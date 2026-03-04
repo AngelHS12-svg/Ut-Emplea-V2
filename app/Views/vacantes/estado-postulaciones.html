@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado de Postulaciones - UT Oriental Emplea</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <div>
+                        <div class="sidebar-title">UT Oriental</div>
+                        <div class="sidebar-subtitle">Bolsa de Trabajo</div>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <ul class="sidebar-nav">
+                    <li><a href="panel-candidato.html"><i class="fas fa-home"></i> Inicio</a></li>
+                    <li><a href="buscar-vacantes.html"><i class="fas fa-search"></i> Buscar vacantes</a></li>
+                    <li><a href="ver-vacantes.html"><i class="fas fa-briefcase"></i> Ver vacantes</a></li>
+                    <li><a href="mis-postulaciones.html"><i class="fas fa-paper-plane"></i> Mis postulaciones</a></li>
+                    <li><a href="estado-postulaciones.html" class="active"><i class="fas fa-clipboard-list"></i> Estado de postulaciones</a></li>
+                    <li><a href="perfil-candidato.html"><i class="fas fa-user"></i> Perfil del candidato</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div class="accent-strip mb-2"></div>
+                <h1>Estado de Postulaciones</h1>
+                <p>Revisa el progreso de tus solicitudes</p>
+            </div>
+
+            <!-- Filter -->
+            <div class="filters">
+                <div class="filters-title">
+                    <i class="fas fa-filter"></i>
+                    Filtrar por Estado
+                </div>
+                <div>
+                    <select class="form-control" style="max-width: 300px;">
+                        <option>Todos</option>
+                        <option>En revisión</option>
+                        <option>Aceptado</option>
+                        <option>Rechazado</option>
+                    </select>
+                </div>
+            </div>
+
+            <p style="color: var(--texto-gris); margin-bottom: 1.5rem;">Total de postulaciones: <strong>5</strong></p>
+
+            <!-- Status Table -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Vacante</th>
+                            <th>Empresa</th>
+                            <th>Estado</th>
+                            <th>Comentarios de la empresa</th>
+                            <th>Fecha de actualización</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Desarrollador Frontend Senior</strong></td>
+                            <td>Tech Solutions S.A.</td>
+                            <td><span class="badge badge-pendiente">En revisión</span></td>
+                            <td style="color: var(--texto-gris);">Estamos revisando tu perfil</td>
+                            <td>05/02/2026</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Diseñador UX/UI</strong></td>
+                            <td>Digital Agency</td>
+                            <td><span class="badge badge-aceptado">Aceptado</span></td>
+                            <td style="color: var(--texto-gris);">Felicidades, pasaste a la siguiente etapa. Te contactaremos pronto.</td>
+                            <td>03/02/2026</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Analista de Datos</strong></td>
+                            <td>Finance Corp.</td>
+                            <td><span class="badge badge-rechazado">Rechazado</span></td>
+                            <td style="color: var(--texto-gris);">Agradecemos tu interés, pero hemos decidido continuar con otros candidatos</td>
+                            <td>01/02/2026</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gerente de Proyectos</strong></td>
+                            <td>Constructora ABC</td>
+                            <td><span class="badge badge-pendiente">En revisión</span></td>
+                            <td style="color: var(--texto-gris);">Tu postulación está en proceso de evaluación</td>
+                            <td>04/02/2026</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Desarrollador Backend</strong></td>
+                            <td>StartUp Innovate</td>
+                            <td><span class="badge badge-aceptado">Aceptado</span></td>
+                            <td style="color: var(--texto-gris);">Nos gustaría agendar una entrevista contigo</td>
+                            <td>02/02/2026</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

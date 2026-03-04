@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UT Oriental Emplea - Bolsa de Trabajo</title>
+
+    <link rel="stylesheet" href="/public/css/styles1.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="hero">
+        <!-- Navbar -->
+        <nav class="navbar">
+
+            <div class="logo">
+                <img src="/public/img/Logotipo UT de Oriental-Color.png" class="logo-img" alt="Logo UT Oriental">
+            </div>
+
+            <div>
+                <a href="#" class="login-btn open-login">
+                    Iniciar sesión
+                </a>
+            </div>
+        </nav>
+
+        <!-- Hero Content -->
+        <div class="hero-content">
+            <div class="hero-icon-circle">
+                <img src="/public/img/1_Mesa de trabajo 1.png" class="hero-logo" alt="Bolsa de trabajo">
+            </div>
+
+            <h1 class="hero-title">UT Oriental Emplea</h1>
+            <p class="hero-description">Conoce nuestra <b>Bolsa de trabajo en línea</b> exclusiva para nuestra comunidad universitaria,
+                soportada por nuestro aliado estratégico,  crea tu cuenta para que no te pierdas la oportunidad de tener <b>acceso
+                a vacantes exclusivas de todo el país, ferias de trabajo virtuales complementadas con ponencias en temas de
+                empleabilidad</b> que te ayudarán en tu proceso de inserción laboral. </p>
+
+                <button class="cta-button open-login">
+                    <i class="fas fa-rocket"></i> Iniciar sesión
+                </button>
+
+        </div>
+
+        <div class="wave"></div>
+    </div>
+
+    <!-- Features Section -->
+    <section class="features">
+        <h2 class="features-title">¿Cómo funciona?</h2>
+
+        <div class="features-grid">
+            <div class="feature">
+                <div class="feature-circle dorado">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h3>Regístrate</h3>
+                <p>Crea tu perfil como candidato o empresa de forma rápida y sencilla.</p>
+            </div>
+
+            <div class="feature">
+                <div class="feature-circle verde">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3>Explora</h3>
+                <p>Busca vacantes o candidatos que se ajusten a tu perfil o necesidades.</p>
+            </div>
+
+            <div class="feature">
+                <div class="feature-circle dorado">
+                    <i class="fas fa-handshake"></i>
+                </div>
+                <h3>Conecta</h3>
+                <p>Postúlate o contacta candidatos para iniciar el proceso de selección.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <h2>¿Listo para comenzar?</h2>
+        <p>Únete a nuestra comunidad y encuentra las mejores oportunidades</p>
+
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 Universidad Tecnológica de Oriental - Bolsa de Trabajo</p>
+        <div class="footer-bar"></div>
+    </footer>
+
+
+<!-- ================= MODAL TIPO USUARIO ================= -->
+<div id="modalUserType" class="modal">
+
+    <div class="modal-content">
+
+        <span class="close-modal" id="closeUserType">&times;</span>
+
+        <h2>ELIGE TU TIPO DE USUARIO</h2>
+
+        <button class="user-option" data-role="admin">
+            <i class="fa-solid fa-user-gear"></i>
+            <span>ADMINISTRADOR</span>
+        </button>
+
+        <button class="user-option" data-role="empresa">
+            <i class="fa-solid fa-building"></i>
+            <span>EMPRESA</span>
+        </button>
+
+        <button class="user-option" data-role="candidato">
+            <i class="fa-solid fa-user-tie"></i>
+            <span>CANDIDATO</span>
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ================= MODAL LOGIN ================= -->
+<div id="modalLogin" class="modal">
+
+    <div class="modal-content login-box">
+
+        <span class="close-modal" id="closeLogin">&times;</span>
+
+        <div class="logo-box">
+            <img src="/public/img/Logotipo UT de Oriental-Color.png" class="login-logo" alt="Logo UT">
+        </div>
+
+        <h2>INICIAR SESIÓN</h2>
+
+        <h3 id="roleIndicator"></h3>
+
+        <form id="loginForm">
+
+            <input type="text" id="username" placeholder="Nombre de usuario" required>
+
+            <input type="password" id="password" placeholder="Contraseña" required>
+
+            <button type="submit" class="login-btn">
+                INICIAR SESIÓN
+            </button>
+
+        </form>
+
+        <a href="#" class="forgot">¿Olvidaste tu contraseña?</a>
+
+        <hr>
+
+        <button class="register-btn">Registrar usuario</button>
+
+    </div>
+
+</div>
+<script src="/public/js/script.js" defer></script>
+</body>
+</html>

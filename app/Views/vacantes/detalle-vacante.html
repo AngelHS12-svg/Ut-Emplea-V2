@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle de Vacante - UT Oriental Emplea</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .detail-section {
+            background: var(--blanco);
+            border-radius: 10px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        .salary-highlight {
+            background: linear-gradient(135deg, rgba(194, 145, 79, 0.1) 0%, rgba(194, 145, 79, 0.05) 100%);
+            border-left: 4px solid var(--dorado);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <div>
+                        <div class="sidebar-title">UT Oriental</div>
+                        <div class="sidebar-subtitle">Bolsa de Trabajo</div>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <ul class="sidebar-nav">
+                    <li><a href="panel-candidato.html"><i class="fas fa-home"></i> Inicio</a></li>
+                    <li><a href="buscar-vacantes.html" class="active"><i class="fas fa-search"></i> Buscar vacantes</a></li>
+                    <li><a href="ver-vacantes.html"><i class="fas fa-briefcase"></i> Ver vacantes</a></li>
+                    <li><a href="mis-postulaciones.html"><i class="fas fa-paper-plane"></i> Mis postulaciones</a></li>
+                    <li><a href="estado-postulaciones.html"><i class="fas fa-clipboard-list"></i> Estado de postulaciones</a></li>
+                    <li><a href="perfil-candidato.html"><i class="fas fa-user"></i> Perfil del candidato</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <!-- Back Button -->
+            <div style="margin-bottom: 1.5rem;">
+                <a href="buscar-vacantes.html" style="color: var(--texto-gris); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s;">
+                    <i class="fas fa-arrow-left"></i> Volver a búsqueda
+                </a>
+            </div>
+
+            <div class="detail-section">
+                <!-- Header -->
+                <div style="margin-bottom: 2rem;">
+                    <h1 style="font-size: 2.25rem; margin-bottom: 1rem; color: var(--texto-oscuro);">Desarrollador Full Stack</h1>
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                        <i class="fas fa-building" style="color: var(--dorado); font-size: 1.2rem;"></i>
+                        <span style="font-size: 1.15rem; color: var(--texto-gris);">Tech Solutions S.A.</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <i class="fas fa-map-marker-alt" style="color: var(--dorado);"></i>
+                        <span style="color: var(--texto-gris);">Querétaro, Qro.</span>
+                    </div>
+                </div>
+
+                <div class="accent-strip mb-3"></div>
+
+                <!-- Description -->
+                <section style="margin-bottom: 2.5rem;">
+                    <h2 style="font-size: 1.35rem; margin-bottom: 1rem; color: var(--texto-oscuro);">
+                        <i class="fas fa-align-left" style="color: var(--dorado); margin-right: 0.5rem;"></i>
+                        Descripción del puesto
+                    </h2>
+                    <p style="color: var(--texto-gris); line-height: 1.8; font-size: 1rem;">
+                        Buscamos desarrollador full stack con experiencia en tecnologías modernas para unirse a nuestro equipo de desarrollo. Trabajarás en proyectos innovadores para clientes nacionales e internacionales.
+                    </p>
+                </section>
+
+                <!-- Requirements -->
+                <section style="margin-bottom: 2.5rem;">
+                    <h2 style="font-size: 1.35rem; margin-bottom: 1rem; color: var(--texto-oscuro);">
+                        <i class="fas fa-list-check" style="color: var(--dorado); margin-right: 0.5rem;"></i>
+                        Requisitos
+                    </h2>
+                    <ul style="color: var(--texto-gris); line-height: 2.2; font-size: 1rem; padding-left: 1.5rem;">
+                        <li>Licenciatura en Ingeniería en Sistemas o afín</li>
+                        <li>Experiencia mínima de 2 años en desarrollo web</li>
+                        <li>Conocimientos en React, Node.js y bases de datos</li>
+                        <li>Inglés intermedio</li>
+                        <li>Habilidades de trabajo en equipo</li>
+                    </ul>
+                </section>
+
+                <!-- Schedule -->
+                <section style="margin-bottom: 2.5rem;">
+                    <h2 style="font-size: 1.35rem; margin-bottom: 1rem; color: var(--texto-oscuro);">
+                        <i class="fas fa-clock" style="color: var(--dorado); margin-right: 0.5rem;"></i>
+                        Horario
+                    </h2>
+                    <p style="color: var(--texto-gris); font-size: 1rem;">
+                        <i class="fas fa-calendar-days" style="color: var(--dorado); margin-right: 0.5rem;"></i>
+                        <strong>Lunes a Viernes, 9:00 AM - 6:00 PM</strong>
+                    </p>
+                </section>
+
+                <!-- Salary -->
+                <section style="margin-bottom: 2.5rem;">
+                    <h2 style="font-size: 1.35rem; margin-bottom: 1rem; color: var(--texto-oscuro);">
+                        <i class="fas fa-dollar-sign" style="color: var(--dorado); margin-right: 0.5rem;"></i>
+                        Salario y Prestaciones
+                    </h2>
+                    <div class="salary-highlight">
+                        <p style="font-size: 1.5rem; font-weight: 700; color: var(--verde); margin-bottom: 0.5rem;">
+                            $ $15,000 - $20,000 mensuales
+                        </p>
+                        <p style="color: var(--texto-gris); font-size: 0.9rem;">+ prestaciones de ley</p>
+                    </div>
+                    <ul style="color: var(--texto-gris); line-height: 2.2; font-size: 1rem; padding-left: 1.5rem;">
+                        <li>Seguro de gastos médicos mayores</li>
+                        <li>Vales de despensa</li>
+                        <li>Capacitación constante</li>
+                        <li>Oportunidad de home office 2 días a la semana</li>
+                    </ul>
+                </section>
+
+                <div class="accent-strip mb-3"></div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 1rem; padding-top: 2rem;">
+                    <button class="btn btn-primary" style="flex: 1; font-size: 1.1rem; padding: 1rem 2rem;">
+                        <i class="fas fa-paper-plane"></i> POSTULARME
+                    </button>
+                    <button class="btn btn-outline" style="padding: 1rem 2rem;">
+                        <i class="fas fa-bookmark"></i> GUARDAR VACANTE
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const action = this.textContent.trim();
+                if(action.includes('POSTULARME')) {
+                    alert('¡Postulación enviada exitosamente!');
+                } else if(action.includes('GUARDAR')) {
+                    alert('Vacante guardada en favoritos');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

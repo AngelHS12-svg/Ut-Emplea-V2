@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil del Candidato - UT Oriental Emplea</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <div>
+                        <div class="sidebar-title">UT Oriental</div>
+                        <div class="sidebar-subtitle">Bolsa de Trabajo</div>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <ul class="sidebar-nav">
+                    <li><a href="panel-candidato.html"><i class="fas fa-home"></i> Inicio</a></li>
+                    <li><a href="buscar-vacantes.html"><i class="fas fa-search"></i> Buscar vacantes</a></li>
+                    <li><a href="ver-vacantes.html"><i class="fas fa-briefcase"></i> Ver vacantes</a></li>
+                    <li><a href="mis-postulaciones.html"><i class="fas fa-paper-plane"></i> Mis postulaciones</a></li>
+                    <li><a href="estado-postulaciones.html"><i class="fas fa-clipboard-list"></i> Estado de postulaciones</a></li>
+                    <li><a href="perfil-candidato.html" class="active"><i class="fas fa-user"></i> Perfil del candidato</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div class="accent-strip mb-2"></div>
+                <h1>Perfil del Candidato</h1>
+                <p>Actualiza tu información personal y académica</p>
+            </div>
+
+            <form>
+                <!-- Personal Information -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fas fa-user"></i> Información Personal</h2>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Sexo <span class="required">*</span></label>
+                        <div style="display: flex; gap: 2rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="radio" name="sexo" value="masculino" checked>
+                                <span>Masculino</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="radio" name="sexo" value="femenino">
+                                <span>Femenino</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="radio" name="sexo" value="otro">
+                                <span>Otro</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Nombre completo <span class="required">*</span></label>
+                            <div class="input-icon">
+                                <i class="fas fa-user"></i>
+                                <input type="text" class="form-control" placeholder="Ej: Juan Pérez García" value="Juan Pérez García">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Carrera <span class="required">*</span></label>
+                            <div class="input-icon">
+                                <i class="fas fa-graduation-cap"></i>
+                                <select class="form-control">
+                                    <option>Selecciona tu carrera</option>
+                                    <option selected>Ingeniería en Sistemas</option>
+                                    <option>Administración</option>
+                                    <option>Contaduría Pública</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Año de egreso <span class="required">*</span></label>
+                            <div class="input-icon">
+                                <i class="fas fa-calendar"></i>
+                                <input type="text" class="form-control" placeholder="Ej: 2024" value="2024">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Número celular <span class="required">*</span></label>
+                            <div class="input-icon">
+                                <i class="fas fa-phone"></i>
+                                <input type="tel" class="form-control" placeholder="Ej: +52 123 456 7890" value="+52 123 456 7890">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Correo electrónico <span class="required">*</span></label>
+                            <div class="input-icon">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" class="form-control" placeholder="ejemplo@correo.com" value="eduardo.martinez@utdeoriental.edu.mx">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Contraseña <span class="required">*</span></label>
+                            <div class="input-icon">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" class="form-control" placeholder="••••••••" value="password123">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Confirmar contraseña <span class="required">*</span></label>
+                        <div class="input-icon">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" class="form-control" placeholder="••••••••" value="password123">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                    <button type="button" class="btn btn-outline">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar cambios
+                    </button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <script>
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Perfil actualizado exitosamente');
+        });
+    </script>
+</body>
+</html>

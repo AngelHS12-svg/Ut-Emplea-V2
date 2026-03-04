@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel del Candidato - UT Oriental Emplea</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <div>
+                        <div class="sidebar-title">UT Oriental</div>
+                        <div class="sidebar-subtitle">Bolsa de Trabajo</div>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <ul class="sidebar-nav">
+                    <li><a href="panel-candidato.html" class="active"><i class="fas fa-home"></i> Inicio</a></li>
+                    <li><a href="buscar-vacantes.html"><i class="fas fa-search"></i> Buscar vacantes</a></li>
+                    <li><a href="ver-vacantes.html"><i class="fas fa-briefcase"></i> Ver vacantes</a></li>
+                    <li><a href="mis-postulaciones.html"><i class="fas fa-paper-plane"></i> Mis postulaciones</a></li>
+                    <li><a href="estado-postulaciones.html"><i class="fas fa-clipboard-list"></i> Estado de postulaciones</a></li>
+                    <li><a href="perfil-candidato.html"><i class="fas fa-user"></i> Perfil del candidato</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div class="accent-strip mb-2"></div>
+                <h1>Bienvenido al Panel del Candidato</h1>
+                <p>Consulta y postúlate a vacantes dentro de la universidad</p>
+            </div>
+
+            <section class="quick-access">
+                <a href="buscar-vacantes.html" class="quick-card">
+                    <div class="quick-card-icon"><i class="fas fa-search"></i></div>
+                    <h3 class="quick-card-title">Buscar vacantes</h3>
+                    <p class="quick-card-description">Encuentra ofertas según tu perfil</p>
+                </a>
+                <a href="ver-vacantes.html" class="quick-card">
+                    <div class="quick-card-icon"><i class="fas fa-briefcase"></i></div>
+                    <h3 class="quick-card-title">Ver vacantes</h3>
+                    <p class="quick-card-description">Consulta todas las vacantes disponibles</p>
+                </a>
+                <a href="mis-postulaciones.html" class="quick-card">
+                    <div class="quick-card-icon"><i class="fas fa-paper-plane"></i></div>
+                    <h3 class="quick-card-title">Mis postulaciones</h3>
+                    <p class="quick-card-description">Revisa las vacantes a las que has aplicado</p>
+                </a>
+                <a href="estado-postulaciones.html" class="quick-card">
+                    <div class="quick-card-icon"><i class="fas fa-clipboard-check"></i></div>
+                    <h3 class="quick-card-title">Estado de postulaciones</h3>
+                    <p class="quick-card-description">Consulta el estado de tus solicitudes</p>
+                </a>
+            </section>
+
+            <div class="search-bar">
+                <div class="search-input">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Buscar vacante por puesto o empresa" class="form-control">
+                </div>
+                <button class="btn btn-accent"><i class="fas fa-search"></i> Buscar</button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-clock"></i> Actividad reciente</h2>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Vacante</th>
+                            <th>Empresa</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                            <th style="text-align: center;">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Desarrollador Frontend</td>
+                            <td>TechCorp SA</td>
+                            <td><span class="badge badge-pendiente">En revisión</span></td>
+                            <td>05/02/2026</td>
+                            <td style="text-align: center;"><i class="fas fa-chevron-right" style="color: var(--dorado); cursor: pointer;"></i></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

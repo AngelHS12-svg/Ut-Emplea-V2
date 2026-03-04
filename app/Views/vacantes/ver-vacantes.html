@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vacantes Disponibles - UT Oriental Emplea</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <div>
+                        <div class="sidebar-title">UT Oriental</div>
+                        <div class="sidebar-subtitle">Bolsa de Trabajo</div>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <ul class="sidebar-nav">
+                    <li><a href="panel-candidato.html"><i class="fas fa-home"></i> Inicio</a></li>
+                    <li><a href="buscar-vacantes.html"><i class="fas fa-search"></i> Buscar vacantes</a></li>
+                    <li><a href="ver-vacantes.html" class="active"><i class="fas fa-briefcase"></i> Ver vacantes</a></li>
+                    <li><a href="mis-postulaciones.html"><i class="fas fa-paper-plane"></i> Mis postulaciones</a></li>
+                    <li><a href="estado-postulaciones.html"><i class="fas fa-clipboard-list"></i> Estado de postulaciones</a></li>
+                    <li><a href="perfil-candidato.html"><i class="fas fa-user"></i> Perfil del candidato</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div class="accent-strip mb-2"></div>
+                <h1>Vacantes Disponibles</h1>
+                <p>Explora todas las oportunidades laborales</p>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters">
+                <div class="filters-title">
+                    <i class="fas fa-filter"></i>
+                    Filtros
+                </div>
+                <div class="filters-grid">
+                    <div class="form-group">
+                        <label class="form-label">Buscar por puesto</label>
+                        <input type="text" class="form-control" placeholder="Ej: Desarrollador, Analista...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Filtrar por carrera</label>
+                        <select class="form-control">
+                            <option>Todas</option>
+                            <option>Ingeniería en Sistemas</option>
+                            <option>Administración</option>
+                            <option>Contaduría Pública</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <p style="color: var(--texto-gris); margin-bottom: 1.5rem;">6 vacantes encontradas</p>
+
+            <!-- Vacancy Grid -->
+            <div class="grid grid-3">
+                <!-- Card 1 -->
+                <div class="vacancy-card">
+                    <div class="vacancy-header">
+                        <div>
+                            <h3 class="vacancy-title">Desarrollador Frontend Junior</h3>
+                            <p class="vacancy-company"><i class="fas fa-building"></i> Tech Solutions S.A.</p>
+                        </div>
+                        <span class="badge badge-activa">Activa</span>
+                    </div>
+                    <div class="vacancy-details">
+                        <span class="vacancy-detail"><i class="fas fa-graduation-cap"></i> Ingeniería en Sistemas</span>
+                        <span class="vacancy-detail"><i class="fas fa-briefcase"></i> Híbrida</span>
+                        <span class="vacancy-detail"><i class="fas fa-calendar"></i> 04/02/2026</span>
+                    </div>
+                    <div class="vacancy-footer">
+                        <button class="btn btn-small btn-primary">Ver detalle</button>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="vacancy-card">
+                    <div class="vacancy-header">
+                        <div>
+                            <h3 class="vacancy-title">Analista de Datos</h3>
+                            <p class="vacancy-company"><i class="fas fa-building"></i> Data Corp</p>
+                        </div>
+                        <span class="badge badge-activa">Activa</span>
+                    </div>
+                    <div class="vacancy-details">
+                        <span class="vacancy-detail"><i class="fas fa-graduation-cap"></i> Ingeniería Industrial</span>
+                        <span class="vacancy-detail"><i class="fas fa-briefcase"></i> Remota</span>
+                        <span class="vacancy-detail"><i class="fas fa-calendar"></i> 03/02/2026</span>
+                    </div>
+                    <div class="vacancy-footer">
+                        <button class="btn btn-small btn-primary">Ver detalle</button>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="vacancy-card">
+                    <div class="vacancy-header">
+                        <div>
+                            <h3 class="vacancy-title">Diseñador UX/UI</h3>
+                            <p class="vacancy-company"><i class="fas fa-building"></i> Creative Studios</p>
+                        </div>
+                        <span class="badge badge-activa">Activa</span>
+                    </div>
+                    <div class="vacancy-details">
+                        <span class="vacancy-detail"><i class="fas fa-graduation-cap"></i> Diseño Gráfico</span>
+                        <span class="vacancy-detail"><i class="fas fa-briefcase"></i> Presencial</span>
+                        <span class="vacancy-detail"><i class="fas fa-calendar"></i> 02/02/2026</span>
+                    </div>
+                    <div class="vacancy-footer">
+                        <button class="btn btn-small btn-primary">Ver detalle</button>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="vacancy-card">
+                    <div class="vacancy-header">
+                        <div>
+                            <h3 class="vacancy-title">Administrador de Redes</h3>
+                            <p class="vacancy-company"><i class="fas fa-building"></i> Network Plus</p>
+                        </div>
+                        <span class="badge badge-activa">Activa</span>
+                    </div>
+                    <div class="vacancy-details">
+                        <span class="vacancy-detail"><i class="fas fa-graduation-cap"></i> Ingeniería en Sistemas</span>
+                        <span class="vacancy-detail"><i class="fas fa-briefcase"></i> Presencial</span>
+                        <span class="vacancy-detail"><i class="fas fa-calendar"></i> 01/02/2026</span>
+                    </div>
+                    <div class="vacancy-footer">
+                        <button class="btn btn-small btn-primary">Ver detalle</button>
+                    </div>
+                </div>
+
+                <!-- Card 5 -->
+                <div class="vacancy-card">
+                    <div class="vacancy-header">
+                        <div>
+                            <h3 class="vacancy-title">Contador Junior</h3>
+                            <p class="vacancy-company"><i class="fas fa-building"></i> Finanzas & Co.</p>
+                        </div>
+                        <span class="badge badge-activa">Activa</span>
+                    </div>
+                    <div class="vacancy-details">
+                        <span class="vacancy-detail"><i class="fas fa-graduation-cap"></i> Contaduría Pública</span>
+                        <span class="vacancy-detail"><i class="fas fa-briefcase"></i> Híbrida</span>
+                        <span class="vacancy-detail"><i class="fas fa-calendar"></i> 31/01/2026</span>
+                    </div>
+                    <div class="vacancy-footer">
+                        <button class="btn btn-small btn-primary">Ver detalle</button>
+                    </div>
+                </div>
+
+                <!-- Card 6 -->
+                <div class="vacancy-card">
+                    <div class="vacancy-header">
+                        <div>
+                            <h3 class="vacancy-title">Ingeniero de Software</h3>
+                            <p class="vacancy-company"><i class="fas fa-building"></i> StartUp Innovation</p>
+                        </div>
+                        <span class="badge badge-activa">Activa</span>
+                    </div>
+                    <div class="vacancy-details">
+                        <span class="vacancy-detail"><i class="fas fa-graduation-cap"></i> Ingeniería en Sistemas</span>
+                        <span class="vacancy-detail"><i class="fas fa-briefcase"></i> Remota</span>
+                        <span class="vacancy-detail"><i class="fas fa-calendar"></i> 30/01/2026</span>
+                    </div>
+                    <div class="vacancy-footer">
+                        <button class="btn btn-small btn-primary">Ver detalle</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

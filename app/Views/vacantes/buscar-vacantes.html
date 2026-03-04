@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Vacantes - UT Oriental Emplea</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <div>
+                        <div class="sidebar-title">UT Oriental</div>
+                        <div class="sidebar-subtitle">Bolsa de Trabajo</div>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <ul class="sidebar-nav">
+                    <li><a href="panel-candidato.html"><i class="fas fa-home"></i> Inicio</a></li>
+                    <li><a href="buscar-vacantes.html" class="active"><i class="fas fa-search"></i> Buscar vacantes</a></li>
+                    <li><a href="ver-vacantes.html"><i class="fas fa-briefcase"></i> Ver vacantes</a></li>
+                    <li><a href="mis-postulaciones.html"><i class="fas fa-paper-plane"></i> Mis postulaciones</a></li>
+                    <li><a href="estado-postulaciones.html"><i class="fas fa-clipboard-list"></i> Estado de postulaciones</a></li>
+                    <li><a href="perfil-candidato.html"><i class="fas fa-user"></i> Perfil del candidato</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div class="accent-strip mb-2"></div>
+                <h1>Buscar Vacantes</h1>
+                <p>Explora y postúlate a vacantes disponibles</p>
+            </div>
+
+            <div class="search-bar">
+                <div class="search-input">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Buscar por puesto, empresa o palabra clave" class="form-control">
+                </div>
+                <select class="form-control" style="max-width: 250px;">
+                    <option>Todas las carreras</option>
+                    <option>Ingeniería en Sistemas</option>
+                    <option>Administración</option>
+                    <option>Contaduría</option>
+                </select>
+                <select class="form-control" style="max-width: 200px;">
+                    <option>Tipo de empleo</option>
+                    <option>Tiempo completo</option>
+                    <option>Medio tiempo</option>
+                    <option>Remoto</option>
+                </select>
+                <select class="form-control" style="max-width: 200px;">
+                    <option>Modalidad</option>
+                    <option>Presencial</option>
+                    <option>Remoto</option>
+                    <option>Híbrido</option>
+                </select>
+                <button class="btn btn-accent"><i class="fas fa-search"></i> BUSCAR</button>
+            </div>
+
+            <div class="mb-3">
+                <p style="color: var(--texto-gris); font-size: 0.95rem;">5 vacantes encontradas</p>
+            </div>
+
+            <!-- Vacancy Cards in Sidebar List -->
+            <div style="display: grid; grid-template-columns: 350px 1fr; gap: 2rem;">
+                <!-- Left Sidebar List -->
+                <div>
+                    <div style="background: var(--blanco); border-radius: 10px; padding: 1rem; max-height: 700px; overflow-y: auto;">
+                        <div style="border-bottom: 2px solid var(--borde); padding: 1rem; cursor: pointer; transition: all 0.2s;" onclick="selectVacancy(1)">
+                            <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--texto-oscuro);">Desarrollador Full Stack</h4>
+                            <p style="font-size: 0.85rem; color: var(--texto-gris); margin-bottom: 0.5rem;"><i class="fas fa-building"></i> Tech Solutions S.A.</p>
+                            <p style="font-size: 0.85rem; color: var(--texto-gris); margin-bottom: 0.5rem;"><i class="fas fa-map-marker-alt"></i> Querétaro, Qro.</p>
+                            <p style="font-size: 0.85rem; color: var(--texto-gris);"><i class="fas fa-briefcase"></i> Tiempo completo</p>
+                            <p style="font-size: 0.8rem; color: var(--texto-gris); margin-top: 0.5rem;"><i class="fas fa-calendar"></i> 5 feb 2026</p>
+                        </div>
+
+                        <div style="border-bottom: 2px solid var(--borde); padding: 1rem; cursor: pointer; transition: all 0.2s;" onclick="selectVacancy(2)">
+                            <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--texto-oscuro);">Contador General</h4>
+                            <p style="font-size: 0.85rem; color: var(--texto-gris); margin-bottom: 0.5rem;"><i class="fas fa-building"></i> Grupo Financiero del Centro</p>
+                            <p style="font-size: 0.85rem; color: var(--texto-gris); margin-bottom: 0.5rem;"><i class="fas fa-map-marker-alt"></i> San Juan del Río, Qro.</p>
+                            <p style="font-size: 0.85rem; color: var(--texto-gris);"><i class="fas fa-briefcase"></i> Tiempo completo</p>
+                            <p style="font-size: 0.8rem; color: var(--texto-gris); margin-top: 0.5rem;"><i class="fas fa-calendar"></i> 4 feb 2026</p>
+                        </div>
+
+                        <div style="border-bottom: 2px solid var(--borde); padding: 1rem; cursor: pointer; transition: all 0.2s;" onclick="selectVacancy(3)">
+                            <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--texto-oscuro);">Diseñador Gráfico</h4>
+                            <p style="font-size: 0.85rem; color: var(--texto-gris); margin-bottom: 0.5rem;"><i class="fas fa-building"></i> Agencia Creativa MX</p>
+                            <p style="font-size: 0.85rem; color: var(--texto-gris); margin-bottom: 0.5rem;"><i class="fas fa-map-marker-alt"></i> Remoto</p>
+                            <p style="font-size: 0.85rem; color: var(--texto-gris);"><i class="fas fa-briefcase"></i> Medio tiempo</p>
+                            <p style="font-size: 0.8rem; color: var(--texto-gris); margin-top: 0.5rem;"><i class="fas fa-calendar"></i> 3 feb 2026</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Detail Panel -->
+                <div id="vacancyDetail">
+                    <div class="card">
+                        <h2 style="font-size: 1.75rem; margin-bottom: 1rem;">Desarrollador Full Stack</h2>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                            <i class="fas fa-building" style="color: var(--dorado);"></i>
+                            <span style="font-size: 1.1rem; color: var(--texto-gris);">Tech Solutions S.A.</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
+                            <i class="fas fa-map-marker-alt" style="color: var(--dorado);"></i>
+                            <span style="color: var(--texto-gris);">Querétaro, Qro.</span>
+                        </div>
+
+                        <div class="accent-strip mb-3"></div>
+
+                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Descripción del puesto</h3>
+                        <p style="color: var(--texto-gris); line-height: 1.7; margin-bottom: 1.5rem;">
+                            Buscamos desarrollador full stack con experiencia en tecnologías modernas para unirse a nuestro equipo de desarrollo. Trabajarás en proyectos innovadores para clientes nacionales e internacionales.
+                        </p>
+
+                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Requisitos</h3>
+                        <ul style="color: var(--texto-gris); line-height: 2; margin-bottom: 1.5rem; padding-left: 1.5rem;">
+                            <li>Licenciatura en Ingeniería en Sistemas o afín</li>
+                            <li>Experiencia mínima de 2 años en desarrollo web</li>
+                            <li>Conocimientos en React, Node.js y bases de datos</li>
+                            <li>Inglés intermedio</li>
+                            <li>Habilidades de trabajo en equipo</li>
+                        </ul>
+
+                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Horario</h3>
+                        <p style="color: var(--texto-gris); margin-bottom: 1.5rem;">
+                            <i class="fas fa-clock" style="color: var(--dorado);"></i> Lunes a Viernes, 9:00 AM - 6:00 PM
+                        </p>
+
+                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Salario y Prestaciones</h3>
+                        <p style="color: var(--texto-oscuro); font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;">
+                            $ $15,000 - $20,000 mensuales
+                        </p>
+                        <ul style="color: var(--texto-gris); line-height: 2; margin-bottom: 2rem; padding-left: 1.5rem;">
+                            <li>Seguro de gastos médicos mayores</li>
+                            <li>Vales de despensa</li>
+                            <li>Capacitación constante</li>
+                            <li>Oportunidad de home office 2 días a la semana</li>
+                        </ul>
+
+                        <div style="display: flex; gap: 1rem; border-top: 2px solid var(--borde); padding-top: 2rem;">
+                            <button class="btn btn-primary" style="flex: 1;">
+                                <i class="fas fa-paper-plane"></i> POSTULARME
+                            </button>
+                            <button class="btn btn-outline">
+                                <i class="fas fa-bookmark"></i> GUARDAR VACANTE
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function selectVacancy(id) {
+            console.log('Vacante seleccionada:', id);
+        }
+    </script>
+</body>
+</html>

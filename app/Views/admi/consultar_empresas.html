@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consultar Empresas · Panel Administrativo</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="/public/css/consultar_empresas.css">
+  
+</head>
+<body>
+
+
+    <!-- Filtros -->
+    <div class="filters-section">
+      <div class="filters-title">
+        <i class="fa-solid fa-filter"></i>
+        <h3>Filtros de búsqueda</h3>
+      </div>
+
+      <div class="filters-grid">
+        <div class="filter-group">
+          <label><i class="fa-regular fa-building"></i> BUSCAR POR NOMBRE</label>
+          <div class="filter-input">
+            <i class="fa-regular fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Nombre de empresa...">
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label><i class="fa-regular fa-circle-check"></i> FILTRAR POR ESTADO</label>
+          <div class="filter-input">
+            <i class="fa-regular fa-list"></i>
+            <select id="statusFilter">
+              <option value="todas">Todas</option>
+              <option value="aceptada">Aceptada</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="rechazada">Rechazada</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label><i class="fa-regular fa-tag"></i> FILTRAR POR TIPO</label>
+          <div class="filter-input">
+            <i class="fa-regular fa-layer-group"></i>
+            <select id="typeFilter">
+              <option value="todas">Todas</option>
+              <option value="privada">Privada</option>
+              <option value="publica">Pública</option>
+              <option value="mixta">Mixta</option>
+              <option value="sin_fines">Sin fines de lucro</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn-secondary" id="clearFilters">
+          <i class="fa-regular fa-rotate-right"></i>
+          Limpiar filtros
+        </button>
+        <button class="btn-primary" id="applyFilters">
+          <i class="fa-regular fa-magnifying-glass"></i>
+          Buscar
+        </button>
+      </div>
+    </div>
+
+    <!-- Resultados -->
+    <div class="results-header">
+      <div class="results-count" id="resultsCount">
+        <i class="fa-regular fa-building"></i>
+        Mostrando 5 de 8 empresas
+      </div>
+      <div class="export-btn" id="exportBtn">
+        <i class="fa-regular fa-file-excel"></i>
+        Exportar lista
+      </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-container">
+      <table id="companiesTable">
+        <thead>
+          <tr>
+            <th><i class="fa-regular fa-building"></i> NOMBRE DE LA EMPRESA</th>
+            <th><i class="fa-regular fa-tag"></i> GIRO</th>
+            <th><i class="fa-regular fa-layer-group"></i> TIPO</th>
+            <th><i class="fa-regular fa-circle-check"></i> ESTADO</th>
+            <th><i class="fa-regular fa-calendar"></i> FECHA DE REGISTRO</th>
+            <th><i class="fa-regular fa-gear"></i> ACCIONES</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- Los datos se cargan dinámicamente con JavaScript -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="pagination">
+      <button class="pagination-btn" id="prevPage" disabled>
+        <i class="fa-regular fa-chevron-left"></i>
+        Anterior
+      </button>
+      
+      <div class="pagination-numbers" id="paginationNumbers">
+        <span class="page-number active" data-page="1">1</span>
+        <span class="page-number" data-page="2">2</span>
+        <span class="page-number" data-page="3">3</span>
+      </div>
+
+      <div class="pagination-info" id="pageInfo">
+        Página 1 de 3
+      </div>
+
+      <button class="pagination-btn" id="nextPage">
+        Siguiente
+        <i class="fa-regular fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal de detalles -->
+  <div class="modal" id="detailModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fa-regular fa-building"></i> Detalles de la empresa</h3>
+        <button class="close-modal" id="closeDetailModal">&times;</button>
+      </div>
+      <div class="modal-body" id="detailModalBody">
+        <!-- Contenido dinámico -->
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="closeDetailBtn">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmación -->
+  <div class="modal" id="confirmModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fa-regular fa-circle-question"></i> Confirmar acción</h3>
+        <button class="close-modal" id="closeConfirmModal">&times;</button>
+      </div>
+      <div class="modal-body" id="confirmModalBody">
+        ¿Está seguro que desea realizar esta acción?
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="cancelConfirm">Cancelar</button>
+        <button class="btn-primary" id="acceptConfirm">Aceptar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast de notificación -->
+  <div class="toast" id="toast">
+    <i class="fa-regular fa-circle-check"></i>
+    <div id="toastMessage">Acción realizada con éxito</div>
+  </div>
+
+  <script>
+    // Datos de ejemplo
+    const companies = [
+      { id: 1, nombre: "Tecnología Global S.A.", giro: "Tecnología", tipo: "privada", estado: "aceptada", fecha: "15/01/2026" },
+      { id: 2, nombre: "Servicios Financieros XYZ", giro: "Finanzas", tipo: "privada", estado: "pendiente", fecha: "10/01/2026" },
+      { id: 3, nombre: "Consultoría Empresarial Pro", giro: "Consultoría", tipo: "privada", estado: "rechazada", fecha: "05/01/2026" },
+      { id: 4, nombre: "Retail Comercial S.C.", giro: "Comercio", tipo: "privada", estado: "aceptada", fecha: "03/01/2026" },
+      { id: 5, nombre: "Alimentos Procesados del Sur", giro: "Alimentación", tipo: "privada", estado: "pendiente", fecha: "28/12/2025" },
+      { id: 6, nombre: "Innovación Tecnológica SA", giro: "Tecnología", tipo: "publica", estado: "aceptada", fecha: "20/12/2025" },
+      { id: 7, nombre: "Construcciones Modernas", giro: "Construcción", tipo: "privada", estado: "aceptada", fecha: "15/12/2025" },
+      { id: 8, nombre: "Servicios Médicos Integrales", giro: "Salud", tipo: "sin_fines", estado: "pendiente", fecha: "10/12/2025" }
+    ];
+
+    let currentPage = 1;
+    const itemsPerPage = 5;
+    let filteredCompanies = [...companies];
+
+    // Elementos del DOM
+    const tableBody = document.getElementById('tableBody');
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const typeFilter = document.getElementById('typeFilter');
+    const applyFilters = document.getElementById('applyFilters');
+    const clearFilters = document.getElementById('clearFilters');
+    const prevPage = document.getElementById('prevPage');
+    const nextPage = document.getElementById('nextPage');
+    const pageInfo = document.getElementById('pageInfo');
+    const paginationNumbers = document.getElementById('paginationNumbers');
+    const resultsCount = document.getElementById('resultsCount');
+    const exportBtn = document.getElementById('exportBtn');
+
+    // Modales
+    const detailModal = document.getElementById('detailModal');
+    const confirmModal = document.getElementById('confirmModal');
+    const detailModalBody = document.getElementById('detailModalBody');
+    const confirmModalBody = document.getElementById('confirmModalBody');
+    
+    // Toast
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+
+    // Función para mostrar toast
+    function showToast(message, type = 'success') {
+      toastMessage.textContent = message;
+      toast.className = 'toast show ' + type;
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Función para renderizar la tabla
+    function renderTable() {
+      const start = (currentPage - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      const paginatedCompanies = filteredCompanies.slice(start, end);
+
+      tableBody.innerHTML = '';
+      paginatedCompanies.forEach(company => {
+        const row = document.createElement('tr');
+        
+        let statusClass = '';
+        let statusIcon = '';
+        let statusText = '';
+
+        switch(company.estado) {
+          case 'aceptada':
+            statusClass = 'status-aceptada';
+            statusIcon = '<i class="fa-regular fa-circle-check"></i>';
+            statusText = 'Aceptada';
+            break;
+          case 'pendiente':
+            statusClass = 'status-pendiente';
+            statusIcon = '<i class="fa-regular fa-clock"></i>';
+            statusText = 'Pendiente';
+            break;
+          case 'rechazada':
+            statusClass = 'status-rechazada';
+            statusIcon = '<i class="fa-regular fa-circle-xmark"></i>';
+            statusText = 'Rechazada';
+            break;
+        }
+
+        let tipoText = '';
+        switch(company.tipo) {
+          case 'privada': tipoText = 'Privada'; break;
+          case 'publica': tipoText = 'Pública'; break;
+          case 'mixta': tipoText = 'Mixta'; break;
+          case 'sin_fines': tipoText = 'Sin fines de lucro'; break;
+          default: tipoText = company.tipo;
+        }
+
+        row.innerHTML = `
+          <td><strong>${company.nombre}</strong></td>
+          <td>${company.giro}</td>
+          <td>${tipoText}</td>
+          <td><span class="status-badge ${statusClass}">${statusIcon} ${statusText}</span></td>
+          <td>${company.fecha}</td>
+          <td class="action-icons">
+            <button class="action-btn view-btn" data-id="${company.id}" title="Ver detalles"><i class="fa-regular fa-eye"></i></button>
+            <button class="action-btn edit-btn" data-id="${company.id}" title="Editar"><i class="fa-regular fa-pen-to-square"></i></button>
+            <button class="action-btn message-btn" data-id="${company.id}" title="Enviar mensaje"><i class="fa-regular fa-message"></i></button>
+            <button class="action-btn more-btn" data-id="${company.id}" title="Más opciones"><i class="fa-regular fa-ellipsis-vertical"></i></button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+
+      // Actualizar contador
+      resultsCount.innerHTML = `<i class="fa-regular fa-building"></i> Mostrando ${paginatedCompanies.length} de ${filteredCompanies.length} empresas`;
+
+      // Actualizar paginación
+      updatePagination();
+
+      // Agregar event listeners a los botones de acción
+      addActionListeners();
+    }
+
+    // Función para agregar listeners a los botones de acción
+    function addActionListeners() {
+      document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = parseInt(btn.dataset.id);
+          const company = companies.find(c => c.id === id);
+          showCompanyDetails(company);
+        });
+      });
+
+      document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = parseInt(btn.dataset.id);
+          const company = companies.find(c => c.id === id);
+          showConfirmModal('¿Está seguro que desea editar esta empresa?', () => {
+            showToast(`Editando empresa: ${company.nombre}`, 'success');
+          });
+        });
+      });
+
+      document.querySelectorAll('.message-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = parseInt(btn.dataset.id);
+          const company = companies.find(c => c.id === id);
+          showToast(`Mensaje enviado a ${company.nombre}`, 'success');
+        });
+      });
+
+      document.querySelectorAll('.more-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = parseInt(btn.dataset.id);
+          const company = companies.find(c => c.id === id);
+          showConfirmModal('Opciones adicionales: ¿Qué desea hacer?', () => {
+            showToast(`Acción adicional para ${company.nombre}`, 'warning');
+          }, 'Ver opciones');
+        });
+      });
+    }
+
+    // Función para mostrar detalles de la empresa
+    function showCompanyDetails(company) {
+      let tipoText = '';
+      switch(company.tipo) {
+        case 'privada': tipoText = 'Privada'; break;
+        case 'publica': tipoText = 'Pública'; break;
+        case 'mixta': tipoText = 'Mixta'; break;
+        case 'sin_fines': tipoText = 'Sin fines de lucro'; break;
+        default: tipoText = company.tipo;
+      }
+
+      let estadoClass = '';
+      let estadoText = '';
+      switch(company.estado) {
+        case 'aceptada': 
+          estadoClass = 'status-aceptada';
+          estadoText = 'Aceptada';
+          break;
+        case 'pendiente':
+          estadoClass = 'status-pendiente';
+          estadoText = 'Pendiente';
+          break;
+        case 'rechazada':
+          estadoClass = 'status-rechazada';
+          estadoText = 'Rechazada';
+          break;
+      }
+
+      detailModalBody.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <i class="fa-regular fa-building" style="font-size: 32px; color: #1e3a8a;"></i>
+            <div>
+              <div style="font-weight: 700; font-size: 18px;">${company.nombre}</div>
+              <div style="color: #5f6f8c;">ID: ${company.id}</div>
+            </div>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #f9fcff; padding: 16px; border-radius: 16px;">
+            <div>
+              <div style="color: #5f6f8c; font-size: 12px;">GIRO</div>
+              <div style="font-weight: 600;">${company.giro}</div>
+            </div>
+            <div>
+              <div style="color: #5f6f8c; font-size: 12px;">TIPO</div>
+              <div style="font-weight: 600;">${tipoText}</div>
+            </div>
+            <div>
+              <div style="color: #5f6f8c; font-size: 12px;">ESTADO</div>
+              <div><span class="status-badge ${estadoClass}">${estadoText}</span></div>
+            </div>
+            <div>
+              <div style="color: #5f6f8c; font-size: 12px;">FECHA REGISTRO</div>
+              <div style="font-weight: 600;">${company.fecha}</div>
+            </div>
+          </div>
+          
+          <div style="border-top: 1px solid #eaf1fa; padding-top: 16px;">
+            <div style="display: flex; gap: 16px;">
+              <div><i class="fa-regular fa-envelope" style="color: #1e3a8a;"></i> contacto@${company.nombre.toLowerCase().replace(/\s/g, '')}.com</div>
+              <div><i class="fa-regular fa-phone" style="color: #1e3a8a;"></i> (555) 123-4567</div>
+            </div>
+          </div>
+        </div>
+      `;
+      detailModal.classList.add('active');
+    }
+
+    // Función para mostrar modal de confirmación
+    function showConfirmModal(message, onConfirm, confirmText = 'Aceptar') {
+      confirmModalBody.textContent = message;
+      confirmModal.classList.add('active');
+      
+      const acceptBtn = document.getElementById('acceptConfirm');
+      const cancelBtn = document.getElementById('cancelConfirm');
+      
+      const acceptHandler = () => {
+        onConfirm();
+        confirmModal.classList.remove('active');
+        acceptBtn.removeEventListener('click', acceptHandler);
+      };
+      
+      const cancelHandler = () => {
+        confirmModal.classList.remove('active');
+        cancelBtn.removeEventListener('click', cancelHandler);
+      };
+      
+      acceptBtn.addEventListener('click', acceptHandler);
+      cancelBtn.addEventListener('click', cancelHandler);
+    }
+
+    // Función para actualizar la paginación
+    function updatePagination() {
+      const totalPages = Math.ceil(filteredCompanies.length / itemsPerPage);
+      
+      pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+      
+      prevPage.disabled = currentPage === 1;
+      nextPage.disabled = currentPage === totalPages;
+
+      // Actualizar números de página
+      paginationNumbers.innerHTML = '';
+      for (let i = 1; i <= totalPages; i++) {
+        const pageSpan = document.createElement('span');
+        pageSpan.className = `page-number ${i === currentPage ? 'active' : ''}`;
+        pageSpan.dataset.page = i;
+        pageSpan.textContent = i;
+        pageSpan.addEventListener('click', () => {
+          currentPage = i;
+          renderTable();
+        });
+        paginationNumbers.appendChild(pageSpan);
+      }
+    }
+
+    // Función para aplicar filtros
+    function applyFiltersFunction() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const statusValue = statusFilter.value;
+      const typeValue = typeFilter.value;
+
+      filteredCompanies = companies.filter(company => {
+        const matchesSearch = company.nombre.toLowerCase().includes(searchTerm) || 
+                             company.giro.toLowerCase().includes(searchTerm);
+        const matchesStatus = statusValue === 'todas' || company.estado === statusValue;
+        const matchesType = typeValue === 'todas' || company.tipo === typeValue;
+        
+        return matchesSearch && matchesStatus && matchesType;
+      });
+
+      currentPage = 1;
+      renderTable();
+      
+      if (filteredCompanies.length === 0) {
+        showToast('No se encontraron empresas con los filtros aplicados', 'warning');
+      }
+    }
+
+    // Event listeners
+    applyFilters.addEventListener('click', applyFiltersFunction);
+
+    clearFilters.addEventListener('click', () => {
+      searchInput.value = '';
+      statusFilter.value = 'todas';
+      typeFilter.value = 'todas';
+      filteredCompanies = [...companies];
+      currentPage = 1;
+      renderTable();
+      showToast('Filtros limpiados', 'success');
+    });
+
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        applyFiltersFunction();
+      }
+    });
+
+    prevPage.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderTable();
+      }
+    });
+
+    nextPage.addEventListener('click', () => {
+      const totalPages = Math.ceil(filteredCompanies.length / itemsPerPage);
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderTable();
+      }
+    });
+
+    exportBtn.addEventListener('click', () => {
+      showToast('Exportando lista de empresas...', 'success');
+    });
+
+    // Cerrar modales
+    document.getElementById('closeDetailModal').addEventListener('click', () => {
+      detailModal.classList.remove('active');
+    });
+
+    document.getElementById('closeDetailBtn').addEventListener('click', () => {
+      detailModal.classList.remove('active');
+    });
+
+    document.getElementById('closeConfirmModal').addEventListener('click', () => {
+      confirmModal.classList.remove('active');
+    });
+
+    window.addEventListener('click', (e) => {
+      if (e.target === detailModal) {
+        detailModal.classList.remove('active');
+      }
+      if (e.target === confirmModal) {
+        confirmModal.classList.remove('active');
+      }
+    });
+
+    // Inicializar tabla
+    renderTable();
+  </script>
+</body>
+</html>

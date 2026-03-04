@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio - Panel Empresa</title>
+    <link rel="stylesheet" href="/public/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i class="fas fa-briefcase"></i>
+                    <div>
+                        <div class="sidebar-title">UT Oriental Emplea</div>
+                        <div class="sidebar-subtitle">Empresa</div>
+                    </div>
+                </div>
+            </div>
+            <ul class="sidebar-nav">
+                <li><a href="empresa-inicio.html" class="active"><i class="fas fa-home"></i> Inicio</a></li>
+                <li><a href="empresa-publicar.html"><i class="fas fa-plus-circle"></i> Publicar vacante</a></li>
+                <li><a href="empresa-consultar.html"><i class="fas fa-search"></i> Consultar vacantes</a></li>
+                <li><a href="empresa-estadisticas.html"><i class="fas fa-chart-bar"></i> Estadísticas</a></li>
+                <li><a href="empresa-perfil.html"><i class="fas fa-building"></i> Perfil de empresa</a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <button class="btn-logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+            </div>
+        </aside>
+
+        <!-- Contenido principal -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1>Bienvenido al Panel de Empresa</h1>
+                <p>Administre sus vacantes y consulte candidatos de la bolsa de trabajo universitaria.</p>
+            </div>
+
+            <!-- Accesos rápidos -->
+            <div class="quick-access">
+                <a href="empresa-publicar.html" class="quick-card">
+                    <div class="quick-card-icon"><i class="fas fa-plus-circle"></i></div>
+                    <h3 class="quick-card-title">Publicar vacante</h3>
+                    <p class="quick-card-description">Cree y publique nuevas ofertas de empleo</p>
+                </a>
+                <a href="empresa-consultar.html" class="quick-card">
+                    <div class="quick-card-icon"><i class="fas fa-search"></i></div>
+                    <h3 class="quick-card-title">Consultar vacantes</h3>
+                    <p class="quick-card-description">Administre y edite sus vacantes publicadas</p>
+                </a>
+                <a href="empresa-estadisticas.html" class="quick-card">
+                    <div class="quick-card-icon"><i class="fas fa-chart-bar"></i></div>
+                    <h3 class="quick-card-title">Estadísticas</h3>
+                    <p class="quick-card-description">Visualice el rendimiento de sus vacantes</p>
+                </a>
+            </div>
+
+            <!-- Actividad reciente -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-clock"></i> Actividad reciente</h2>
+                </div>
+                <ul class="activity-list">
+                    <li class="activity-item">
+                        <p>Vacante "Desarrollador Full Stack" ha recibido 12 nuevas postulaciones</p>
+                        <small>05 Feb 2026</small>
+                    </li>
+                    <li class="activity-item">
+                        <p>Su vacante "Analista de Datos" está próxima a vencer (3 días restantes)</p>
+                        <small>04 Feb 2026</small>
+                    </li>
+                    <li class="activity-item">
+                        <p>Vacante "Diseñador UX/UI" publicada exitosamente</p>
+                        <small>03 Feb 2026</small>
+                    </li>
+                </ul>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

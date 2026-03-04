@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Postulaciones - UT Oriental Emplea</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <div>
+                        <div class="sidebar-title">UT Oriental</div>
+                        <div class="sidebar-subtitle">Bolsa de Trabajo</div>
+                    </div>
+                </div>
+            </div>
+            <nav>
+                <ul class="sidebar-nav">
+                    <li><a href="panel-candidato.html"><i class="fas fa-home"></i> Inicio</a></li>
+                    <li><a href="buscar-vacantes.html"><i class="fas fa-search"></i> Buscar vacantes</a></li>
+                    <li><a href="ver-vacantes.html"><i class="fas fa-briefcase"></i> Ver vacantes</a></li>
+                    <li><a href="mis-postulaciones.html" class="active"><i class="fas fa-paper-plane"></i> Mis postulaciones</a></li>
+                    <li><a href="estado-postulaciones.html"><i class="fas fa-clipboard-list"></i> Estado de postulaciones</a></li>
+                    <li><a href="perfil-candidato.html"><i class="fas fa-user"></i> Perfil del candidato</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div class="accent-strip mb-2"></div>
+                <h1>Mis Postulaciones</h1>
+                <p>Revisa el estado de tus solicitudes</p>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Puesto</th>
+                            <th>Empresa</th>
+                            <th>Fecha de postulación</th>
+                            <th>Estado actual</th>
+                            <th style="text-align: center;">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Desarrollador Frontend</strong></td>
+                            <td>TechCorp Solutions</td>
+                            <td>15/01/2026</td>
+                            <td><span class="badge badge-pendiente"><i class="fas fa-clock"></i> En revisión</span></td>
+                            <td style="text-align: center;">
+                              <a href="estado-postulaciones.html" class="btn btn-small btn-outline">Ver detalle</a>
+
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ingeniero de Software</strong></td>
+                            <td>Innovation Labs</td>
+                            <td>10/01/2026</td>
+                            <td><span class="badge badge-aceptado"><i class="fas fa-check-circle"></i> Aceptado</span></td>
+                            <td style="text-align: center;">
+                                <a href="estado-postulaciones.html" class="btn btn-small btn-outline">Ver detalle</a>
+
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Analista de Datos</strong></td>
+                            <td>DataMinds Inc.</td>
+                            <td>05/01/2026</td>
+                            <td><span class="badge badge-rechazado"><i class="fas fa-times-circle"></i> Rechazado</span></td>
+                            <td style="text-align: center;">
+                                 <a href="estado-postulaciones.html" class="btn btn-small btn-outline">Ver detalle</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Diseñador UX/UI</strong></td>
+                            <td>Creative Studio</td>
+                            <td>28/12/2025</td>
+                            <td><span class="badge badge-pendiente"><i class="fas fa-clock"></i> En revisión</span></td>
+                            <td style="text-align: center;">
+                                 <a href="estado-postulaciones.html" class="btn btn-small btn-outline">Ver detalle</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Product Manager</strong></td>
+                            <td>StartupXYZ</td>
+                            <td>20/12/2025</td>
+                            <td><span class="badge badge-pendiente"><i class="fas fa-clock"></i> En revisión</span></td>
+                            <td style="text-align: center;">
+                                 <a href="estado-postulaciones.html" class="btn btn-small btn-outline">Ver detalle</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Backend Developer</strong></td>
+                            <td>CloudServices Co.</td>
+                            <td>15/12/2025</td>
+                            <td><span class="badge badge-aceptado"><i class="fas fa-check-circle"></i> Aceptado</span></td>
+                            <td style="text-align: center;">
+                                 <a href="estado-postulaciones.html" class="btn btn-small btn-outline">Ver detalle</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="grid grid-4" style="margin-top: 2rem;">
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 2.5rem; color: var(--dorado); margin-bottom: 0.5rem;">6</div>
+                    <div style="color: var(--texto-gris); font-size: 0.95rem;">Total de postulaciones</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 2.5rem; color: var(--verde); margin-bottom: 0.5rem;">2</div>
+                    <div style="color: var(--texto-gris); font-size: 0.95rem;">Aceptadas</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 2.5rem; color: var(--texto-oscuro); margin-bottom: 0.5rem;">3</div>
+                    <div style="color: var(--texto-gris); font-size: 0.95rem;">En revisión</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 2.5rem; color: var(--vino); margin-bottom: 0.5rem;">1</div>
+                    <div style="color: var(--texto-gris); font-size: 0.95rem;">Rechazadas</div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
