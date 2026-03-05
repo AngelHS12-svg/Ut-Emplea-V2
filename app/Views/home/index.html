@@ -19,11 +19,6 @@
                 <img src="/public/img/Logotipo UT de Oriental-Color.png" class="logo-img" alt="Logo UT Oriental">
             </div>
 
-            <div>
-                <a href="#" class="login-btn open-login">
-                    Iniciar sesión
-                </a>
-            </div>
         </nav>
 
         <!-- Hero Content -->
@@ -136,13 +131,13 @@
 
         <h3 id="roleIndicator"></h3>
 
-        <form id="loginForm">
+        <form id="loginForm" method="POST" action="/auth/login">
 
-            <input type="text" id="username" placeholder="Nombre de usuario" required>
+            <input type="text" name="correo" id="username" placeholder="Correo" required>
+            <input type="password"  name="password" id="password" placeholder="Contraseña" required>
+            <input type="hidden" name="rol" id="inputRol" value="">
 
-            <input type="password" id="password" placeholder="Contraseña" required>
-
-            <button type="submit" class="login-btn">
+            <button type="submit" class="">
                 INICIAR SESIÓN
             </button>
 
@@ -152,10 +147,8 @@
 
         <hr>
 
-        <button class="register-btn">Registrar usuario</button>
-
+        <button type="button" class="register-btn">Registrar usuario</button>
     </div>
-
 </div>
 <script src="/public/js/script.js" defer></script>
 </body>

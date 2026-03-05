@@ -1,3 +1,5 @@
+let rolSeleccionado = "";
+
 document.addEventListener("DOMContentLoaded", function(){
 
     // ===== ELEMENTOS =====
@@ -8,6 +10,42 @@ document.addEventListener("DOMContentLoaded", function(){
     const closeLogin = document.getElementById("closeLogin");
     const roleIndicator = document.getElementById("roleIndicator");
     const userOptions = document.querySelectorAll(".user-option");
+    const registerBtn = document.querySelector(".register-btn");
+    const inputRol = document.getElementById("inputRol");
+
+    const loginForm = document.getElementById("loginForm");
+
+loginForm.addEventListener("submit", function(e){
+
+    const rol = inputRol.value;
+
+    if(!rol){
+        e.preventDefault();
+        alert("Debes seleccionar un tipo de usuario primero");
+    }
+
+});
+
+     // ===== BOTON REGISTRO =====
+    if(registerBtn){
+    registerBtn.addEventListener("click", function(e){
+
+        e.preventDefault();
+
+        const rol = localStorage.getItem("rol");
+
+        if (rol === "empresa") {
+            window.location.href = "/registro-empresa";
+        } 
+        else if (rol === "candidato") {
+            window.location.href = "/registro-candidato";
+        } 
+        else {
+            alert("Primero selecciona el tipo de usuario");
+        }
+
+    });
+}
 
     // ===== ABRIR PRIMER MODAL =====
     openLoginBtns.forEach(btn => {
@@ -32,26 +70,21 @@ document.addEventListener("DOMContentLoaded", function(){
     }
 
     // ===== SELECCIÓN DE ROL =====
-    userOptions.forEach(option => {
+   userOptions.forEach(option => {
+    option.addEventListener("click", () => {
 
-        option.addEventListener("click", function(){
+        const rol = option.dataset.role;
 
-            const role = this.dataset.role;
+        // poner rol en el input hidden
+        inputRol.value = rol;
 
-            let roleText = "";
+        // mostrar rol en pantalla
+        roleIndicator.innerText = "Rol: " + rol.toUpperCase();
 
-            if(role === "admin") roleText = "ADMINISTRADOR";
-            if(role === "empresa") roleText = "EMPRESA";
-            if(role === "candidato") roleText = "CANDIDATO";
-
-            roleIndicator.textContent = "Iniciando como: " + roleText;
-
-            modalUserType.style.display = "none";
-            modalLogin.style.display = "flex";
-
-        });
-
+        modalUserType.style.display = "none";
+        modalLogin.style.display = "flex";
     });
+});
 
     // ===== CLICK FUERA =====
     window.addEventListener("click", function(e){

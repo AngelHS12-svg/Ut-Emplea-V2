@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Candidato</title>
+
+<link rel="stylesheet" href="/public/css/styles.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="layout">
+
+<main class="main-content" style="margin-left:0; width:100%;">
+
+<div class="page-header">
+
+<h1>Registro de Candidato</h1>
+
+<p>Complete la información para registrarse en UT Oriental Emplea</p>
+
+</div>
+
+
+<div class="card">
+
+<div class="card-header">
+<h2 class="card-title">
+<i class="fas fa-user"></i>
+Datos personales
+</h2>
+</div>
+
+
+<form action="/registro-candidato" method="POST">
+
+
+<div class="form-group">
+
+<label class="form-label">
+Sexo <span class="required">*</span>
+</label>
+
+<div style="display:flex; gap:2rem;">
+
+<label style="display:flex;align-items:center;gap:0.5rem;">
+<input type="radio" name="sexo" value="masculino" required>
+<span>Masculino</span>
+</label>
+
+<label style="display:flex;align-items:center;gap:0.5rem;">
+<input type="radio" name="sexo" value="femenino">
+<span>Femenino</span>
+</label>
+
+<label style="display:flex;align-items:center;gap:0.5rem;">
+<input type="radio" name="sexo" value="otro">
+<span>Otro</span>
+</label>
+
+</div>
+
+</div>
+
+
+<div class="grid grid-2">
+
+<div class="form-group">
+
+<label class="form-label">
+Nombre completo <span class="required">*</span>
+</label>
+
+<div class="input-icon">
+
+<i class="fas fa-user"></i>
+
+<input type="text" name="nombre" class="form-control" placeholder="Ej: Juan Pérez García" required>
+
+</div>
+
+</div>
+
+
+<div class="form-group">
+
+<label class="form-label">
+Carrera <span class="required">*</span>
+</label>
+
+<div class="input-icon">
+
+<i class="fas fa-graduation-cap"></i>
+
+<select name="carrera" class="form-control" required>
+
+<option value="">Seleccionar carrera</option>
+<option>Tecnologías de la Información</option>
+<option>Administración</option>
+<option>Contaduría Pública</option>
+<option>Logística</option>
+<option>Ingeniería Industrial</option>
+
+</select>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="grid grid-2">
+
+<div class="form-group">
+
+<label class="form-label">
+Año de egreso <span class="required">*</span>
+</label>
+
+<div class="input-icon">
+
+<i class="fas fa-calendar"></i>
+
+<input type="number" name="egreso" class="form-control" placeholder="Ej: 2024" required>
+
+</div>
+
+</div>
+
+
+<div class="form-group">
+
+<label class="form-label">
+Número celular <span class="required">*</span>
+</label>
+
+<div class="input-icon">
+
+<i class="fas fa-phone"></i>
+
+<input type="tel" name="telefono" class="form-control" placeholder="Ej: 2211234567" required>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="form-group">
+
+<label class="form-label">
+Correo electrónico <span class="required">*</span>
+</label>
+
+<div class="input-icon">
+
+<i class="fas fa-envelope"></i>
+
+<input type="email" name="correo" class="form-control" placeholder="ejemplo@correo.com" required>
+
+</div>
+
+</div>
+
+
+<h3 style="margin-top:2rem; color:var(--verde);">
+Datos de acceso
+</h3>
+
+<div class="accent-strip mb-3"></div>
+
+
+<div class="grid grid-2">
+
+<div class="form-group">
+
+<label class="form-label">
+Contraseña <span class="required">*</span>
+</label>
+
+<div class="input-icon">
+
+<i class="fas fa-lock"></i>
+
+<input 
+type="password"
+name="password"
+class="form-control"
+required
+minlength="8"
+pattern="(?=.*[A-Z])(?=.*[0-9])(?=.*[\W]).{8,}"
+title="Debe tener al menos 8 caracteres, una mayúscula, un número y un símbolo">
+
+</div>
+
+<small style="color:var(--texto-gris)">
+La contraseña debe tener mínimo 8 caracteres, una mayúscula, un número y un símbolo.
+</small>
+
+</div>
+
+
+<div class="form-group">
+
+<label class="form-label">
+Confirmar contraseña <span class="required">*</span>
+</label>
+
+<div class="input-icon">
+
+<i class="fas fa-lock"></i>
+
+<input type="password" name="confirmar_password" class="form-control" required>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<h3 style="margin-top:2rem; color:var(--verde);">
+Aviso de protección de datos personales
+</h3>
+
+<div class="accent-strip mb-3"></div>
+
+
+<p style="font-size:14px; line-height:1.6; color:var(--texto-gris);">
+
+Al enviar este formulario consiento y autorizo que mis datos personales sean tratados conforme a lo previsto en el aviso de Privacidad de la Universidad Tecnológica de Oriental.
+
+La Universidad Tecnológica de Oriental, con domicilio en Prolongación de la 37 Norte Núm. 3402 Colonia Centro, Oriental, Puebla, C.P. 75020, es responsable de recabar sus datos personales, del uso que se le dé a los mismos y de su protección.
+
+Su información personal será utilizada indistintamente en el caso de que usted sea aspirante, alumno, egresado, proveedor, colaborador o solicitante de empleo, para efectos académicos o administrativos, proveerle de servicios, productos e información, participarle sobre cambios en los mismos, evaluar la calidad del servicio que le brindamos, generar reportes con fines estadísticos que ayuden a la planeación estratégica y operativa de esta institución, así como a la acreditación de sus programas académicos.
+
+Si usted desea conocer el texto completo de nuestro aviso de privacidad visite:
+
+<a href="https://utdeoriental.edu.mx/utdeoriental/aviso-de-proteccion-de-datos-personales/" target="_blank">
+Aviso de privacidad
+</a>
+
+</p>
+
+
+<div class="form-group">
+
+<label style="display:flex; gap:10px; align-items:flex-start;">
+
+<input type="checkbox" required>
+
+<span>
+Acepto el aviso de privacidad y autorizo el tratamiento de mis datos personales.
+</span>
+
+</label>
+
+</div>
+
+
+<div class="d-flex gap-2 justify-between">
+
+<a href="login.html" class="btn btn-outline">
+Cancelar
+</a>
+
+<button type="submit" class="btn btn-primary">
+
+<i class="fas fa-user-plus"></i>
+
+Registrarme
+
+</button>
+
+</div>
+
+
+</form>
+
+</div>
+
+</main>
+
+</div>
+
+</body>
+</html>
