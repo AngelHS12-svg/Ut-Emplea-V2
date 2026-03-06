@@ -1,207 +1,366 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Registro de Empresa</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Empresa | UT Oriental Emplea</title>
 
-<link rel="stylesheet" href="/public/css/styles.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/public/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Estilos específicos para el dashboard */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+            background-color: #f4f6f9;
+        }
 
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, var(--verde) 0%, #1a4f36 100%);
+            color: white;
+            padding: 2rem 1rem;
+            position: fixed;
+            height: 100vh;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 1rem;
+        }
+
+        .sidebar-logo h2 {
+            font-size: 1.2rem;
+            margin-top: 10px;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 10px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: var(--dorado);
+        }
+
+        /* Main Content */
+        .main-wrapper {
+            flex: 1;
+            margin-left: 250px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header */
+        .top-header {
+            background-color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-profile .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--verde);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            color: #e74c3c;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            color: #c0392b;
+        }
+
+        /* Dashboard Content */
+        .dashboard-content {
+            padding: 30px;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid var(--verde);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background-color: rgba(0, 102, 51, 0.1);
+            color: var(--verde);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-right: 15px;
+        }
+
+        .stat-card.dorado {
+            border-left-color: var(--dorado);
+        }
+
+        .stat-card.dorado .stat-icon {
+            background-color: rgba(179, 142, 93, 0.1);
+            color: var(--dorado);
+        }
+
+        .stat-info h3 {
+            font-size: 1.8rem;
+            margin: 0;
+            color: #333;
+        }
+
+        .stat-info p {
+            margin: 0;
+            color: #777;
+            font-size: 0.9rem;
+        }
+
+        /* Quick Actions Section */
+        .quick-actions {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .quick-actions h2 {
+            margin-top: 0;
+            color: var(--verde);
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: var(--verde);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-color: var(--dorado);
+        }
+    </style>
 </head>
+
 <body>
 
-<div class="layout">
+    <div class="dashboard-container">
 
-    <main class="main-content" style="margin-left:0; width:100%;">
-        
-        <div class="page-header">
-            <h1>Registro de Empresa</h1>
-            <p>Complete la información para registrar su empresa en UT Oriental Emplea</p>
-        </div>
-
-        <div class="card">
-
-            <div class="card-header">
-                <h2 class="card-title">
-                    <i class="fas fa-building"></i>
-                    Datos de la empresa
-                </h2>
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <i class="fas fa-building fa-3x" style="color: var(--dorado);"></i>
+                <h2>Panel de Empresa</h2>
             </div>
 
-            <form action="/registro-empresa" method="POST">
-
-                <div class="grid grid-2">
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Nombre de la empresa <span class="required">*</span>
-                        </label>
-                        <input type="text" name="empresa" class="form-control" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Giro de la empresa <span class="required">*</span>
-                        </label>
-                        <input type="text" name="giro" class="form-control" required>
-                    </div>
-
-                </div>
-
-                <div class="grid grid-2">
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Tipo de empresa <span class="required">*</span>
-                        </label>
-                        <select name="tipo_empresa" class="form-control" required>
-                            <option value="">Seleccionar</option>
-                            <option value="Privada">Privada</option>
-                            <option value="Publica">Pública</option>
-                            <option value="Mixta">Mixta</option>
-                            <option value="ONG">ONG</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Teléfono <span class="required">*</span>
-                        </label>
-                        <input type="tel" name="telefono" class="form-control" required>
-                    </div>
-
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">
-                        Dirección <span class="required">*</span>
-                    </label>
-                    <input type="text" name="direccion" class="form-control" required>
-                </div>
-
-                <h3 style="margin-top:2rem; color:var(--verde);">
-                    Datos de acceso
-                </h3>
-
-                <div class="accent-strip mb-3"></div>
-
-                <div class="grid grid-2">
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Correo electrónico <span class="required">*</span>
-                        </label>
-                        <input type="email" name="correo" class="form-control" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Contraseña <span class="required">*</span>
-                        </label>
-
-                        <input 
-                        type="password"
-                        name="password"
-                        class="form-control"
-                        required
-                        minlength="8"
-                        pattern="(?=.*[A-Z])(?=.*[0-9])(?=.*[\W]).{8,}"
-                        title="Debe tener al menos 8 caracteres, una mayúscula, un número y un símbolo">
-
-                        <small style="color:var(--texto-gris)">
-                        La contraseña debe tener mínimo 8 caracteres, una mayúscula, un número y un símbolo.
-                        </small>
-
-                    </div>
-
-                </div>
-
-                <h3 style="margin-top:2rem; color:var(--verde);">
-                    Contacto de Recursos Humanos
-                </h3>
-
-                <div class="accent-strip mb-3"></div>
-
-                <div class="grid grid-2">
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Nombre del responsable <span class="required">*</span>
-                        </label>
-                        <input type="text" name="responsable_rrhh" class="form-control" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Teléfono de RR.HH.
-                        </label>
-                        <input type="tel" name="telefono_rrhh" class="form-control">
-                    </div>
-
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">
-                        Correo de RR.HH.
-                    </label>
-                    <input type="email" name="correo_rrhh" class="form-control">
-                </div>
-
-                <h3 style="margin-top:2rem; color:var(--verde);">
-Aviso de Protección de Datos Personales
-</h3>
-
-<div class="accent-strip mb-3"></div>
-
-<div class="card" style="background:#f8f8f8">
-
-<p style="font-size:0.9rem; line-height:1.6;">
-
-Al responder el presente formulario, consiente y autoriza que los datos compartidos serán tratados conforme a lo previsto en el aviso de Privacidad de la Universidad Tecnológica de Oriental.
-
-La Universidad Tecnológica de Oriental, con domicilio en Prolongación de la 37 Norte Núm. 3402 Colonia Centro, Oriental, Puebla, C.P. 75020, se compromete al uso responsable de los mismos para su protección.
-
-Los datos serán empleados indistintamente para colaborar en los proyectos que tengan a bien desarrollar con nuestra Institución educativa.
-
-Si usted desea conocer el texto completo de nuestro aviso de privacidad, por favor visite:
-
-<a href="https://utdeoriental.edu.mx/utdeoriental/aviso-de-proteccion-de-datos-personales/" target="_blank">
-https://utdeoriental.edu.mx/utdeoriental/aviso-de-proteccion-de-datos-personales/
-</a>
-
-</p>
-
-<div class="form-group">
-
-<label style="display:flex; gap:10px; align-items:center; margin-top:10px;">
-
-<input type="checkbox" required>
-
-<span>Acepto el aviso de privacidad y el tratamiento de mis datos personales.</span>
-
-</label>
-
-</div>
-
-</div>
-
-                <div class="d-flex gap-2 justify-between">
-
-                    <a href="login.html" class="btn btn-outline">
-                        Cancelar
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/empresa" class="nav-link active">
+                        <i class="fas fa-home"></i> Inicio
                     </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/empresa/publicar" class="nav-link">
+                        <i class="fas fa-plus-circle"></i> Publicar Vacante
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/empresa/consultar" class="nav-link">
+                        <i class="fas fa-briefcase"></i> Mis Vacantes
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/empresa/estadisticas" class="nav-link">
+                        <i class="fas fa-chart-bar"></i> Estadísticas
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/empresa/perfil" class="nav-link">
+                        <i class="fas fa-user-cog"></i> Mi Perfil
+                    </a>
+                </li>
+            </ul>
+        </aside>
 
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-user-plus"></i>
-                        Registrar empresa
-                    </button>
+        <!-- Main Wrapper -->
+        <div class="main-wrapper">
+
+            <!-- Top Header -->
+            <header class="top-header">
+                <div>
+                    <h3 style="margin: 0; color: #333; font-size: 1.1rem;">Bienvenido de nuevo</h3>
+                    <span style="font-size: 0.85rem; color: #777;">UT Oriental Emplea</span>
                 </div>
-            </form>
-        </div>
-    </main>
 
-</div>
+                <div class="user-profile">
+                    <div class="avatar">E</div>
+                    <div style="margin-right: 15px;">
+                        <strong>Usuario Empresa</strong>
+                        <br>
+                        <small style="color: #777;">empresa@uto.com</small>
+                    </div>
+                    <a href="/logout" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                    </a>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <main class="dashboard-content">
+
+                <div class="page-header" style="text-align: left; padding: 0 0 20px 0;">
+                    <h1 style="font-size: 1.8rem; padding: 15px;">Resumen General</h1>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-bullhorn"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>0</h3>
+                            <p>Vacantes Activas</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card dorado">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>0</h3>
+                            <p>Total Postulaciones</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>0</h3>
+                            <p>Vistas a tu perfil</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <h2>Acciones Rápidas</h2>
+                    <div class="actions-grid">
+                        <a href="/empresa/publicar" class="action-btn">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Nueva Vacante</span>
+                        </a>
+                        <a href="/empresa/consultar" class="action-btn">
+                            <i class="fas fa-search"></i>
+                            <span>Ver Postulados</span>
+                        </a>
+                        <a href="/empresa/perfil" class="action-btn">
+                            <i class="fas fa-cog"></i>
+                            <span>Configurar Perfil</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 style="color: var(--verde); font-size: 1.2rem; margin-bottom: 15px;">Actividad Reciente</h2>
+                    <p style="color: #666; font-style: italic;">No hay actividad reciente para mostrar. Publica tu
+                        primera vacante para empezar a recibir postulaciones.</p>
+                </div>
+
+            </main>
+        </div>
+
+    </div>
 
 </body>
+
 </html>

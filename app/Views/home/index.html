@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UT Oriental Emplea - Bolsa de Trabajo</title>
 
     <link rel="stylesheet" href="/public/css/styles1.css">
-    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
@@ -28,14 +31,18 @@
             </div>
 
             <h1 class="hero-title">UT Oriental Emplea</h1>
-            <p class="hero-description">Conoce nuestra <b>Bolsa de trabajo en línea</b> exclusiva para nuestra comunidad universitaria,
-                soportada por nuestro aliado estratégico,  crea tu cuenta para que no te pierdas la oportunidad de tener <b>acceso
-                a vacantes exclusivas de todo el país, ferias de trabajo virtuales complementadas con ponencias en temas de
-                empleabilidad</b> que te ayudarán en tu proceso de inserción laboral. </p>
+            <p class="hero-description">Conoce nuestra <b>Bolsa de trabajo en línea</b> exclusiva para nuestra comunidad
+                universitaria,
+                soportada por nuestro aliado estratégico, crea tu cuenta para que no te pierdas la oportunidad de tener
+                <b>acceso
+                    a vacantes exclusivas de todo el país, ferias de trabajo virtuales complementadas con ponencias en
+                    temas de
+                    empleabilidad</b> que te ayudarán en tu proceso de inserción laboral.
+            </p>
 
-                <button class="cta-button open-login">
-                    <i class="fas fa-rocket"></i> Iniciar sesión
-                </button>
+            <button class="cta-button open-login">
+                <i class="fas fa-rocket"></i> Iniciar sesión
+            </button>
 
         </div>
 
@@ -87,69 +94,86 @@
     </footer>
 
 
-<!-- ================= MODAL TIPO USUARIO ================= -->
-<div id="modalUserType" class="modal">
+    <!-- ================= MODAL TIPO USUARIO ================= -->
+    <div id="modalUserType" class="modal">
 
-    <div class="modal-content">
+        <div class="modal-content">
 
-        <span class="close-modal" id="closeUserType">&times;</span>
+            <span class="close-modal" id="closeUserType">&times;</span>
 
-        <h2>ELIGE TU TIPO DE USUARIO</h2>
+            <h2>ELIGE TU TIPO DE USUARIO</h2>
 
-        <button class="user-option" data-role="admin">
-            <i class="fa-solid fa-user-gear"></i>
-            <span>ADMINISTRADOR</span>
-        </button>
-
-        <button class="user-option" data-role="empresa">
-            <i class="fa-solid fa-building"></i>
-            <span>EMPRESA</span>
-        </button>
-
-        <button class="user-option" data-role="candidato">
-            <i class="fa-solid fa-user-tie"></i>
-            <span>CANDIDATO</span>
-        </button>
-
-    </div>
-
-</div>
-
-
-<!-- ================= MODAL LOGIN ================= -->
-<div id="modalLogin" class="modal">
-
-    <div class="modal-content login-box">
-
-        <span class="close-modal" id="closeLogin">&times;</span>
-
-        <div class="logo-box">
-            <img src="/public/img/Logotipo UT de Oriental-Color.png" class="login-logo" alt="Logo UT">
-        </div>
-
-        <h2>INICIAR SESIÓN</h2>
-
-        <h3 id="roleIndicator"></h3>
-
-        <form id="loginForm" method="POST" action="/auth/login">
-
-            <input type="text" name="correo" id="username" placeholder="Correo" required>
-            <input type="password"  name="password" id="password" placeholder="Contraseña" required>
-            <input type="hidden" name="rol" id="inputRol" value="">
-
-            <button type="submit" class="">
-                INICIAR SESIÓN
+            <button class="user-option" data-role="admin">
+                <i class="fa-solid fa-user-gear"></i>
+                <span>ADMINISTRADOR</span>
             </button>
 
-        </form>
+            <button class="user-option" data-role="empresa">
+                <i class="fa-solid fa-building"></i>
+                <span>EMPRESA</span>
+            </button>
 
-        <a href="#" class="forgot">¿Olvidaste tu contraseña?</a>
+            <button class="user-option" data-role="candidato">
+                <i class="fa-solid fa-user-tie"></i>
+                <span>CANDIDATO</span>
+            </button>
 
-        <hr>
+        </div>
 
-        <button type="button" class="register-btn">Registrar usuario</button>
     </div>
-</div>
-<script src="/public/js/script.js" defer></script>
+
+
+    <!-- ================= MODAL LOGIN ================= -->
+    <div id="modalLogin" class="modal">
+
+        <div class="modal-content login-box">
+
+            <span class="close-modal" id="closeLogin">&times;</span>
+
+            <div class="logo-box">
+                <img src="/public/img/Logotipo UT de Oriental-Color.png" class="login-logo" alt="Logo UT">
+            </div>
+
+            <h2>INICIAR SESIÓN</h2>
+
+            <h3 id="roleIndicator"></h3>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <div style="margin-bottom: 20px;">
+                {% for message in messages %}
+                <div
+                    style="padding: 10px; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 5px; margin-bottom: 5px; font-size: 0.9rem;">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <form id="loginForm" method="POST" action="/auth/login">
+
+                <input type="text" name="correo" id="username" placeholder="Correo" required>
+                <input type="password" name="password" id="password" placeholder="Contraseña" required>
+                <input type="hidden" name="rol" id="inputRol" value="">
+
+                <button type="submit"
+                    style="width: 100%; padding: 12px; background: var(--dorado, #D4AF37); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: background 0.3s; margin-top: 10px;">
+                    INICIAR SESIÓN
+                </button>
+
+            </form>
+
+            <a href="#" class="forgot">¿Olvidaste tu contraseña?</a>
+
+            <hr>
+
+            <button type="button" class="register-btn" id="registerBtnModal"
+                style="display: block; margin: 15px auto 0;">Registrar usuario</button>
+        </div>
+    </div>
+    <script src="/public/js/script.js" defer></script>
 </body>
+
 </html>

@@ -1,18 +1,22 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Universidad · Panel de Administración</title>
 
   <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap"
+    rel="stylesheet">
 
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <link rel="stylesheet" href="/public/css/index.css">
 </head>
+
 <body>
 
   <!-- SIDEBAR FIJO - NUNCA DESAPARECE -->
@@ -62,10 +66,6 @@
         <i class="fa-solid fa-file-lines"></i> Reportes
       </a>
     </div>
-
-    <div style="font-size:13px; color:#6f86a6; padding-left:12px; margin-top:24px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #eaf1fa; padding-top: 18px;">
-      <button>Cerrar Sesión</button>
-    </div>
   </div>
 
   <!-- CONTENIDO PRINCIPAL CON IFRAME -->
@@ -74,73 +74,92 @@
     <div class="main-header" id="mainHeader">
       <div>
         <h1 id="headerTitle">Bienvenido, administrador</h1>
-        <p id="headerDescription"><i class="fa-regular fa-calendar" style="margin-right:8px;"></i> Gestiona empresas, candidatos y vacantes</p>
+        <p id="headerDescription"><i class="fa-regular fa-calendar" style="margin-right:8px;"></i> Gestiona empresas,
+          candidatos y vacantes</p>
       </div>
-      <div>
+      <div style="display: flex; align-items: center; gap: 20px;">
         <div class="badge-date">
           <i class="fa-regular fa-calendar-check"></i> 15 febrero 2026
+        </div>
+
+        <!-- User Profile y Logout igual al módulo candidato -->
+        <div class="user-profile"
+          style="display: flex; align-items: center; gap: 15px; background: white; padding: 10px 20px; border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+          <div class="avatar"
+            style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--primario); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+            AD
+          </div>
+          <div style="margin-right: 10px;">
+            <strong style="color: var(--texto-oscuro); display: block;">Administrador</strong>
+            <span style="font-size: 0.8rem; color: var(--texto-gris);">Sistema</span>
+          </div>
+          <div style="border-left: 1px solid var(--borde, #e2e8f0); height: 30px; margin: 0 10px;"></div>
+          <a href="/logout" class="logout-btn"
+            style="color: #e74c3c; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; font-weight: 600; transition: color 0.3s ease;">
+            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+          </a>
         </div>
       </div>
     </div>
 
     <!-- IFRAME - Aquí se cargan todas las páginas -->
-    <iframe class="page-iframe" id="pageFrame" src="inicio.html" frameborder="0"></iframe>
+    <iframe class="page-iframe" id="pageFrame" src="/admin/inicio" frameborder="0"></iframe>
   </div>
 
   <script>
-    // Función para cambiar la página en el iframe
-    function cargarPagina(pagina) {
+    // Función para cambiar la página en el iframe mediante la ruta correcta
+    function cargarPagina(ruta) {
       const iframe = document.getElementById('pageFrame');
-      
+
       // Actualizar clase active en el menú
       document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
-      });
-      event.currentTarget.classList.add('active');
-
-      // Si es 'inicio', cargamos inicio.html
-      if (pagina === 'inicio') {
-        iframe.src = 'inicio.html';
-        document.getElementById('headerTitle').innerText = 'Bienvenido, administrador';
-        document.getElementById('headerDescription').innerHTML = '<i class="fa-regular fa-calendar" style="margin-right:8px;"></i> Gestiona empresas, candidatos y vacantes';
-      } else {
-        // Cargar la página seleccionada
-        iframe.src = pagina;
-        
-        // Actualizar header según la página
-        switch(pagina) {
-          case 'validar_empresa.html':
-            document.getElementById('headerTitle').innerHTML = '<i class="fa-regular fa-building" style="margin-right: 10px;"></i>Validar Empresas';
-            document.getElementById('headerDescription').innerHTML = '<i class="fa-regular fa-pen-to-square"></i> Revise y apruebe las empresas registradas en el sistema';
-            break;
-          case 'consultar_empresas.html':
-            document.getElementById('headerTitle').innerHTML = '<i class="fa-solid fa-magnifying-glass" style="margin-right: 10px;"></i>Consultar Empresas';
-            document.getElementById('headerDescription').innerHTML = 'Busque y consulte empresas registradas en el sistema';
-            break;
-          case 'validar_candidato.html':
-            document.getElementById('headerTitle').innerHTML = '<i class="fa-solid fa-user-check" style="margin-right: 10px;"></i>Validar Candidatos';
-            document.getElementById('headerDescription').innerHTML = 'Revise y apruebe estudiantes y egresados registrados';
-            break;
-          case 'consultar_candidatos.html':
-            document.getElementById('headerTitle').innerHTML = '<i class="fa-solid fa-users" style="margin-right: 10px;"></i>Consultar Candidatos';
-            document.getElementById('headerDescription').innerHTML = 'Busque y consulte candidatos registrados';
-            break;
-          case 'vacantes.html':
-            document.getElementById('headerTitle').innerHTML = '<i class="fa-solid fa-briefcase" style="margin-right: 10px;"></i>Vacantes Activas';
-            document.getElementById('headerDescription').innerHTML = 'Administre todas las ofertas de empleo disponibles';
-            break;
-          case 'seguimiento.html':
-            document.getElementById('headerTitle').innerHTML = '<i class="fa-solid fa-chart-line" style="margin-right: 10px;"></i>Seguimiento';
-            document.getElementById('headerDescription').innerHTML = 'Dé seguimiento a los procesos de contratación';
-            break;
-          case 'reportes.html':
-            document.getElementById('headerTitle').innerHTML = '<i class="fa-solid fa-file-lines" style="margin-right: 10px;"></i>Reportes';
-            document.getElementById('headerDescription').innerHTML = 'Genere reportes del sistema';
-            break;
+        if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(ruta)) {
+          item.classList.add('active');
         }
+      });
+
+      // Cargar la ruta de Flask en el iframe
+      iframe.src = ruta;
+
+      // Actualizar los textos del header según la ruta seleccionada
+      switch (ruta) {
+        case '/admin/inicio':
+          document.getElementById('headerTitle').innerHTML = 'Bienvenido, administrador';
+          document.getElementById('headerDescription').innerHTML = '<i class="fa-regular fa-calendar" style="margin-right:8px;"></i> Gestiona empresas, candidatos y vacantes';
+          break;
+        case '/admin/validar-empresa':
+          document.getElementById('headerTitle').innerHTML = '<i class="fa-regular fa-building" style="margin-right: 10px;"></i>Validar Empresas';
+          document.getElementById('headerDescription').innerHTML = '<i class="fa-regular fa-pen-to-square"></i> Revise y apruebe las empresas registradas en el sistema';
+          break;
+        case '/admin/consultar-empresas':
+          document.getElementById('headerTitle').innerHTML = '<i class="fa-solid fa-magnifying-glass" style="margin-right: 10px;"></i>Consultar Empresas';
+          document.getElementById('headerDescription').innerHTML = 'Busque y consulte empresas registradas en el sistema';
+          break;
+        case '/admin/validar-candidato':
+          document.getElementById('headerTitle').innerHTML = '<i class="fa-solid fa-user-check" style="margin-right: 10px;"></i>Validar Candidatos';
+          document.getElementById('headerDescription').innerHTML = 'Revise y apruebe estudiantes y egresados registrados';
+          break;
+        case '/admin/consultar-candidatos':
+          document.getElementById('headerTitle').innerHTML = '<i class="fa-solid fa-users" style="margin-right: 10px;"></i>Consultar Candidatos';
+          document.getElementById('headerDescription').innerHTML = 'Busque y consulte candidatos registrados';
+          break;
+        case '/admin/vacantes':
+          document.getElementById('headerTitle').innerHTML = '<i class="fa-solid fa-briefcase" style="margin-right: 10px;"></i>Vacantes Activas';
+          document.getElementById('headerDescription').innerHTML = 'Administre todas las ofertas de empleo disponibles';
+          break;
+        case '/admin/seguimiento':
+          document.getElementById('headerTitle').innerHTML = '<i class="fa-solid fa-chart-line" style="margin-right: 10px;"></i>Seguimiento';
+          document.getElementById('headerDescription').innerHTML = 'Dé seguimiento a los procesos de contratación';
+          break;
+        case '/admin/reportes':
+          document.getElementById('headerTitle').innerHTML = '<i class="fa-solid fa-file-lines" style="margin-right: 10px;"></i>Reportes';
+          document.getElementById('headerDescription').innerHTML = 'Genere reportes del sistema';
+          break;
       }
     }
   </script>
 
 </body>
+
 </html>

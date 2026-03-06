@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buscar Vacantes - UT Oriental Emplea</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/public/css/styles.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
     <div class="layout">
         <aside class="sidebar">
@@ -22,24 +26,48 @@
             </div>
             <nav>
                 <ul class="sidebar-nav">
-                    <li><a href="panel-candidato.html"><i class="fas fa-home"></i> Inicio</a></li>
-                    <li><a href="buscar-vacantes.html" class="active"><i class="fas fa-search"></i> Buscar vacantes</a></li>
-                    <li><a href="ver-vacantes.html"><i class="fas fa-briefcase"></i> Ver vacantes</a></li>
-                    <li><a href="mis-postulaciones.html"><i class="fas fa-paper-plane"></i> Mis postulaciones</a></li>
-                    <li><a href="estado-postulaciones.html"><i class="fas fa-clipboard-list"></i> Estado de postulaciones</a></li>
-                    <li><a href="perfil-candidato.html"><i class="fas fa-user"></i> Perfil del candidato</a></li>
+                    <li><a href="/candidato-dashboard"><i class="fas fa-home"></i> Inicio</a></li>
+                    <li><a href="/candidato/buscar" class="active"><i class="fas fa-search"></i> Buscar vacantes</a>
+                    </li>
+                    <li><a href="/candidato/ver"><i class="fas fa-briefcase"></i> Ver vacantes</a></li>
+                    <li><a href="/candidato/postulaciones"><i class="fas fa-paper-plane"></i> Mis postulaciones</a></li>
+                    <li><a href="/candidato/estado-postulaciones"><i class="fas fa-clipboard-list"></i> Estado de
+                            postulaciones</a></li>
+                    <li><a href="/candidato/perfil"><i class="fas fa-user"></i> Perfil del candidato</a></li>
                 </ul>
             </nav>
-            <div class="sidebar-footer">
-                <button class="btn-logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+            <div class="sidebar-footer" style="padding: 1.5rem; text-align: center;">
+                <p style="color: var(--texto-gris); font-size: 0.8rem;">&copy; 2026 UT Oriental</p>
             </div>
         </aside>
 
         <main class="main-content">
-            <div class="page-header">
-                <div class="accent-strip mb-2"></div>
-                <h1>Buscar Vacantes</h1>
-                <p>Explora y postúlate a vacantes disponibles</p>
+            <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="accent-strip mb-2"></div>
+                    <h1>Buscar Vacantes</h1>
+                    <p>Explora y postúlate a vacantes disponibles</p>
+                </div>
+
+                <!-- Perfil y Logout -->
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div class="user-profile"
+                        style="display: flex; align-items: center; gap: 15px; background: var(--blanco); padding: 10px 20px; border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                        <div class="avatar"
+                            style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--primario); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                            CA
+                        </div>
+                        <div style="margin-right: 10px;">
+                            <strong style="color: var(--texto-oscuro); display: block;">Candidato</strong>
+                            <span style="font-size: 0.8rem; color: var(--texto-gris);">Estudiante</span>
+                        </div>
+                        <div style="border-left: 1px solid var(--borde); height: 30px; margin: 0 10px;"></div>
+                        <a href="/logout" class="logout-btn"
+                            style="color: #e74c3c; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; font-weight: 600; transition: color 0.3s ease;">
+                            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                        </a>
+                    </div>
+                </div>
             </div>
 
             <div class="search-bar">
@@ -76,29 +104,48 @@
             <div style="display: grid; grid-template-columns: 350px 1fr; gap: 2rem;">
                 <!-- Left Sidebar List -->
                 <div>
-                    <div style="background: var(--blanco); border-radius: 10px; padding: 1rem; max-height: 700px; overflow-y: auto;">
-                        <div style="border-bottom: 2px solid var(--borde); padding: 1rem; cursor: pointer; transition: all 0.2s;" onclick="selectVacancy(1)">
-                            <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--texto-oscuro);">Desarrollador Full Stack</h4>
-                            <p style="font-size: 0.85rem; color: var(--texto-gris); margin-bottom: 0.5rem;"><i class="fas fa-building"></i> Tech Solutions S.A.</p>
-                            <p style="font-size: 0.85rem; color: var(--texto-gris); margin-bottom: 0.5rem;"><i class="fas fa-map-marker-alt"></i> Querétaro, Qro.</p>
-                            <p style="font-size: 0.85rem; color: var(--texto-gris);"><i class="fas fa-briefcase"></i> Tiempo completo</p>
-                            <p style="font-size: 0.8rem; color: var(--texto-gris); margin-top: 0.5rem;"><i class="fas fa-calendar"></i> 5 feb 2026</p>
+                    <div
+                        style="background: var(--blanco); border-radius: 10px; padding: 1rem; max-height: 700px; overflow-y: auto;">
+                        <div style="border-bottom: 2px solid var(--borde); padding: 1rem; cursor: pointer; transition: all 0.2s;"
+                            onclick="selectVacancy(1)">
+                            <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--texto-oscuro);">
+                                Desarrollador Full Stack</h4>
+                            <p style="font-size: 0.85rem; color: var(--texto-gris); margin-bottom: 0.5rem;"><i
+                                    class="fas fa-building"></i> Tech Solutions S.A.</p>
+                            <p style="font-size: 0.85rem; color: var(--texto-gris); margin-bottom: 0.5rem;"><i
+                                    class="fas fa-map-marker-alt"></i> Querétaro, Qro.</p>
+                            <p style="font-size: 0.85rem; color: var(--texto-gris);"><i class="fas fa-briefcase"></i>
+                                Tiempo completo</p>
+                            <p style="font-size: 0.8rem; color: var(--texto-gris); margin-top: 0.5rem;"><i
+                                    class="fas fa-calendar"></i> 5 feb 2026</p>
                         </div>
 
-                        <div style="border-bottom: 2px solid var(--borde); padding: 1rem; cursor: pointer; transition: all 0.2s;" onclick="selectVacancy(2)">
-                            <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--texto-oscuro);">Contador General</h4>
-                            <p style="font-size: 0.85rem; color: var(--texto-gris); margin-bottom: 0.5rem;"><i class="fas fa-building"></i> Grupo Financiero del Centro</p>
-                            <p style="font-size: 0.85rem; color: var(--texto-gris); margin-bottom: 0.5rem;"><i class="fas fa-map-marker-alt"></i> San Juan del Río, Qro.</p>
-                            <p style="font-size: 0.85rem; color: var(--texto-gris);"><i class="fas fa-briefcase"></i> Tiempo completo</p>
-                            <p style="font-size: 0.8rem; color: var(--texto-gris); margin-top: 0.5rem;"><i class="fas fa-calendar"></i> 4 feb 2026</p>
+                        <div style="border-bottom: 2px solid var(--borde); padding: 1rem; cursor: pointer; transition: all 0.2s;"
+                            onclick="selectVacancy(2)">
+                            <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--texto-oscuro);">Contador
+                                General</h4>
+                            <p style="font-size: 0.85rem; color: var(--texto-gris); margin-bottom: 0.5rem;"><i
+                                    class="fas fa-building"></i> Grupo Financiero del Centro</p>
+                            <p style="font-size: 0.85rem; color: var(--texto-gris); margin-bottom: 0.5rem;"><i
+                                    class="fas fa-map-marker-alt"></i> San Juan del Río, Qro.</p>
+                            <p style="font-size: 0.85rem; color: var(--texto-gris);"><i class="fas fa-briefcase"></i>
+                                Tiempo completo</p>
+                            <p style="font-size: 0.8rem; color: var(--texto-gris); margin-top: 0.5rem;"><i
+                                    class="fas fa-calendar"></i> 4 feb 2026</p>
                         </div>
 
-                        <div style="border-bottom: 2px solid var(--borde); padding: 1rem; cursor: pointer; transition: all 0.2s;" onclick="selectVacancy(3)">
-                            <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--texto-oscuro);">Diseñador Gráfico</h4>
-                            <p style="font-size: 0.85rem; color: var(--texto-gris); margin-bottom: 0.5rem;"><i class="fas fa-building"></i> Agencia Creativa MX</p>
-                            <p style="font-size: 0.85rem; color: var(--texto-gris); margin-bottom: 0.5rem;"><i class="fas fa-map-marker-alt"></i> Remoto</p>
-                            <p style="font-size: 0.85rem; color: var(--texto-gris);"><i class="fas fa-briefcase"></i> Medio tiempo</p>
-                            <p style="font-size: 0.8rem; color: var(--texto-gris); margin-top: 0.5rem;"><i class="fas fa-calendar"></i> 3 feb 2026</p>
+                        <div style="border-bottom: 2px solid var(--borde); padding: 1rem; cursor: pointer; transition: all 0.2s;"
+                            onclick="selectVacancy(3)">
+                            <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--texto-oscuro);">Diseñador
+                                Gráfico</h4>
+                            <p style="font-size: 0.85rem; color: var(--texto-gris); margin-bottom: 0.5rem;"><i
+                                    class="fas fa-building"></i> Agencia Creativa MX</p>
+                            <p style="font-size: 0.85rem; color: var(--texto-gris); margin-bottom: 0.5rem;"><i
+                                    class="fas fa-map-marker-alt"></i> Remoto</p>
+                            <p style="font-size: 0.85rem; color: var(--texto-gris);"><i class="fas fa-briefcase"></i>
+                                Medio tiempo</p>
+                            <p style="font-size: 0.8rem; color: var(--texto-gris); margin-top: 0.5rem;"><i
+                                    class="fas fa-calendar"></i> 3 feb 2026</p>
                         </div>
                     </div>
                 </div>
@@ -120,11 +167,14 @@
 
                         <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Descripción del puesto</h3>
                         <p style="color: var(--texto-gris); line-height: 1.7; margin-bottom: 1.5rem;">
-                            Buscamos desarrollador full stack con experiencia en tecnologías modernas para unirse a nuestro equipo de desarrollo. Trabajarás en proyectos innovadores para clientes nacionales e internacionales.
+                            Buscamos desarrollador full stack con experiencia en tecnologías modernas para unirse a
+                            nuestro equipo de desarrollo. Trabajarás en proyectos innovadores para clientes nacionales e
+                            internacionales.
                         </p>
 
                         <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Requisitos</h3>
-                        <ul style="color: var(--texto-gris); line-height: 2; margin-bottom: 1.5rem; padding-left: 1.5rem;">
+                        <ul
+                            style="color: var(--texto-gris); line-height: 2; margin-bottom: 1.5rem; padding-left: 1.5rem;">
                             <li>Licenciatura en Ingeniería en Sistemas o afín</li>
                             <li>Experiencia mínima de 2 años en desarrollo web</li>
                             <li>Conocimientos en React, Node.js y bases de datos</li>
@@ -134,14 +184,17 @@
 
                         <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Horario</h3>
                         <p style="color: var(--texto-gris); margin-bottom: 1.5rem;">
-                            <i class="fas fa-clock" style="color: var(--dorado);"></i> Lunes a Viernes, 9:00 AM - 6:00 PM
+                            <i class="fas fa-clock" style="color: var(--dorado);"></i> Lunes a Viernes, 9:00 AM - 6:00
+                            PM
                         </p>
 
                         <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Salario y Prestaciones</h3>
-                        <p style="color: var(--texto-oscuro); font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;">
+                        <p
+                            style="color: var(--texto-oscuro); font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;">
                             $ $15,000 - $20,000 mensuales
                         </p>
-                        <ul style="color: var(--texto-gris); line-height: 2; margin-bottom: 2rem; padding-left: 1.5rem;">
+                        <ul
+                            style="color: var(--texto-gris); line-height: 2; margin-bottom: 2rem; padding-left: 1.5rem;">
                             <li>Seguro de gastos médicos mayores</li>
                             <li>Vales de despensa</li>
                             <li>Capacitación constante</li>
@@ -168,4 +221,5 @@
         }
     </script>
 </body>
+
 </html>

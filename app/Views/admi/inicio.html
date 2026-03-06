@@ -1,21 +1,25 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inicio · Panel Administrativo</title>
 
   <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap"
+    rel="stylesheet">
 
   <!-- Font Awesome 6 (iconos innovadores) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="/public/css/inicio.css">
 </head>
+
 <body>
   <!-- Acciones rápidas con iconos innovadores -->
   <div class="quick-actions">
-    <a href="validar_empresa.html" class="action-card">
+    <a href="#" onclick="parent.cargarPagina('/admin/validar-empresa'); return false;" class="action-card">
       <div class="action-icon">
         <i class="fa-solid fa-building-circle-arrow-right"></i>
       </div>
@@ -27,7 +31,7 @@
       </div>
     </a>
 
-    <a href="validar_candidato.html" class="action-card">
+    <a href="#" onclick="parent.cargarPagina('/admin/validar-candidato'); return false;" class="action-card">
       <div class="action-icon">
         <i class="fa-solid fa-user-check"></i>
       </div>
@@ -39,7 +43,7 @@
       </div>
     </a>
 
-    <a href="vacantes.html" class="action-card">
+    <a href="#" onclick="parent.cargarPagina('/admin/vacantes'); return false;" class="action-card">
       <div class="action-icon">
         <i class="fa-solid fa-briefcase"></i>
       </div>
@@ -51,7 +55,7 @@
       </div>
     </a>
 
-    <a href="reportes.html" class="action-card">
+    <a href="#" onclick="parent.cargarPagina('/admin/reportes'); return false;" class="action-card">
       <div class="action-icon">
         <i class="fa-solid fa-chart-simple"></i>
       </div>
@@ -135,7 +139,8 @@
 
       <div class="aviso-item">
         <h4><i class="fa-solid fa-bell"></i> Recordatorio: Feria de empleo próxima</h4>
-        <p>La feria de empleo se llevará a cabo el <strong>15 de febrero</strong> en el auditorio principal. Asegúrese de confirmar la participación de las empresas registradas antes del 10 de febrero.</p>
+        <p>La feria de empleo se llevará a cabo el <strong>15 de febrero</strong> en el auditorio principal. Asegúrese
+          de confirmar la participación de las empresas registradas antes del 10 de febrero.</p>
         <div class="aviso-meta">
           <span><i class="fa-regular fa-calendar"></i> 1 de febrero, 2026</span>
           <span><i class="fa-regular fa-clock"></i> 08:30 - 18:00</span>
@@ -144,7 +149,8 @@
 
       <div class="aviso-item">
         <h4><i class="fa-solid fa-cloud-arrow-up"></i> Actualización de sistema programada</h4>
-        <p>El sistema estará en mantenimiento el próximo sábado <strong>de 2:00 AM a 6:00 AM</strong>. Se recomienda guardar reportes y cerrar sesión antes del mantenimiento.</p>
+        <p>El sistema estará en mantenimiento el próximo sábado <strong>de 2:00 AM a 6:00 AM</strong>. Se recomienda
+          guardar reportes y cerrar sesión antes del mantenimiento.</p>
         <div class="aviso-meta">
           <span><i class="fa-regular fa-calendar"></i> 31 de enero, 2026</span>
           <span><i class="fa-solid fa-moon"></i> mantenimiento nocturno</span>
@@ -268,4 +274,5 @@
     </div>
   </div>
 </body>
+
 </html>

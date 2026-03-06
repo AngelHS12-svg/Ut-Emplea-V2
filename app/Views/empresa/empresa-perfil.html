@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,102 +8,150 @@
     <link rel="stylesheet" href="/public/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
+</head>
+
 <body>
-    <div class="layout">
+    <div class="dashboard-container">
+        <!-- Sidebar unificado -->
         <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-logo">
-                    <i class="fas fa-briefcase"></i>
-                    <div>
-                        <div class="sidebar-title">UT Oriental Emplea</div>
-                        <div class="sidebar-subtitle">Empresa</div>
-                    </div>
-                </div>
+            <div class="sidebar-logo">
+                <i class="fas fa-building fa-3x" style="color: var(--dorado);"></i>
+                <h2>Panel de Empresa</h2>
             </div>
-            <ul class="sidebar-nav">
-                <li><a href="empresa-inicio.html"><i class="fas fa-home"></i> Inicio</a></li>
-                <li><a href="empresa-publicar.html"><i class="fas fa-plus-circle"></i> Publicar vacante</a></li>
-                <li><a href="empresa-consultar.html"><i class="fas fa-search"></i> Consultar vacantes</a></li>
-                <li><a href="empresa-estadisticas.html"><i class="fas fa-chart-bar"></i> Estadísticas</a></li>
-                <li><a href="empresa-perfil.html" class="active"><i class="fas fa-building"></i> Perfil de empresa</a></li>
+
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/empresa" class="nav-link">
+                        <i class="fas fa-home"></i> Inicio
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/empresa/publicar" class="nav-link">
+                        <i class="fas fa-plus-circle"></i> Publicar Vacante
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/empresa/consultar" class="nav-link">
+                        <i class="fas fa-briefcase"></i> Mis Vacantes
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/empresa/estadisticas" class="nav-link">
+                        <i class="fas fa-chart-bar"></i> Estadísticas
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/empresa/perfil" class="nav-link active">
+                        <i class="fas fa-user-cog"></i> Mi Perfil
+                    </a>
+                </li>
+                <li class="nav-item sidebar-footer"
+                    style="padding: 1.5rem; text-align: center; margin-top: auto; position: absolute; bottom: 0; width: 100%;">
+                    <p style="color: rgba(255,255,255,0.6); font-size: 0.8rem;">&copy; 2026 UT Oriental</p>
+                </li>
             </ul>
-            <div class="sidebar-footer">
-                <button class="btn-logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
-            </div>
         </aside>
 
-        <main class="main-content">
-            <div class="page-header">
-                <h1>Perfil de la Empresa</h1>
-                <p>Información general y datos de contacto de la empresa</p>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title"><i class="fas fa-building"></i> Datos de la empresa</h2>
+        <!-- Main Wrapper -->
+        <div class="main-content">
+            <!-- Top Header -->
+            <header class="page-header"
+                style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
+                <div>
+                    <div class="accent-strip mb-2"></div>
+                    <h1 style="margin: 0; color: #fff; font-size: 1.8rem;">Perfil de la Empresa</h1>
+                    <p style="color: var(--texto-gris);">Información general y datos de contacto de la empresa</p>
                 </div>
-                <form>
-                    <div class="grid grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Nombre de la empresa / organización <span class="required">*</span></label>
-                            <input type="text" class="form-control" value="Empresa Ejemplo S.A. de C.V.">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Giro de la empresa <span class="required">*</span></label>
-                            <input type="text" class="form-control" value="Tecnología de la información">
-                        </div>
-                    </div>
-                    <div class="grid grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Tipo de empresa <span class="required">*</span></label>
-                            <select class="form-control">
-                                <option>Privada</option>
-                                <option>Pública</option>
-                                <option>Mixta</option>
-                                <option>ONG</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Teléfono <span class="required">*</span></label>
-                            <input type="text" class="form-control" value="555-1234-5678">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Dirección <span class="required">*</span></label>
-                        <input type="text" class="form-control" value="Av. Universidad 123, Ciudad Universitaria">
-                    </div>
 
-                    <h3 style="margin-top: 2rem; color: var(--verde);">Datos de acceso y contacto</h3>
-                    <div class="accent-strip mb-3"></div>
+                <div class="user-profile"
+                    style="display: flex; align-items: center; gap: 15px; background: white; padding: 10px 20px; border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <div class="avatar"
+                        style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--primario); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                        EM
+                    </div>
+                    <div style="margin-right: 10px;">
+                        <strong style="color: var(--texto-oscuro); display: block;">Usuario Empresa</strong>
+                        <span style="font-size: 0.8rem; color: var(--texto-gris);">Organización</span>
+                    </div>
+                    <div style="border-left: 1px solid var(--borde, #e2e8f0); height: 30px; margin: 0 10px;"></div>
+                    <a href="/logout" class="logout-btn"
+                        style="color: #e74c3c; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; font-weight: 600; transition: color 0.3s ease;">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                    </a>
+                </div>
+            </header>
 
-                    <div class="grid grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Contraseña</label>
-                            <input type="password" class="form-control" value="********">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Nombre del director o jefe de RR.HH.</label>
-                            <input type="text" class="form-control" value="Juan Pérez García">
-                        </div>
-                    </div>
-                    <div class="grid grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Teléfono de Recursos Humanos</label>
-                            <input type="text" class="form-control" value="555-8765-4321">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Correo electrónico de RR.HH.</label>
-                            <input type="email" class="form-control" value="rrhh@empresa.com">
-                        </div>
-                    </div>
+            <div class="card" style="padding: 2rem; background: transparent; box-shadow: none;">
 
-                    <div class="d-flex gap-2 justify-end">
-                        <button type="button" class="btn btn-outline">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fas fa-building"></i> Datos de la empresa</h2>
                     </div>
-                </form>
+                    <form>
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Nombre de la empresa / organización <span
+                                        class="required">*</span></label>
+                                <input type="text" class="form-control" value="Empresa Ejemplo S.A. de C.V.">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Giro de la empresa <span class="required">*</span></label>
+                                <input type="text" class="form-control" value="Tecnología de la información">
+                            </div>
+                        </div>
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Tipo de empresa <span class="required">*</span></label>
+                                <select class="form-control">
+                                    <option>Privada</option>
+                                    <option>Pública</option>
+                                    <option>Mixta</option>
+                                    <option>ONG</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Teléfono <span class="required">*</span></label>
+                                <input type="text" class="form-control" value="555-1234-5678">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Dirección <span class="required">*</span></label>
+                            <input type="text" class="form-control" value="Av. Universidad 123, Ciudad Universitaria">
+                        </div>
+
+                        <h3 style="margin-top: 2rem; color: var(--verde);">Datos de acceso y contacto</h3>
+                        <div class="accent-strip mb-3"></div>
+
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Contraseña</label>
+                                <input type="password" class="form-control" value="********">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Nombre del director o jefe de RR.HH.</label>
+                                <input type="text" class="form-control" value="Juan Pérez García">
+                            </div>
+                        </div>
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Teléfono de Recursos Humanos</label>
+                                <input type="text" class="form-control" value="555-8765-4321">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Correo electrónico de RR.HH.</label>
+                                <input type="email" class="form-control" value="rrhh@empresa.com">
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-end">
+                            <button type="button" class="btn btn-outline">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </main>
+        </div>
     </div>
 </body>
+
 </html>

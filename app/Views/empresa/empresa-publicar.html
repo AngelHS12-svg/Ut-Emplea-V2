@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,109 +8,167 @@
     <link rel="stylesheet" href="/public/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
+</head>
+
 <body>
-    <div class="layout">
+    <div class="dashboard-container">
+        <!-- Sidebar unificado -->
         <aside class="sidebar">
-            <!-- mismo sidebar que en inicio -->
-            <div class="sidebar-header">
-                <div class="sidebar-logo">
-                    <i class="fas fa-briefcase"></i>
-                    <div>
-                        <div class="sidebar-title">UT Oriental Emplea</div>
-                        <div class="sidebar-subtitle">Empresa</div>
-                    </div>
-                </div>
+            <div class="sidebar-logo">
+                <i class="fas fa-building fa-3x" style="color: var(--dorado);"></i>
+                <h2>Panel de Empresa</h2>
             </div>
-            <ul class="sidebar-nav">
-                <li><a href="empresa-inicio.html"><i class="fas fa-home"></i> Inicio</a></li>
-                <li><a href="empresa-publicar.html" class="active"><i class="fas fa-plus-circle"></i> Publicar vacante</a></li>
-                <li><a href="empresa-consultar.html"><i class="fas fa-search"></i> Consultar vacantes</a></li>
-                <li><a href="empresa-estadisticas.html"><i class="fas fa-chart-bar"></i> Estadísticas</a></li>
-                <li><a href="empresa-perfil.html"><i class="fas fa-building"></i> Perfil de empresa</a></li>
+
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/empresa" class="nav-link">
+                        <i class="fas fa-home"></i> Inicio
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/empresa/publicar" class="nav-link active">
+                        <i class="fas fa-plus-circle"></i> Publicar Vacante
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/empresa/consultar" class="nav-link">
+                        <i class="fas fa-briefcase"></i> Mis Vacantes
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/empresa/estadisticas" class="nav-link">
+                        <i class="fas fa-chart-bar"></i> Estadísticas
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/empresa/perfil" class="nav-link">
+                        <i class="fas fa-user-cog"></i> Mi Perfil
+                    </a>
+                </li>
+                <li class="nav-item sidebar-footer"
+                    style="padding: 1.5rem; text-align: center; margin-top: auto; position: absolute; bottom: 0; width: 100%;">
+                    <p style="color: rgba(255,255,255,0.6); font-size: 0.8rem;">&copy; 2026 UT Oriental</p>
+                </li>
             </ul>
-            <div class="sidebar-footer">
-                <button class="btn-logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
-            </div>
         </aside>
 
-        <main class="main-content">
-            <div class="page-header">
-                <h1>Registro de Vacante</h1>
-                <p>Formulario administrativo para publicación de vacantes empresariales</p>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title"><i class="fas fa-briefcase"></i> Datos de la Vacante</h2>
+        <!-- Main Wrapper -->
+        <div class="main-content">
+            <!-- Top Header -->
+            <header class="page-header"
+                style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
+                <div>
+                    <div class="accent-strip mb-2"></div>
+                    <h1 style="margin: 0; color: #fff; font-size: 1.8rem;">Registro de Vacante</h1>
+                    <p style="color: var(--texto-gris);">Formulario administrativo para publicación de vacantes
+                        empresariales</p>
                 </div>
-                <form>
-                    <div class="form-group">
-                        <label class="form-label">Perfil solicitado <span class="required">*</span></label>
-                        <input type="text" class="form-control" placeholder="Ej: Ingeniero, Administrador, Diseñador">
+
+                <div class="user-profile"
+                    style="display: flex; align-items: center; gap: 15px; background: white; padding: 10px 20px; border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <div class="avatar"
+                        style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--primario); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                        EM
                     </div>
-                    <div class="grid grid-2">
+                    <div style="margin-right: 10px;">
+                        <strong style="color: var(--texto-oscuro); display: block;">Usuario Empresa</strong>
+                        <span style="font-size: 0.8rem; color: var(--texto-gris);">Organización</span>
+                    </div>
+                    <div style="border-left: 1px solid var(--borde, #e2e8f0); height: 30px; margin: 0 10px;"></div>
+                    <a href="/logout" class="logout-btn"
+                        style="color: #e74c3c; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; font-weight: 600; transition: color 0.3s ease;">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                    </a>
+                </div>
+            </header>
+
+            <div class="card" style="padding: 2rem; background: transparent; box-shadow: none;">
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fas fa-briefcase"></i> Datos de la Vacante</h2>
+                    </div>
+                    <form>
                         <div class="form-group">
-                            <label class="form-label">Número de vacantes disponibles <span class="required">*</span></label>
-                            <input type="number" class="form-control" value="1">
+                            <label class="form-label">Perfil solicitado <span class="required">*</span></label>
+                            <input type="text" class="form-control"
+                                placeholder="Ej: Ingeniero, Administrador, Diseñador">
+                        </div>
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Número de vacantes disponibles <span
+                                        class="required">*</span></label>
+                                <input type="number" class="form-control" value="1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Nombre del puesto <span class="required">*</span></label>
+                                <input type="text" class="form-control" placeholder="Título del puesto vacante">
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Nombre del puesto <span class="required">*</span></label>
-                            <input type="text" class="form-control" placeholder="Título del puesto vacante">
+                            <label class="form-label">Breve descripción del puesto <span
+                                    class="required">*</span></label>
+                            <textarea class="form-control"
+                                placeholder="Describa las principales funciones y responsabilidades del puesto..."></textarea>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Breve descripción del puesto <span class="required">*</span></label>
-                        <textarea class="form-control" placeholder="Describa las principales funciones y responsabilidades del puesto..."></textarea>
-                    </div>
-                    <div class="grid grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Experiencia requerida</label>
-                            <input type="text" class="form-control" placeholder="Ej: 2 años, Sin experiencia, 5+ años">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Escolaridad necesaria</label>
-                            <input type="text" class="form-control" placeholder="Ej: Licenciatura, Maestría, Técnico">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Requerimientos del cargo <span class="required">*</span></label>
-                        <textarea class="form-control" placeholder="Conocimientos, habilidades y competencias necesarias..."></textarea>
-                    </div>
-                    <div class="grid grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Horario de trabajo</label>
-                            <input type="text" class="form-control" placeholder="Ej: Lun–Vie 9:00–18:00">
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Experiencia requerida</label>
+                                <input type="text" class="form-control"
+                                    placeholder="Ej: 2 años, Sin experiencia, 5+ años">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Escolaridad necesaria</label>
+                                <input type="text" class="form-control"
+                                    placeholder="Ej: Licenciatura, Maestría, Técnico">
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Lugar de trabajo</label>
-                            <input type="text" class="form-control" placeholder="Ciudad o modalidad (presencial / remoto)">
+                            <label class="form-label">Requerimientos del cargo <span class="required">*</span></label>
+                            <textarea class="form-control"
+                                placeholder="Conocimientos, habilidades y competencias necesarias..."></textarea>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Rango de salario y prestaciones</label>
-                        <input type="text" class="form-control" value="$15,000 – $20,000 MXN mensuales + prestaciones de ley">
-                    </div>
-                    <div class="grid grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Sexo, edad y estado civil</label>
-                            <input type="text" class="form-control" placeholder="Indistinto / Especificar requisitos (opcional)">
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Horario de trabajo</label>
+                                <input type="text" class="form-control" placeholder="Ej: Lun–Vie 9:00–18:00">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Lugar de trabajo</label>
+                                <input type="text" class="form-control"
+                                    placeholder="Ciudad o modalidad (presencial / remoto)">
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Fecha de entrevista</label>
+                            <label class="form-label">Rango de salario y prestaciones</label>
+                            <input type="text" class="form-control"
+                                value="$15,000 – $20,000 MXN mensuales + prestaciones de ley">
+                        </div>
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Sexo, edad y estado civil</label>
+                                <input type="text" class="form-control"
+                                    placeholder="Indistinto / Especificar requisitos (opcional)">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Fecha de entrevista</label>
+                                <input type="date" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Fecha de vencimiento de la vacante <span
+                                    class="required">*</span></label>
                             <input type="date" class="form-control">
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Fecha de vencimiento de la vacante <span class="required">*</span></label>
-                        <input type="date" class="form-control">
-                    </div>
-                    <div class="d-flex gap-2 justify-end">
-                        <button type="button" class="btn btn-outline">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar registro</button>
-                    </div>
-                </form>
+                        <div class="d-flex gap-2 justify-end">
+                            <button type="button" class="btn btn-outline">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar registro</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </main>
+        </div>
     </div>
 </body>
+
 </html>

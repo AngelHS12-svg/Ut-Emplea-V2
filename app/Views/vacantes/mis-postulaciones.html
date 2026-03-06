@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis Postulaciones - UT Oriental Emplea</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/public/css/styles.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
     <div class="layout">
         <aside class="sidebar">
@@ -22,24 +26,48 @@
             </div>
             <nav>
                 <ul class="sidebar-nav">
-                    <li><a href="panel-candidato.html"><i class="fas fa-home"></i> Inicio</a></li>
-                    <li><a href="buscar-vacantes.html"><i class="fas fa-search"></i> Buscar vacantes</a></li>
-                    <li><a href="ver-vacantes.html"><i class="fas fa-briefcase"></i> Ver vacantes</a></li>
-                    <li><a href="mis-postulaciones.html" class="active"><i class="fas fa-paper-plane"></i> Mis postulaciones</a></li>
-                    <li><a href="estado-postulaciones.html"><i class="fas fa-clipboard-list"></i> Estado de postulaciones</a></li>
-                    <li><a href="perfil-candidato.html"><i class="fas fa-user"></i> Perfil del candidato</a></li>
+                    <li><a href="/candidato-dashboard"><i class="fas fa-home"></i> Inicio</a></li>
+                    <li><a href="/candidato/buscar"><i class="fas fa-search"></i> Buscar vacantes</a></li>
+                    <li><a href="/candidato/ver"><i class="fas fa-briefcase"></i> Ver vacantes</a></li>
+                    <li><a href="/candidato/postulaciones" class="active"><i class="fas fa-paper-plane"></i> Mis
+                            postulaciones</a></li>
+                    <li><a href="/candidato/estado-postulaciones"><i class="fas fa-clipboard-list"></i> Estado de
+                            postulaciones</a></li>
+                    <li><a href="/candidato/perfil"><i class="fas fa-user"></i> Perfil del candidato</a></li>
                 </ul>
             </nav>
-            <div class="sidebar-footer">
-                <button class="btn-logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+            <div class="sidebar-footer" style="padding: 1.5rem; text-align: center;">
+                <p style="color: var(--texto-gris); font-size: 0.8rem;">&copy; 2026 UT Oriental</p>
             </div>
         </aside>
 
         <main class="main-content">
-            <div class="page-header">
-                <div class="accent-strip mb-2"></div>
-                <h1>Mis Postulaciones</h1>
-                <p>Revisa el estado de tus solicitudes</p>
+            <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div class="accent-strip mb-2"></div>
+                    <h1>Mis Postulaciones</h1>
+                    <p>Revisa el estado de tus solicitudes</p>
+                </div>
+
+                <!-- Perfil y Logout -->
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div class="user-profile"
+                        style="display: flex; align-items: center; gap: 15px; background: var(--blanco); padding: 10px 20px; border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                        <div class="avatar"
+                            style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--primario); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                            CA
+                        </div>
+                        <div style="margin-right: 10px;">
+                            <strong style="color: var(--texto-oscuro); display: block;">Candidato</strong>
+                            <span style="font-size: 0.8rem; color: var(--texto-gris);">Estudiante</span>
+                        </div>
+                        <div style="border-left: 1px solid var(--borde); height: 30px; margin: 0 10px;"></div>
+                        <a href="/logout" class="logout-btn"
+                            style="color: #e74c3c; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; font-weight: 600; transition: color 0.3s ease;">
+                            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                        </a>
+                    </div>
+                </div>
             </div>
 
             <div class="table-container">
@@ -60,7 +88,8 @@
                             <td>15/01/2026</td>
                             <td><span class="badge badge-pendiente"><i class="fas fa-clock"></i> En revisión</span></td>
                             <td style="text-align: center;">
-                              <a href="estado-postulaciones.html" class="btn btn-small btn-outline">Ver detalle</a>
+                                <a href="/candidato/estado-postulaciones" class="btn btn-small btn-outline">Ver
+                                    detalle</a>
 
                             </td>
                         </tr>
@@ -68,9 +97,11 @@
                             <td><strong>Ingeniero de Software</strong></td>
                             <td>Innovation Labs</td>
                             <td>10/01/2026</td>
-                            <td><span class="badge badge-aceptado"><i class="fas fa-check-circle"></i> Aceptado</span></td>
+                            <td><span class="badge badge-aceptado"><i class="fas fa-check-circle"></i> Aceptado</span>
+                            </td>
                             <td style="text-align: center;">
-                                <a href="estado-postulaciones.html" class="btn btn-small btn-outline">Ver detalle</a>
+                                <a href="/candidato/estado-postulaciones" class="btn btn-small btn-outline">Ver
+                                    detalle</a>
 
                             </td>
                         </tr>
@@ -78,9 +109,11 @@
                             <td><strong>Analista de Datos</strong></td>
                             <td>DataMinds Inc.</td>
                             <td>05/01/2026</td>
-                            <td><span class="badge badge-rechazado"><i class="fas fa-times-circle"></i> Rechazado</span></td>
+                            <td><span class="badge badge-rechazado"><i class="fas fa-times-circle"></i> Rechazado</span>
+                            </td>
                             <td style="text-align: center;">
-                                 <a href="estado-postulaciones.html" class="btn btn-small btn-outline">Ver detalle</a>
+                                <a href="/candidato/estado-postulaciones" class="btn btn-small btn-outline">Ver
+                                    detalle</a>
                             </td>
                         </tr>
                         <tr>
@@ -89,7 +122,8 @@
                             <td>28/12/2025</td>
                             <td><span class="badge badge-pendiente"><i class="fas fa-clock"></i> En revisión</span></td>
                             <td style="text-align: center;">
-                                 <a href="estado-postulaciones.html" class="btn btn-small btn-outline">Ver detalle</a>
+                                <a href="/candidato/estado-postulaciones" class="btn btn-small btn-outline">Ver
+                                    detalle</a>
                             </td>
                         </tr>
                         <tr>
@@ -98,16 +132,19 @@
                             <td>20/12/2025</td>
                             <td><span class="badge badge-pendiente"><i class="fas fa-clock"></i> En revisión</span></td>
                             <td style="text-align: center;">
-                                 <a href="estado-postulaciones.html" class="btn btn-small btn-outline">Ver detalle</a>
+                                <a href="/candidato/estado-postulaciones" class="btn btn-small btn-outline">Ver
+                                    detalle</a>
                             </td>
                         </tr>
                         <tr>
                             <td><strong>Backend Developer</strong></td>
                             <td>CloudServices Co.</td>
                             <td>15/12/2025</td>
-                            <td><span class="badge badge-aceptado"><i class="fas fa-check-circle"></i> Aceptado</span></td>
+                            <td><span class="badge badge-aceptado"><i class="fas fa-check-circle"></i> Aceptado</span>
+                            </td>
                             <td style="text-align: center;">
-                                 <a href="estado-postulaciones.html" class="btn btn-small btn-outline">Ver detalle</a>
+                                <a href="/candidato/estado-postulaciones" class="btn btn-small btn-outline">Ver
+                                    detalle</a>
                             </td>
                         </tr>
                     </tbody>
@@ -136,4 +173,5 @@
         </main>
     </div>
 </body>
+
 </html>

@@ -1,6 +1,6 @@
 let rolSeleccionado = "";
 
-document.addEventListener("DOMContentLoaded", function(){
+document.addEventListener("DOMContentLoaded", function () {
 
     // ===== ELEMENTOS =====
     const openLoginBtns = document.querySelectorAll(".open-login");
@@ -15,85 +15,96 @@ document.addEventListener("DOMContentLoaded", function(){
 
     const loginForm = document.getElementById("loginForm");
 
-loginForm.addEventListener("submit", function(e){
+    loginForm.addEventListener("submit", function (e) {
 
-    const rol = inputRol.value;
+        const rol = inputRol.value;
 
-    if(!rol){
-        e.preventDefault();
-        alert("Debes seleccionar un tipo de usuario primero");
-    }
-
-});
-
-     // ===== BOTON REGISTRO =====
-    if(registerBtn){
-    registerBtn.addEventListener("click", function(e){
-
-        e.preventDefault();
-
-        const rol = localStorage.getItem("rol");
-
-        if (rol === "empresa") {
-            window.location.href = "/registro-empresa";
-        } 
-        else if (rol === "candidato") {
-            window.location.href = "/registro-candidato";
-        } 
-        else {
-            alert("Primero selecciona el tipo de usuario");
+        if (!rol) {
+            e.preventDefault();
+            alert("Debes seleccionar un tipo de usuario primero");
         }
 
     });
-}
+
+    // ===== BOTON REGISTRO =====
+    if (registerBtn) {
+        registerBtn.addEventListener("click", function (e) {
+
+            e.preventDefault();
+
+            const rol = inputRol.value;
+
+            if (rol === "empresa") {
+                window.location.href = "/registro-empresa";
+            }
+            else if (rol === "candidato") {
+                window.location.href = "/registro-candidato";
+            }
+            else {
+                alert("Primero selecciona el tipo de usuario");
+            }
+
+        });
+    }
 
     // ===== ABRIR PRIMER MODAL =====
     openLoginBtns.forEach(btn => {
-    btn.addEventListener("click", function(e){
-        e.preventDefault();
-        modalUserType.style.display = "flex";
+        btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            modalUserType.style.display = "flex";
+        });
     });
-});
 
     // ===== CERRAR PRIMER MODAL =====
-    if(closeUserType){
-        closeUserType.addEventListener("click", function(){
+    if (closeUserType) {
+        closeUserType.addEventListener("click", function () {
             modalUserType.style.display = "none";
         });
     }
 
     // ===== CERRAR LOGIN =====
-    if(closeLogin){
-        closeLogin.addEventListener("click", function(){
+    if (closeLogin) {
+        closeLogin.addEventListener("click", function () {
             modalLogin.style.display = "none";
         });
     }
 
     // ===== SELECCIÓN DE ROL =====
-   userOptions.forEach(option => {
-    option.addEventListener("click", () => {
+    userOptions.forEach(option => {
+        option.addEventListener("click", () => {
 
-        const rol = option.dataset.role;
+            const rol = option.dataset.role;
 
-        // poner rol en el input hidden
-        inputRol.value = rol;
+            // poner rol en el input hidden
+            inputRol.value = rol;
 
-        // mostrar rol en pantalla
-        roleIndicator.innerText = "Rol: " + rol.toUpperCase();
+            // mostrar rol en pantalla
+            roleIndicator.innerText = "Rol: " + rol.toUpperCase();
 
-        modalUserType.style.display = "none";
-        modalLogin.style.display = "flex";
+            // Ocultar botón de registro si es administrador
+            const registerBtnModal = document.getElementById("registerBtnModal");
+            if (registerBtnModal) {
+                if (rol === "admin" || rol === "administrador") {
+                    registerBtnModal.style.display = "none";
+                } else {
+                    registerBtnModal.style.display = "block";
+                    registerBtnModal.style.margin = "0 auto";
+                }
+            }
+
+            modalUserType.style.display = "none";
+            modalLogin.style.display = "flex";
+        });
     });
-});
 
     // ===== CLICK FUERA =====
-    window.addEventListener("click", function(e){
+    window.addEventListener("click", function (e) {
 
-        if(e.target === modalUserType){
+        if (e.target === modalUserType) {
             modalUserType.style.display = "none";
         }
 
-        if(e.target === modalLogin){
+        if (e.target === modalLogin) {
             modalLogin.style.display = "none";
         }
 
