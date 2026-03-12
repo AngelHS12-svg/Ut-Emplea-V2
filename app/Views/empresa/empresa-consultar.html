@@ -125,9 +125,13 @@
                                 </td>
                                 <td>{{ vacante[4] }}</td>
                                 <td>
-                                    <a href="/empresa/vacante/{{ vacante[0] }}/postulaciones" title="Ver postulados"><i class="fas fa-eye" style="color: var(--verde); margin-right: 10px;"></i></a>
-                                    <a href="#" title="Editar vacante"><i class="fas fa-edit" style="color: var(--dorado); margin-right: 10px;"></i></a>
-                                    <a href="#" title="Eliminar vacante"><i class="fas fa-trash" style="color: var(--vino);"></i></a>
+                                    <a href="/empresa/vacante/{{ vacante[0] }}/ver" title="Ver detalles y postulados"><i class="fas fa-eye" style="color: var(--verde); margin-right: 10px;"></i></a>
+                                    <a href="/empresa/vacante/{{ vacante[0] }}/editar" title="Editar vacante"><i class="fas fa-edit" style="color: var(--dorado); margin-right: 10px;"></i></a>
+                                    <form action="/empresa/vacante/{{ vacante[0] }}/eliminar" method="POST" style="display: inline;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta vacante? Esta acción no se puede deshacer.');">
+                                        <button type="submit" style="background: none; border: none; padding: 0; cursor: pointer;">
+                                            <i class="fas fa-trash" style="color: var(--vino);"></i>
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                             {% else %}

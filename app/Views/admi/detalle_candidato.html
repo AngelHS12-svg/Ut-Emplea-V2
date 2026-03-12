@@ -69,9 +69,14 @@
                         </div>
                     </div>
                     {% if candidato[8] %}
-                    <a href="/descargar-cv/{{ candidato[0] }}" class="btn btn-primary">
-                        <i class="fas fa-download"></i> Descargar PDF
-                    </a>
+                    <div style="display: flex; gap: 10px;">
+                        <a href="/ver-cv/{{ candidato[0] }}" target="_blank" class="btn btn-outline" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-eye"></i> Ver PDF
+                        </a>
+                        <a href="/descargar-cv/{{ candidato[0] }}" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-download"></i> Descargar PDF
+                        </a>
+                    </div>
                     {% else %}
                     <span style="color: var(--text-muted); font-style: italic;">No disponible</span>
                     {% endif %}

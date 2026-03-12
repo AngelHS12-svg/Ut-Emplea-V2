@@ -15,7 +15,7 @@ app.secret_key = "secret_key_prueba"
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads', 'cv')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
+app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024  # 32MB max
 
 # Configuración de Flask-Login
 login_manager = LoginManager()
@@ -594,7 +594,7 @@ def candidato_perfil():
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
-        SELECT c.nombre, c.sexo, c.telefono, c.anio_egreso,
+        SELECT c.id_candidato, c.nombre, c.sexo, c.telefono, c.anio_egreso,
                COALESCE(ca.nombre, '') as carrera, u.correo, c.cv_url
         FROM candidatos c
         JOIN usuarios u ON c.id_usuario = u.id_usuario
@@ -749,6 +749,20 @@ def candidato_subir_cv():
         flash("Solo se permiten archivos PDF, DOC o DOCX.")
     return redirect(url_for("candidato_perfil"))
 
+@app.route("/ver-cv/<int:id_candidato>")
+@login_required
+def ver_cv(id_candidato):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT cv_url FROM candidatos WHERE id_candidato = %s", (id_candidato,))
+    result = cur.fetchone()
+    cur.close()
+    conn.close()
+    if result and result[0]:
+        return send_from_directory(app.config['UPLOAD_FOLDER'], result[0], as_attachment=False)
+    flash("El candidato no ha subido su CV aún.")
+    return redirect(request.referrer or url_for("home"))
+
 @app.route("/descargar-cv/<int:id_candidato>")
 @login_required
 def descargar_cv(id_candidato):
@@ -797,27 +811,34 @@ def admin_detalle_candidato(id_candidato):
     conn.close()
     return render_template("admi/detalle_candidato.html", candidato=candidato, postulaciones=postulaciones)
 
-# ================= EMPRESA: VER POSTULACIONES POR VACANTE =================
-@app.route("/empresa/vacante/<int:id_vacante>/postulaciones")
+# ================= EMPRESA: GESTIÓN DE VACANTES =================
+
+@app.route("/empresa/vacante/<int:id_vacante>/ver")
 @login_required
-def empresa_ver_postulaciones(id_vacante):
+def empresa_ver_vacante(id_vacante):
     if current_user.rol != "Empresa": return redirect(url_for("home"))
     conn = get_connection()
     cur = conn.cursor()
     
-    # Verificar que la vacante pertenece a esta empresa
+    # Obtener detalles completos de la vacante
     cur.execute("""
-        SELECT v.id_vacante, v.titulo FROM vacantes v
+        SELECT v.id_vacante, v.titulo, v.descripcion, v.salario, v.modalidad, 
+               v.horario, v.lugar_trabajo, v.fecha_vencimiento, v.num_vacantes, v.perfil,
+               r.escolaridad, r.experiencia, r.descripcion as req_desc
+        FROM vacantes v
+        LEFT JOIN requisitos_vacante r ON v.id_vacante = r.id_vacante
         JOIN empresas e ON v.id_empresa = e.id_empresa
         WHERE v.id_vacante = %s AND e.id_usuario = %s
     """, (id_vacante, current_user.id))
     vacante = cur.fetchone()
+    
     if not vacante:
         cur.close()
         conn.close()
-        flash("Vacante no encontrada.")
+        flash("Vacante no encontrada o sin acceso.")
         return redirect(url_for("empresa.consultar"))
     
+    # Obtener postulaciones
     cur.execute("""
         SELECT p.id_postulacion, c.id_candidato, c.nombre, u.correo, c.telefono,
                p.fecha_postulacion, p.estado, c.cv_url,
@@ -835,21 +856,100 @@ def empresa_ver_postulaciones(id_vacante):
     conn.close()
     return render_template("empresa/empresa-postulaciones.html", vacante=vacante, postulaciones=postulaciones)
 
+@app.route("/empresa/vacante/<int:id_vacante>/editar", methods=["GET", "POST"])
+@login_required
+def empresa_editar_vacante(id_vacante):
+    if current_user.rol != "Empresa": return redirect(url_for("home"))
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    if request.method == "POST":
+        titulo = request.form.get("titulo")
+        descripcion = request.form.get("descripcion")
+        salario = request.form.get("salario")
+        modalidad = request.form.get("modalidad")
+        horario = request.form.get("horario")
+        lugar = request.form.get("lugar")
+        fecha_vencimiento = request.form.get("fecha_vencimiento")
+        escolaridad = request.form.get("escolaridad")
+        experiencia = request.form.get("experiencia")
+        conocimientos = request.form.get("conocimientos")
+        num_vacantes = request.form.get("num_vacantes")
+        perfil = request.form.get("perfil")
+        
+        try:
+            cur.execute("""
+                UPDATE vacantes SET titulo=%s, descripcion=%s, salario=%s, modalidad=%s, 
+                horario=%s, lugar_trabajo=%s, fecha_vencimiento=%s, num_vacantes=%s, perfil=%s
+                WHERE id_vacante = %s
+            """, (titulo, descripcion, float(salario) if salario else None, modalidad, horario, lugar, fecha_vencimiento, int(num_vacantes) if num_vacantes else 1, perfil, id_vacante))
+            
+            cur.execute("""
+                UPDATE requisitos_vacante SET escolaridad=%s, experiencia=%s, descripcion=%s
+                WHERE id_vacante = %s
+            """, (escolaridad, experiencia, conocimientos, id_vacante))
+            
+            conn.commit()
+            flash("Vacante actualizada exitosamente.")
+            return redirect(url_for("empresa.consultar"))
+        except Exception as e:
+            conn.rollback()
+            flash(f"Error al actualizar: {str(e)}")
+    
+    # GET: Cargar datos actuales
+    cur.execute("""
+        SELECT v.id_vacante, v.titulo, v.descripcion, v.salario, v.modalidad, 
+               v.horario, v.lugar_trabajo, v.fecha_vencimiento, v.num_vacantes, v.perfil,
+               r.escolaridad, r.experiencia, r.descripcion as req_desc
+        FROM vacantes v
+        LEFT JOIN requisitos_vacante r ON v.id_vacante = r.id_vacante
+        WHERE v.id_vacante = %s
+    """, (id_vacante,))
+    vacante = cur.fetchone()
+    cur.close()
+    conn.close()
+    
+    return render_template("empresa/empresa-editar-vacante.html", vacante=vacante)
+
+@app.route("/empresa/vacante/<int:id_vacante>/eliminar", methods=["POST"])
+@login_required
+def empresa_eliminar_vacante(id_vacante):
+    if current_user.rol != "Empresa": return redirect(url_for("home"))
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        # Primero eliminar requisitos (por FK)
+        cur.execute("DELETE FROM requisitos_vacante WHERE id_vacante = %s", (id_vacante,))
+        # Eliminar postulaciones (opcional o obligatorio dependiendo de la lógica, 
+        # usualmente si hay postulaciones no se debería eliminar tan fácil, 
+        # pero para esta tarea lo haremos simple)
+        cur.execute("DELETE FROM postulaciones WHERE id_vacante = %s", (id_vacante,))
+        cur.execute("DELETE FROM vacantes WHERE id_vacante = %s", (id_vacante,))
+        conn.commit()
+        flash("Vacante eliminada.")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Error al eliminar: {str(e)}")
+    finally:
+        cur.close()
+        conn.close()
+    return redirect(url_for("empresa.consultar"))
+
 @app.route("/empresa/postulacion/<int:id_postulacion>/aceptar", methods=["POST"])
 @login_required
 def empresa_aceptar_postulacion(id_postulacion):
     if current_user.rol != "Empresa": return redirect(url_for("home"))
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("UPDATE postulaciones SET estado = 'aceptado', fecha_actualizacion = CURRENT_TIMESTAMP WHERE id_postulacion = %s", (id_postulacion,))
+    cur.execute("UPDATE postulaciones SET estado = 'aceptado' WHERE id_postulacion = %s", (id_postulacion,))
     cur.execute("SELECT id_vacante FROM postulaciones WHERE id_postulacion = %s", (id_postulacion,))
     vacante = cur.fetchone()
     conn.commit()
     cur.close()
     conn.close()
-    flash("Candidato aceptado exitosamente.")
+    flash("Candidato aceptado.")
     if vacante:
-        return redirect(url_for("empresa_ver_postulaciones", id_vacante=vacante[0]))
+        return redirect(url_for("empresa_ver_vacante", id_vacante=vacante[0]))
     return redirect(url_for("empresa.consultar"))
 
 @app.route("/empresa/postulacion/<int:id_postulacion>/rechazar", methods=["POST"])
@@ -858,7 +958,7 @@ def empresa_rechazar_postulacion(id_postulacion):
     if current_user.rol != "Empresa": return redirect(url_for("home"))
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("UPDATE postulaciones SET estado = 'rechazado', fecha_actualizacion = CURRENT_TIMESTAMP WHERE id_postulacion = %s", (id_postulacion,))
+    cur.execute("UPDATE postulaciones SET estado = 'rechazado' WHERE id_postulacion = %s", (id_postulacion,))
     cur.execute("SELECT id_vacante FROM postulaciones WHERE id_postulacion = %s", (id_postulacion,))
     vacante = cur.fetchone()
     conn.commit()
@@ -866,9 +966,9 @@ def empresa_rechazar_postulacion(id_postulacion):
     conn.close()
     flash("Candidato rechazado.")
     if vacante:
-        return redirect(url_for("empresa_ver_postulaciones", id_vacante=vacante[0]))
+        return redirect(url_for("empresa_ver_vacante", id_vacante=vacante[0]))
     return redirect(url_for("empresa.consultar"))
 
 # ================= MAIN =================
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)

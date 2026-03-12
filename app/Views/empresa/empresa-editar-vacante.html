@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Vacante · UT Oriental Emplea</title>
+    <link rel="stylesheet" href="/public/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body class="app-shell">
+
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <i class="fas fa-building"></i>
+            </div>
+            <div class="brand-text">
+                Panel de Empresa
+                <span>UT Oriental Emplea</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('empresa.inicio') }}" class="nav-item">
+                <i class="fas fa-home"></i> <span>Inicio</span>
+            </a>
+            <a href="{{ url_for('empresa.publicar') }}" class="nav-item">
+                <i class="fas fa-plus-circle"></i> <span>Publicar Vacante</span>
+            </a>
+            <a href="{{ url_for('empresa.consultar') }}" class="nav-item active">
+                <i class="fas fa-briefcase"></i> <span>Mis Vacantes</span>
+            </a>
+            <a href="{{ url_for('empresa.estadisticas') }}" class="nav-item">
+                <i class="fas fa-chart-bar"></i> <span>Estadísticas</span>
+            </a>
+            <a href="{{ url_for('empresa.perfil') }}" class="nav-item">
+                <i class="fas fa-user-cog"></i> <span>Mi Perfil</span>
+            </a>
+        </nav>
+    </div>
+
+    <div class="main-wrapper">
+        <header class="navbar-top">
+            <div class="nav-left">
+                <h1 class="page-title">Editar Vacante</h1>
+                <p class="page-subtitle">Modifique la información de la oferta seleccionada</p>
+            </div>
+
+            <div class="user-menu">
+                <div class="profile-trigger">
+                    <div class="user-avatar">
+                        {{ current_user.correo[0]|upper }}
+                    </div>
+                    <div class="user-meta">
+                        <h4>{{ current_user.correo }}</h4>
+                        <span>{{ current_user.rol }}</span>
+                    </div>
+                </div>
+                <a href="/logout" class="nav-logout-btn" title="Cerrar Sesión">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
+        </header>
+
+        <main class="app-content">
+
+            <div class="card" style="padding: 2rem; background: transparent; box-shadow: none;">
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fas fa-edit"></i> Edición de Vacante</h2>
+                    </div>
+                    
+                    {% with messages = get_flashed_messages() %}
+                      {% if messages %}
+                        {% for message in messages %}
+                          <div class="alert alert-info" style="margin-bottom: 1.5rem;">
+                            {{ message }}
+                          </div>
+                        {% endfor %}
+                      {% endif %}
+                    {% endwith %}
+
+                    <form action="/empresa/vacante/{{ vacante[0] }}/editar" method="POST">
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Título del puesto <span class="required">*</span></label>
+                                <input type="text" name="titulo" class="form-control" value="{{ vacante[1] }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Perfil solicitado <span class="required">*</span></label>
+                                <input type="text" name="perfil" class="form-control" value="{{ vacante[9] or '' }}" placeholder="Ej: Ingeniero, Diseñador" required>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Número de vacantes disponibles <span class="required">*</span></label>
+                                <input type="number" name="num_vacantes" class="form-control" value="{{ vacante[8] or 1 }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Salario mensual aproximado</label>
+                                <input type="text" name="salario" class="form-control" value="{{ vacante[3] or '' }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Breve descripción del puesto <span class="required">*</span></label>
+                            <textarea name="descripcion" class="form-control" rows="4" required>{{ vacante[2] }}</textarea>
+                        </div>
+
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Experiencia requerida</label>
+                                <input type="text" name="experiencia" class="form-control" value="{{ vacante[11] or '' }}" placeholder="Ej: 2 años">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Escolaridad necesaria</label>
+                                <input type="text" name="escolaridad" class="form-control" value="{{ vacante[10] or '' }}" placeholder="Ej: Licenciatura">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Requerimientos y conocimientos del cargo <span class="required">*</span></label>
+                            <textarea name="conocimientos" class="form-control" rows="4" required>{{ vacante[12] or '' }}</textarea>
+                        </div>
+
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Horario de trabajo</label>
+                                <input type="text" name="horario" class="form-control" value="{{ vacante[5] or '' }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Lugar de trabajo / Modalidad</label>
+                                <input type="text" name="lugar" class="form-control" value="{{ vacante[6] or '' }}">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Salario mensual aproximado</label>
+                                <input type="text" name="salario" class="form-control" value="{{ vacante[3] or '' }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Fecha de vencimiento <span class="required">*</span></label>
+                                <input type="date" name="fecha_vencimiento" class="form-control" value="{{ vacante[7].strftime('%Y-%m-%d') if vacante[7] else '' }}" required>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-end" style="margin-top: 2rem;">
+                            <a href="{{ url_for('empresa.consultar') }}" class="btn btn-outline">Cancelar</a>
+                            <button type="submit" class="btn btn-accent">Actualizar Vacante</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

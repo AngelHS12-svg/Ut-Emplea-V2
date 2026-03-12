@@ -1,123 +1,222 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Postulaciones - Empresa</title>
+    <title>Detalle de Vacante · UT Oriental Emplea</title>
     <link rel="stylesheet" href="/public/css/styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
-    <div class="dashboard-container">
-        <aside class="sidebar">
-            <div class="sidebar-logo">
-                <i class="fas fa-building fa-3x" style="color: var(--dorado);"></i>
-                <h2>Panel de Empresa</h2>
-            </div>
-            <ul class="nav-menu">
-                <li class="nav-item"><a href="{{ url_for('empresa.inicio') }}" class="nav-link"><i class="fas fa-home"></i> Inicio</a></li>
-                <li class="nav-item"><a href="{{ url_for('empresa.publicar') }}" class="nav-link"><i class="fas fa-plus-circle"></i> Publicar Vacante</a></li>
-                <li class="nav-item"><a href="{{ url_for('empresa.consultar') }}" class="nav-link active"><i class="fas fa-briefcase"></i> Mis Vacantes</a></li>
-                <li class="nav-item"><a href="{{ url_for('empresa.estadisticas') }}" class="nav-link"><i class="fas fa-chart-bar"></i> Estadísticas</a></li>
-                <li class="nav-item"><a href="{{ url_for('empresa.perfil') }}" class="nav-link"><i class="fas fa-user-cog"></i> Mi Perfil</a></li>
-            </ul>
-        </aside>
 
-        <div class="main-content">
-            <div class="page-header" style="text-align: center; max-width: 800px; margin: 0 auto 3rem;">
-            <div class="accent-strip mx-auto mb-2"></div>
-            <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">Registro de Empresa</h1>
-            <p style="font-size: 1.1rem; color: var(--texto-gris);">Únase a nuestra red de talento y encuentre a los mejores candidatos para su organización.</p>
+<body class="app-shell">
+
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <i class="fas fa-building"></i>
+            </div>
+            <div class="brand-text">
+                Panel de Empresa
+                <span>UT Oriental Emplea</span>
+            </div>
         </div>
-            <h1>Postulaciones: {{ vacante[1] }}</h1>
-                    <p>Revisa, acepta o rechaza a los candidatos postulados</p>
-                    {% with messages = get_flashed_messages() %}
-                      {% if messages %}
-                        {% for message in messages %}
-                          <div class="alert alert-info" style="margin-top: 1rem;">{{ message }}</div>
-                        {% endfor %}
-                      {% endif %}
-                    {% endwith %}
-                </div>
-                <div class="user-profile">
-                    <div class="avatar">{{ current_user.correo[0:2]|upper }}</div>
-                    <div class="user-info">
-                        <strong>{{ current_user.correo }}</strong>
-                        <span>Empresa</span>
+
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('empresa.inicio') }}" class="nav-item">
+                <i class="fas fa-home"></i> <span>Inicio</span>
+            </a>
+            <a href="{{ url_for('empresa.publicar') }}" class="nav-item">
+                <i class="fas fa-plus-circle"></i> <span>Publicar Vacante</span>
+            </a>
+            <a href="{{ url_for('empresa.consultar') }}" class="nav-item active">
+                <i class="fas fa-briefcase"></i> <span>Mis Vacantes</span>
+            </a>
+            <a href="{{ url_for('empresa.estadisticas') }}" class="nav-item">
+                <i class="fas fa-chart-bar"></i> <span>Estadísticas</span>
+            </a>
+            <a href="{{ url_for('empresa.perfil') }}" class="nav-item">
+                <i class="fas fa-user-cog"></i> <span>Mi Perfil</span>
+            </a>
+        </nav>
+    </div>
+
+    <div class="main-wrapper">
+        <header class="navbar-top">
+            <div class="nav-left">
+                <h1 class="page-title">Detalle de la Vacante</h1>
+                <p class="page-subtitle">Revisión de oferta y candidatos postulados</p>
+            </div>
+
+            <div class="user-menu">
+                <div class="profile-trigger">
+                    <div class="user-avatar">
+                        {{ current_user.correo[0]|upper }}
                     </div>
-                    <a href="/logout" class="btn-logout-header" title="Cerrar Sesión">
-                        <i class="fas fa-sign-out-alt"></i>
+                    <div class="user-meta">
+                        <h4>{{ current_user.correo }}</h4>
+                        <span>{{ current_user.rol }}</span>
+                    </div>
+                </div>
+                <a href="/logout" class="nav-logout-btn" title="Cerrar Sesión">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
+        </header>
+
+        <main class="app-content">
+            <div style="margin-bottom: 2rem;">
+                <a href="{{ url_for('empresa.consultar') }}" class="btn btn-outline" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-arrow-left"></i> Volver a Mis Vacantes
+                </a>
+            </div>
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-info" style="margin-bottom: 2rem;">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- SECCIÓN: DETALLES DE LA VACANTE -->
+            <div class="card" style="margin-bottom: 3rem;">
+                <div class="card-header d-flex justify-between align-center">
+                    <h2 class="card-title"><i class="fas fa-info-circle"></i> Información General</h2>
+                    <a href="/empresa/vacante/{{ vacante[0] }}/editar" class="btn btn-secondary btn-small">
+                        <i class="fas fa-edit"></i> Editar Vacante
                     </a>
                 </div>
-            </header>
+                
+                <div style="padding: 1.5rem;">
+                    <h3 style="font-size: 1.75rem; color: var(--vino); margin-bottom: 1.5rem;">{{ vacante[1] }}</h3>
+                    
+                    <div class="grid grid-3" style="margin-bottom: 2rem; gap: 1.5rem;">
+                        <div class="stat-item" style="background: var(--bg-soft); padding: 1rem; border-radius: 8px;">
+                            <span style="display: block; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Salario</span>
+                            <strong style="font-size: 1.1rem; color: var(--text-main);">${{ vacante[3] or 'No especificado' }}</strong>
+                        </div>
+                        <div class="stat-item" style="background: var(--bg-soft); padding: 1rem; border-radius: 8px;">
+                            <span style="display: block; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Modalidad</span>
+                            <strong style="font-size: 1.1rem; color: var(--text-main);">{{ vacante[4] or 'N/A' }}</strong>
+                        </div>
+                        <div class="stat-item" style="background: var(--bg-soft); padding: 1rem; border-radius: 8px;">
+                            <span style="display: block; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Vence el</span>
+                            <strong style="font-size: 1.1rem; color: var(--text-main);">{{ vacante[7].strftime('%d/%m/%Y') if vacante[7] else 'N/A' }}</strong>
+                        </div>
+                    </div>
 
-            <div style="margin-bottom: 1rem;">
-                <a href="{{ url_for('empresa.consultar') }}" style="color: var(--primario); text-decoration: none; font-weight: 600;"><i class="fas fa-arrow-left"></i> Volver a mis vacantes</a>
+                    <div class="grid grid-2" style="gap: 2rem;">
+                        <div>
+                            <h4 style="border-bottom: 2px solid var(--dorado-soft); padding-bottom: 5px; margin-bottom: 1rem;">Descripción</h4>
+                            <p style="white-space: pre-wrap; line-height: 1.6;">{{ vacante[2] }}</p>
+                            <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-muted);"><strong>Perfil:</strong> {{ vacante[9] or 'No especificado' }}</p>
+                        </div>
+                        <div>
+                            <h4 style="border-bottom: 2px solid var(--dorado-soft); padding-bottom: 5px; margin-bottom: 1rem;">Requisitos</h4>
+                            <ul style="list-style: none; padding: 0;">
+                                <li style="margin-bottom: 8px;"><strong>Escolaridad:</strong> {{ vacante[10] or 'N/A' }}</li>
+                                <li style="margin-bottom: 8px;"><strong>Experiencia:</strong> {{ vacante[11] or 'N/A' }}</li>
+                                <li style="margin-bottom: 8px;"><strong>Horario:</strong> {{ vacante[5] or 'N/A' }}</li>
+                                <li style="margin-bottom: 8px;"><strong>Ubicación:</strong> {{ vacante[6] or 'N/A' }}</li>
+                            </ul>
+                            <div style="margin-top: 1rem;">
+                                <strong>Conocimientos específicos:</strong>
+                                <p style="font-size: 0.9rem; margin-top: 5px;">{{ vacante[12] or 'No especificados' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <p style="margin-bottom: 1.5rem; color: var(--texto-gris);"><strong>{{ postulaciones|length }}</strong> candidatos postulados</p>
-
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Candidato</th>
-                            <th>Carrera</th>
-                            <th>Correo</th>
-                            <th>Teléfono</th>
-                            <th>Fecha</th>
-                            <th>Estado</th>
-                            <th>CV</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for p in postulaciones %}
-                        <tr>
-                            <td><strong>{{ p[2] }}</strong></td>
-                            <td>{{ p[8] }}</td>
-                            <td>{{ p[3] }}</td>
-                            <td>{{ p[4] or 'N/A' }}</td>
-                            <td>{{ p[5].strftime('%d/%m/%Y') if p[5] else 'N/A' }}</td>
-                            <td>
-                                {% if p[6] == 'aceptado' %}
-                                <span class="badge badge-activa" style="background:#e8f5e9; color:#2e7d32;">Aceptado</span>
-                                {% elif p[6] == 'rechazado' %}
-                                <span class="badge badge-inactiva" style="background:#fce4ec; color:#c62828;">Rechazado</span>
-                                {% else %}
-                                <span class="badge badge-activa" style="background:#fff3e0; color:#e65100;">En revisión</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if p[7] %}
-                                <a href="/descargar-cv/{{ p[1] }}" title="Descargar CV" style="color: var(--primario); font-size: 1.1rem;"><i class="fas fa-file-download"></i></a>
-                                {% else %}
-                                <span style="color: var(--texto-gris); font-size: 0.85rem;">Sin CV</span>
-                                {% endif %}
-                            </td>
-                            <td style="white-space: nowrap;">
-                                {% if p[6] == 'en revision' %}
-                                <form action="/empresa/postulacion/{{ p[0] }}/aceptar" method="POST" style="display:inline;">
-                                    <button type="submit" style="background:#2e7d32; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.85rem; margin-right:4px;" title="Aceptar"><i class="fas fa-check"></i></button>
-                                </form>
-                                <form action="/empresa/postulacion/{{ p[0] }}/rechazar" method="POST" style="display:inline;">
-                                    <button type="submit" style="background:#c62828; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.85rem;" title="Rechazar"><i class="fas fa-times"></i></button>
-                                </form>
-                                {% else %}
-                                <span style="color: var(--texto-gris); font-size: 0.85rem;">—</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="8" style="text-align: center; padding: 2rem; color: var(--texto-gris);">No hay candidatos postulados a esta vacante.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <!-- SECCIÓN: POSTULADOS -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-users"></i> Candidatos Postulados ({{ postulaciones|length }})</h2>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Candidato</th>
+                                <th>Carrera</th>
+                                <th>Contacto</th>
+                                <th>Fecha Postulación</th>
+                                <th>Estado</th>
+                                <th>Acciones CV</th>
+                                <th>Selección</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in postulaciones %}
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 700; color: var(--vino);">{{ p[2] }}</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted);">#ID-{{ p[1] }}</div>
+                                </td>
+                                <td>{{ p[8] }}</td>
+                                <td>
+                                    <div style="font-size: 0.9rem;"><i class="far fa-envelope"></i> {{ p[3] }}</div>
+                                    <div style="font-size: 0.9rem;"><i class="fas fa-phone-alt"></i> {{ p[4] or 'N/A' }}</div>
+                                </td>
+                                <td>{{ p[5].strftime('%d/%m/%Y') if p[5] else 'N/A' }}</td>
+                                <td>
+                                    {% if p[6] == 'aceptado' %}
+                                    <span class="badge badge-activa">Aceptado</span>
+                                    {% elif p[6] == 'rechazado' %}
+                                    <span class="badge badge-inactiva">Rechazado</span>
+                                    {% else %}
+                                    <span class="badge" style="background-color: var(--dorado-soft); color: #856404;">En revisión</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if p[7] %}
+                                    <div class="d-flex gap-2">
+                                        <a href="/ver-cv/{{ p[1] }}" target="_blank" class="btn btn-primary btn-small" title="Visualizar CV">
+                                            <i class="fas fa-eye"></i> Ver
+                                        </a>
+                                        <a href="/descargar-cv/{{ p[1] }}" class="btn btn-secondary btn-small" title="Descargar PDF">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                    </div>
+                                    {% else %}
+                                    <span style="color: var(--text-muted); font-size: 0.85rem;">Sin CV</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if p[6] == 'en revision' %}
+                                    <div class="d-flex gap-2">
+                                        <form action="/empresa/postulacion/{{ p[0] }}/aceptar" method="POST">
+                                            <button type="submit" class="btn btn-primary btn-small" style="background-color: #28a745; border-color: #28a745;" title="Aceptar Candidato">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                        <form action="/empresa/postulacion/{{ p[0] }}/rechazar" method="POST">
+                                            <button type="submit" class="btn btn-secondary btn-small" style="background-color: #dc3545; border-color: #dc3545;" title="Rechazar Candidato">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    {% else %}
+                                    <span style="color: var(--text-muted); font-size: 1.2rem;">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                                    <i class="fas fa-user-clock fa-3x" style="display: block; margin-bottom: 1rem; opacity: 0.3;"></i>
+                                    Todavía no hay postulantes para esta vacante.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        </main>
     </div>
 </body>
+
 </html>

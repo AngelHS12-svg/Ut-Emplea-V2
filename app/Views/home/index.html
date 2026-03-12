@@ -17,7 +17,8 @@
     <!-- Toast Notifications -->
     {% with messages = get_flashed_messages() %}
     {% if messages %}
-    <div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 10px; max-width: 420px;">
+    <div id="toastContainer"
+        style="position: fixed; top: 20px; right: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 10px; max-width: 420px;">
         {% for message in messages %}
         <div class="toast-notification" style="
             display: flex; align-items: center; gap: 12px;
@@ -31,13 +32,34 @@
         ">
             <i class="fas fa-info-circle" style="font-size: 1.2rem; color: #D4AF37;"></i>
             <span style="flex: 1;">{{ message }}</span>
-            <button onclick="this.parentElement.remove()" style="background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer; font-size: 1.1rem; padding: 0; line-height: 1;">&times;</button>
+            <button onclick="this.parentElement.remove()"
+                style="background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer; font-size: 1.1rem; padding: 0; line-height: 1;">&times;</button>
         </div>
         {% endfor %}
     </div>
     <style>
-        @keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; pointer-events: none; } }
+        @keyframes slideInRight {
+            from {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+                pointer-events: none;
+            }
+        }
     </style>
     {% endif %}
     {% endwith %}
@@ -59,14 +81,27 @@
             </div>
 
             <h1 class="hero-title">UT Oriental Emplea</h1>
-            <p class="hero-description">Conoce nuestra <b>Bolsa de trabajo en línea</b> exclusiva para nuestra comunidad
-                universitaria,
-                soportada por nuestro aliado estratégico, crea tu cuenta para que no te pierdas la oportunidad de tener
-                <b>acceso
-                    a vacantes exclusivas de todo el país, ferias de trabajo virtuales complementadas con ponencias en
-                    temas de
-                    empleabilidad</b> que te ayudarán en tu proceso de inserción laboral.
-            </p>
+            <div class="hero-descriptions-row">
+                <p class="hero-description">Conoce nuestra <b>Bolsa de trabajo en línea</b> exclusiva para nuestra
+                    comunidad
+                    universitaria,
+                    soportada por nuestro aliado estratégico, crea tu cuenta para que no te pierdas la oportunidad de
+                    tener
+                    <b>acceso
+                        a vacantes exclusivas de todo el país, ferias de trabajo virtuales complementadas con ponencias
+                        en
+                        temas de
+                        empleabilidad</b> que te ayudarán en tu proceso de inserción laboral.
+                </p>
+                <p class="hero-description">Como parte de los vínculos de colaboración de la UT de Oriental con diversos
+                    organismos del sector productivo público y privado, se gestionan vacantes laborales afines a los
+                    perfiles de egreso de nuestros programas educativos.
+                    <br>
+                    Estas vacantes pertenecen a dichos organismos externos, por lo que se difunde a través de la
+                    <b>Bolsa de Trabajo de la UT de Oriental</b> para acercar el talento de la comunidad de egresados
+                    al mercado laboral.
+                </p>
+            </div>
 
             <button class="cta-button open-login">
                 <i class="fas fa-rocket"></i> Iniciar sesión

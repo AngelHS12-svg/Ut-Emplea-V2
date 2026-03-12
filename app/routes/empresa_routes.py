@@ -61,6 +61,8 @@ def publicar():
         escolaridad = request.form.get("escolaridad")
         experiencia = request.form.get("experiencia")
         conocimientos = request.form.get("conocimientos")
+        perfil = request.form.get("perfil")
+        num_vacantes = request.form.get("num_vacantes")
 
         conn = get_connection()
         cur = conn.cursor()
@@ -71,9 +73,9 @@ def publicar():
             
             # Insertar vacante
             cur.execute("""
-                INSERT INTO vacantes (id_empresa, titulo, descripcion, salario, modalidad, horario, lugar_trabajo, fecha_vencimiento)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id_vacante
-            """, (id_empresa, titulo, descripcion, float(salario) if salario and salario.replace('.', '', 1).isdigit() else None, modalidad, horario, lugar, fecha_vencimiento))
+                INSERT INTO vacantes (id_empresa, titulo, descripcion, salario, modalidad, horario, lugar_trabajo, fecha_vencimiento, num_vacantes, perfil)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id_vacante
+            """, (id_empresa, titulo, descripcion, float(salario) if salario and salario.replace('.', '', 1).isdigit() else None, modalidad, horario, lugar, fecha_vencimiento, int(num_vacantes) if num_vacantes else 1, perfil))
             
             id_vacante = cur.fetchone()[0]
             
