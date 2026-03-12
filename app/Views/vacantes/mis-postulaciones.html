@@ -1,74 +1,74 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis Postulaciones - UT Oriental Emplea</title>
     <link rel="stylesheet" href="/public/css/styles.css">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+<body class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <div class="brand-text">
+                UT Oriental
+                <span>Bolsa de Trabajo</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('candidato_dashboard') }}" class="nav-item">
+                <i class="fas fa-home"></i> <span>Inicio</span>
+            </a>
+            <a href="{{ url_for('candidato_buscar') }}" class="nav-item">
+                <i class="fas fa-search"></i> <span>Buscar Vacantes</span>
+            </a>
+            <a href="{{ url_for('candidato_ver') }}" class="nav-item">
+                <i class="fas fa-briefcase"></i> <span>Todas las Vacantes</span>
+            </a>
+            <a href="{{ url_for('candidato_postulaciones') }}" class="nav-item active">
+                <i class="fas fa-paper-plane"></i> <span>Mis Postulaciones</span>
+            </a>
+            <a href="{{ url_for('candidato_estado_postulaciones') }}" class="nav-item">
+                <i class="fas fa-clipboard-list"></i> <span>Estado de Aplicación</span>
+            </a>
+            <a href="{{ url_for('candidato_perfil') }}" class="nav-item">
+                <i class="fas fa-user"></i> <span>Mi Perfil</span>
+            </a>
+        </nav>
+        <div class="sidebar-divider"></div>
+        <div style="padding: 1.5rem; text-align: center; color: rgba(255,255,255,0.5); font-size: 0.75rem;">
+            &copy; 2026 UT Oriental
+        </div>
+    </aside>
 
-<body>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-logo">
-                    <i class="fas fa-graduation-cap"></i>
-                    <div>
-                        <div class="sidebar-title">UT Oriental</div>
-                        <div class="sidebar-subtitle">Bolsa de Trabajo</div>
+    <div class="main-wrapper">
+        <header class="navbar-top">
+            <div class="nav-left">
+                <h1 class="page-title">Mis Postulaciones</h1>
+                <p class="page-subtitle"><i class="fas fa-paper-plane"></i> Seguimiento de tus aplicaciones laborales</p>
+            </div>
+
+            <div class="user-menu">
+                <div class="profile-trigger">
+                    <div class="user-avatar">
+                        {{ current_user.correo[0:2]|upper }}
+                    </div>
+                    <div class="user-meta">
+                        <h4>{{ current_user.correo }}</h4>
+                        <span>{{ current_user.rol }}</span>
                     </div>
                 </div>
+                <a href="/logout" class="nav-logout-btn" title="Cerrar Sesión">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
             </div>
-            <nav>
-                <ul class="sidebar-nav">
-                    <li><a href="/candidato-dashboard"><i class="fas fa-home"></i> Inicio</a></li>
-                    <li><a href="/candidato/buscar"><i class="fas fa-search"></i> Buscar vacantes</a></li>
-                    <li><a href="/candidato/ver"><i class="fas fa-briefcase"></i> Ver vacantes</a></li>
-                    <li><a href="/candidato/postulaciones" class="active"><i class="fas fa-paper-plane"></i> Mis
-                            postulaciones</a></li>
-                    <li><a href="/candidato/estado-postulaciones"><i class="fas fa-clipboard-list"></i> Estado de
-                            postulaciones</a></li>
-                    <li><a href="/candidato/perfil"><i class="fas fa-user"></i> Perfil del candidato</a></li>
-                </ul>
-            </nav>
-            <div class="sidebar-footer" style="padding: 1.5rem; text-align: center;">
-                <p style="color: var(--texto-gris); font-size: 0.8rem;">&copy; 2026 UT Oriental</p>
-            </div>
-        </aside>
+        </header>
 
-        <main class="main-content">
-            <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div>
-                    <div class="accent-strip mb-2"></div>
-                    <h1>Mis Postulaciones</h1>
-                    <p>Revisa el estado de tus solicitudes</p>
-                </div>
-
-                <!-- Perfil y Logout -->
-                <div style="display: flex; align-items: center; gap: 20px;">
-                    <div class="user-profile"
-                        style="display: flex; align-items: center; gap: 15px; background: var(--blanco); padding: 10px 20px; border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                        <div class="avatar"
-                            style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--primario); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
-                            CA
-                        </div>
-                        <div style="margin-right: 10px;">
-                            <strong style="color: var(--texto-oscuro); display: block;">Candidato</strong>
-                            <span style="font-size: 0.8rem; color: var(--texto-gris);">Estudiante</span>
-                        </div>
-                        <div style="border-left: 1px solid var(--borde); height: 30px; margin: 0 10px;"></div>
-                        <a href="/logout" class="logout-btn"
-                            style="color: #e74c3c; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; font-weight: 600; transition: color 0.3s ease;">
-                            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                        </a>
-                    </div>
-                </div>
-            </div>
+        <main class="app-content">
 
             <div class="table-container">
                 <table>
@@ -78,100 +78,52 @@
                             <th>Empresa</th>
                             <th>Fecha de postulación</th>
                             <th>Estado actual</th>
-                            <th style="text-align: center;">Acción</th>
                         </tr>
                     </thead>
                     <tbody>
+                        {% for p in postulaciones %}
                         <tr>
-                            <td><strong>Desarrollador Frontend</strong></td>
-                            <td>TechCorp Solutions</td>
-                            <td>15/01/2026</td>
-                            <td><span class="badge badge-pendiente"><i class="fas fa-clock"></i> En revisión</span></td>
-                            <td style="text-align: center;">
-                                <a href="/candidato/estado-postulaciones" class="btn btn-small btn-outline">Ver
-                                    detalle</a>
-
+                            <td><strong>{{ p[0] }}</strong></td>
+                            <td>{{ p[1] }}</td>
+                            <td>{{ p[2].strftime('%d/%m/%Y') if p[2] else 'N/A' }}</td>
+                            <td>
+                                {% if p[3] == 'aceptado' %}
+                                <span class="badge badge-aceptado"><i class="fas fa-check-circle"></i> Aceptado</span>
+                                {% elif p[3] == 'rechazado' %}
+                                <span class="badge badge-rechazado"><i class="fas fa-times-circle"></i> Rechazado</span>
+                                {% else %}
+                                <span class="badge badge-pendiente"><i class="fas fa-clock"></i> En revisión</span>
+                                {% endif %}
                             </td>
                         </tr>
+                        {% else %}
                         <tr>
-                            <td><strong>Ingeniero de Software</strong></td>
-                            <td>Innovation Labs</td>
-                            <td>10/01/2026</td>
-                            <td><span class="badge badge-aceptado"><i class="fas fa-check-circle"></i> Aceptado</span>
-                            </td>
-                            <td style="text-align: center;">
-                                <a href="/candidato/estado-postulaciones" class="btn btn-small btn-outline">Ver
-                                    detalle</a>
-
-                            </td>
+                            <td colspan="4" style="text-align: center; color: var(--texto-gris); padding: 2rem;">No tienes postulaciones. ¡Busca vacantes y postúlate!</td>
                         </tr>
-                        <tr>
-                            <td><strong>Analista de Datos</strong></td>
-                            <td>DataMinds Inc.</td>
-                            <td>05/01/2026</td>
-                            <td><span class="badge badge-rechazado"><i class="fas fa-times-circle"></i> Rechazado</span>
-                            </td>
-                            <td style="text-align: center;">
-                                <a href="/candidato/estado-postulaciones" class="btn btn-small btn-outline">Ver
-                                    detalle</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>Diseñador UX/UI</strong></td>
-                            <td>Creative Studio</td>
-                            <td>28/12/2025</td>
-                            <td><span class="badge badge-pendiente"><i class="fas fa-clock"></i> En revisión</span></td>
-                            <td style="text-align: center;">
-                                <a href="/candidato/estado-postulaciones" class="btn btn-small btn-outline">Ver
-                                    detalle</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>Product Manager</strong></td>
-                            <td>StartupXYZ</td>
-                            <td>20/12/2025</td>
-                            <td><span class="badge badge-pendiente"><i class="fas fa-clock"></i> En revisión</span></td>
-                            <td style="text-align: center;">
-                                <a href="/candidato/estado-postulaciones" class="btn btn-small btn-outline">Ver
-                                    detalle</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>Backend Developer</strong></td>
-                            <td>CloudServices Co.</td>
-                            <td>15/12/2025</td>
-                            <td><span class="badge badge-aceptado"><i class="fas fa-check-circle"></i> Aceptado</span>
-                            </td>
-                            <td style="text-align: center;">
-                                <a href="/candidato/estado-postulaciones" class="btn btn-small btn-outline">Ver
-                                    detalle</a>
-                            </td>
-                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
 
-            <!-- Summary Cards -->
             <div class="grid grid-4" style="margin-top: 2rem;">
                 <div class="card" style="text-align: center;">
-                    <div style="font-size: 2.5rem; color: var(--dorado); margin-bottom: 0.5rem;">6</div>
+                    <div style="font-size: 2.5rem; color: var(--dorado); margin-bottom: 0.5rem;">{{ stats.total or 0 }}</div>
                     <div style="color: var(--texto-gris); font-size: 0.95rem;">Total de postulaciones</div>
                 </div>
                 <div class="card" style="text-align: center;">
-                    <div style="font-size: 2.5rem; color: var(--verde); margin-bottom: 0.5rem;">2</div>
+                    <div style="font-size: 2.5rem; color: var(--verde); margin-bottom: 0.5rem;">{{ stats.aceptadas or 0 }}</div>
                     <div style="color: var(--texto-gris); font-size: 0.95rem;">Aceptadas</div>
                 </div>
                 <div class="card" style="text-align: center;">
-                    <div style="font-size: 2.5rem; color: var(--texto-oscuro); margin-bottom: 0.5rem;">3</div>
+                    <div style="font-size: 2.5rem; color: var(--texto-oscuro); margin-bottom: 0.5rem;">{{ stats.en_revision or 0 }}</div>
                     <div style="color: var(--texto-gris); font-size: 0.95rem;">En revisión</div>
                 </div>
                 <div class="card" style="text-align: center;">
-                    <div style="font-size: 2.5rem; color: var(--vino); margin-bottom: 0.5rem;">1</div>
+                    <div style="font-size: 2.5rem; color: var(--vino); margin-bottom: 0.5rem;">{{ stats.rechazadas or 0 }}</div>
                     <div style="color: var(--texto-gris); font-size: 0.95rem;">Rechazadas</div>
                 </div>
             </div>
         </main>
     </div>
 </body>
-
 </html>

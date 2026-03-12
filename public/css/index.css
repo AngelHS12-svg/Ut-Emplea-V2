@@ -152,40 +152,45 @@ background-color:  rgba(194, 145, 79, 0.15);
 
 /* Header */
 .main-header {
-  padding: 20px 30px;
-  background: #0e312d;
+  padding: 15px 30px;
+  background: #ffffff;
   margin: 20px 30px 10px 30px;
-  border-radius: 28px;
-  box-shadow: 0 12px 28px -14px rgba(0,0,0,0.15);
-  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.05);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .main-header h1 {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
-  color: #ffffff;
+  color: #1a202c;
+  margin: 0;
 }
 
 .main-header p {
-  color: #ffffff;
-  font-size: 14px;
+  color: #718096;
+  font-size: 13px;
+  margin-top: 2px;
 }
 
 .badge-date {
-  background-color: rgba(194, 145, 79, 0.5); /* dorado transparente */
-  padding: 10px 20px;
-  border-radius: 50px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #ffffff;
-  border: none;
-  border-bottom: 3px solid #931935;
-  display: inline-block;
-  text-align: center;
-  backdrop-filter: blur(4px); /* opcional: efecto vidrio */
+  background: #f7fafc;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2d3748;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge-date i {
+  color: #c2914f;
 }
 
 

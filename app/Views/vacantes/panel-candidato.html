@@ -1,104 +1,112 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel del Candidato - UT Oriental Emplea</title>
     <link rel="stylesheet" href="/public/css/styles.css">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+<body class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <div class="brand-text">
+                UT Oriental
+                <span>Bolsa de Trabajo</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('candidato_dashboard') }}" class="nav-item active">
+                <i class="fas fa-home"></i> <span>Inicio</span>
+            </a>
+            <a href="{{ url_for('candidato_buscar') }}" class="nav-item">
+                <i class="fas fa-search"></i> <span>Buscar Vacantes</span>
+            </a>
+            <a href="{{ url_for('candidato_ver') }}" class="nav-item">
+                <i class="fas fa-briefcase"></i> <span>Todas las Vacantes</span>
+            </a>
+            <a href="{{ url_for('candidato_postulaciones') }}" class="nav-item">
+                <i class="fas fa-paper-plane"></i> <span>Mis Postulaciones</span>
+            </a>
+            <a href="{{ url_for('candidato_estado_postulaciones') }}" class="nav-item">
+                <i class="fas fa-clipboard-list"></i> <span>Estado de Aplicación</span>
+            </a>
+            <a href="{{ url_for('candidato_perfil') }}" class="nav-item">
+                <i class="fas fa-user"></i> <span>Mi Perfil</span>
+            </a>
+        </nav>
+        <div class="sidebar-divider"></div>
+        <div style="padding: 1.5rem; text-align: center; color: rgba(255,255,255,0.5); font-size: 0.75rem;">
+            &copy; 2026 UT Oriental
+        </div>
+    </aside>
 
-<body>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-logo">
-                    <i class="fas fa-graduation-cap"></i>
+    <div class="main-wrapper">
+        <header class="navbar-top">
+            <div class="nav-left">
+                <h1 class="page-title">Bienvenido, {{ stats.nombre or 'Candidato' }}</h1>
+                <p class="page-subtitle"><i class="fas fa-user-graduate"></i> Gestiona tu carrera profesional</p>
+            </div>
+
+            <div class="user-menu">
+                <div class="profile-trigger">
+                    <div class="user-avatar">
+                        {{ current_user.correo[0:2]|upper }}
+                    </div>
+                    <div class="user-meta">
+                        <h4>{{ current_user.correo }}</h4>
+                        <span>{{ current_user.rol }}</span>
+                    </div>
+                </div>
+                <a href="/logout" class="nav-logout-btn" title="Cerrar Sesión">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
+        </header>
+
+        <main class="app-content">
+
+            {% if stats.cv_missing %}
+            <div class="card" style="background: #fff5f5; border-left: 5px solid #e53e3e; display: flex; align-items: center; justify-content: space-between; padding: 20px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div style="width: 45px; height: 45px; border-radius: 50%; background: #fed7d7; color: #e53e3e; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                        <i class="fas fa-file-upload"></i>
+                    </div>
                     <div>
-                        <div class="sidebar-title">UT Oriental</div>
-                        <div class="sidebar-subtitle">Bolsa de Trabajo</div>
+                        <h4 style="color: #c53030; margin: 0;">¡Completa tu perfil!</h4>
+                        <p style="color: #9b2c2c; margin: 0; font-size: 0.9rem;">No has subido tu CV. Las empresas no podrán ver tu información completa hasta que lo hagas.</p>
                     </div>
                 </div>
+                <a href="/candidato/perfil" class="btn btn-accent" style="padding: 10px 20px;">Subir CV ahora</a>
             </div>
-            <nav>
-                <ul class="sidebar-nav">
-                    <li><a href="/candidato-dashboard" class="active"><i class="fas fa-home"></i> Inicio</a></li>
-                    <li><a href="/candidato/buscar"><i class="fas fa-search"></i> Buscar vacantes</a></li>
-                    <li><a href="/candidato/ver"><i class="fas fa-briefcase"></i> Ver vacantes</a></li>
-                    <li><a href="/candidato/postulaciones"><i class="fas fa-paper-plane"></i> Mis postulaciones</a></li>
-                    <li><a href="/candidato/estado-postulaciones"><i class="fas fa-clipboard-list"></i> Estado de
-                            postulaciones</a></li>
-                    <li><a href="/candidato/perfil"><i class="fas fa-user"></i> Perfil del candidato</a></li>
-                </ul>
-            </nav>
-            <div class="sidebar-footer" style="padding: 1.5rem; text-align: center;">
-                <p style="color: var(--texto-gris); font-size: 0.8rem;">&copy; 2026 UT Oriental</p>
-            </div>
-        </aside>
-
-        <main class="main-content">
-            <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div>
-                    <div class="accent-strip mb-2"></div>
-                    <h1>Bienvenido al Panel del Candidato</h1>
-                    <p>Consulta y postúlate a vacantes dentro de la universidad</p>
-                </div>
-
-                <!-- Perfil y Logout -->
-                <div style="display: flex; align-items: center; gap: 20px;">
-                    <div class="user-profile"
-                        style="display: flex; align-items: center; gap: 15px; background: var(--blanco); padding: 10px 20px; border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                        <div class="avatar"
-                            style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--primario); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
-                            CA
-                        </div>
-                        <div style="margin-right: 10px;">
-                            <strong style="color: var(--texto-oscuro); display: block;">Candidato</strong>
-                            <span style="font-size: 0.8rem; color: var(--texto-gris);">Estudiante</span>
-                        </div>
-                        <div style="border-left: 1px solid var(--borde); height: 30px; margin: 0 10px;"></div>
-                        <a href="/logout" class="logout-btn"
-                            style="color: #e74c3c; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; font-weight: 600; transition: color 0.3s ease;">
-                            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                        </a>
-                    </div>
-                </div>
-            </div>
+            {% endif %}
 
             <section class="quick-access">
-                <a href="/candidato/buscar" class="quick-card">
+                <a href="{{ url_for('candidato_buscar') }}" class="quick-card">
                     <div class="quick-card-icon"><i class="fas fa-search"></i></div>
                     <h3 class="quick-card-title">Buscar vacantes</h3>
                     <p class="quick-card-description">Encuentra ofertas según tu perfil</p>
                 </a>
-                <a href="/candidato/ver" class="quick-card">
+                <a href="{{ url_for('candidato_ver') }}" class="quick-card">
                     <div class="quick-card-icon"><i class="fas fa-briefcase"></i></div>
                     <h3 class="quick-card-title">Ver vacantes</h3>
                     <p class="quick-card-description">Consulta todas las vacantes disponibles</p>
                 </a>
-                <a href="/candidato/postulaciones" class="quick-card">
+                <a href="{{ url_for('candidato_postulaciones') }}" class="quick-card">
                     <div class="quick-card-icon"><i class="fas fa-paper-plane"></i></div>
                     <h3 class="quick-card-title">Mis postulaciones</h3>
-                    <p class="quick-card-description">Revisa las vacantes a las que has aplicado</p>
+                    <p class="quick-card-description">{{ stats.total_postulaciones }} postulaciones enviadas</p>
                 </a>
-                <a href="/candidato/estado-postulaciones" class="quick-card">
+                <a href="{{ url_for('candidato_estado_postulaciones') }}" class="quick-card">
                     <div class="quick-card-icon"><i class="fas fa-clipboard-check"></i></div>
                     <h3 class="quick-card-title">Estado de postulaciones</h3>
-                    <p class="quick-card-description">Consulta el estado de tus solicitudes</p>
+                    <p class="quick-card-description">{{ stats.aceptadas }} aceptadas, {{ stats.en_revision }} en revisión</p>
                 </a>
             </section>
-
-            <div class="search-bar">
-                <div class="search-input">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Buscar vacante por puesto o empresa" class="form-control">
-                </div>
-                <button class="btn btn-accent"><i class="fas fa-search"></i> Buscar</button>
-            </div>
 
             <div class="card">
                 <div class="card-header">
@@ -111,23 +119,33 @@
                             <th>Empresa</th>
                             <th>Estado</th>
                             <th>Fecha</th>
-                            <th style="text-align: center;">Acción</th>
                         </tr>
                     </thead>
                     <tbody>
+                        {% for act in actividad %}
                         <tr>
-                            <td>Desarrollador Frontend</td>
-                            <td>TechCorp SA</td>
-                            <td><span class="badge badge-pendiente">En revisión</span></td>
-                            <td>05/02/2026</td>
-                            <td style="text-align: center;"><i class="fas fa-chevron-right"
-                                    style="color: var(--dorado); cursor: pointer;"></i></td>
+                            <td>{{ act[0] }}</td>
+                            <td>{{ act[1] }}</td>
+                            <td>
+                                {% if act[2] == 'aceptado' %}
+                                <span class="badge badge-aceptado"><i class="fas fa-check-circle"></i> Aceptado</span>
+                                {% elif act[2] == 'rechazado' %}
+                                <span class="badge badge-rechazado"><i class="fas fa-times-circle"></i> Rechazado</span>
+                                {% else %}
+                                <span class="badge badge-pendiente"><i class="fas fa-clock"></i> En revisión</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ act[3].strftime('%d/%m/%Y') if act[3] else 'N/A' }}</td>
                         </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: var(--texto-gris); padding: 2rem;">No hay actividad reciente. ¡Empieza buscando vacantes!</td>
+                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
         </main>
     </div>
 </body>
-
 </html>

@@ -14,6 +14,34 @@
 </head>
 
 <body>
+    <!-- Toast Notifications -->
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 10px; max-width: 420px;">
+        {% for message in messages %}
+        <div class="toast-notification" style="
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 20px; border-radius: 12px;
+            background: linear-gradient(135deg, #1e3a5f, #2c5282);
+            color: #fff; font-size: 0.92rem; font-weight: 500;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+            animation: slideInRight 0.4s ease-out, fadeOut 0.5s ease-in 4s forwards;
+            font-family: 'Montserrat', sans-serif;
+            border-left: 4px solid #D4AF37;
+        ">
+            <i class="fas fa-info-circle" style="font-size: 1.2rem; color: #D4AF37;"></i>
+            <span style="flex: 1;">{{ message }}</span>
+            <button onclick="this.parentElement.remove()" style="background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer; font-size: 1.1rem; padding: 0; line-height: 1;">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    <style>
+        @keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; pointer-events: none; } }
+    </style>
+    {% endif %}
+    {% endwith %}
+
     <div class="hero">
         <!-- Navbar -->
         <nav class="navbar">
@@ -137,20 +165,6 @@
             <h2>INICIAR SESIÓN</h2>
 
             <h3 id="roleIndicator"></h3>
-
-            <!-- Flash Messages -->
-            {% with messages = get_flashed_messages() %}
-            {% if messages %}
-            <div style="margin-bottom: 20px;">
-                {% for message in messages %}
-                <div
-                    style="padding: 10px; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 5px; margin-bottom: 5px; font-size: 0.9rem;">
-                    {{ message }}
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-            {% endwith %}
 
             <form id="loginForm" method="POST" action="/auth/login">
 

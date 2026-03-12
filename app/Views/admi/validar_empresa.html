@@ -1,311 +1,88 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Validar Empresa · Administración</title>
-  
-  <!-- Google Fonts: Inter -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
-  <!-- Font Awesome 6 -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <!-- CSS externo -->
-  <link rel="stylesheet" href="/public/css/validar_empresa.css">
- 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validar Empresa · Bolsa de Trabajo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/public/css/admin-child.css">
 </head>
 <body>
-  <div class="validation-container">
-    <!-- HEADER con iconos actualizados -->
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div style="padding: 12px 20px; margin-bottom: 20px; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; border-radius: 12px; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-check-circle"></i> {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
 
-    <!-- CONTADOR con icono actualizado -->
-    <div class="counter-row">
-      <span><i class="far fa-clock"></i> EMPRESAS PENDIENTES</span>
-      <span class="counter-number">4</span>
+        <div class="stats-grid" style="margin-bottom: 20px;">
+            <div class="stat-card" style="padding: 15px 24px; width: fit-content; min-width: 280px;">
+                <div class="stat-icon"><i class="far fa-clock"></i></div>
+                <div class="stat-info">
+                    <h3>{{ empresas|length }}</h3>
+                    <p>Empresas por validar</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="cards-grid">
+            {% for emp in empresas %}
+            <div class="item-card">
+                <div class="card-top">
+                    <div>
+                        <h4 class="card-title">{{ emp[1] }}</h4>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">{{ emp[2] or 'Sin giro' }} · {{ emp[3] or 'N/A' }}</p>
+                    </div>
+                    <span class="status-badge status-pending">Pendiente</span>
+                </div>
+
+                <div class="card-details">
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="fas fa-phone-alt"></i> Tel:</span>
+                        <span class="detail-value">{{ emp[4] or 'N/A' }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="far fa-envelope"></i> Email:</span>
+                        <span class="detail-value">{{ emp[5] }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="far fa-calendar"></i> Fecha:</span>
+                        <span class="detail-value">{{ emp[6].strftime('%d/%m/%Y') if emp[6] else 'N/A' }}</span>
+                    </div>
+                    {% if emp[7] %}
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="fas fa-map-marker-alt"></i> Dir:</span>
+                        <span class="detail-value">{{ emp[7] }}{% if emp[8] %}, {{ emp[8] }}{% endif %}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="card-actions">
+                    <form action="/admin/aprobar-empresa/{{ emp[0] }}" method="POST" style="flex: 1;">
+                        <button type="submit" class="btn btn-accent" style="width: 100%; justify-content: center;">
+                            <i class="fas fa-check"></i> Aprobar
+                        </button>
+                    </form>
+                    <form action="/admin/rechazar-empresa/{{ emp[0] }}" method="POST" style="flex: 1;">
+                        <button type="submit" class="btn btn-outline" style="width: 100%; justify-content: center; color: var(--danger);">
+                            <i class="fas fa-times"></i> Rechazar
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div style="grid-column: 1/-1; text-align: center; padding: 60px; color: var(--text-muted);">
+                <i class="fas fa-check-double" style="font-size: 3rem; color: var(--success); margin-bottom: 20px;"></i>
+                <h3>Todo al día</h3>
+                <p>No hay empresas pendientes de validación en este momento.</p>
+            </div>
+            {% endfor %}
+        </div>
     </div>
-
-    <!-- TARJETAS DE EMPRESAS -->
-    <div class="cards-grid" id="companyCards"></div>
-  </div>
-
-  <!-- MODAL PRINCIPAL con iconos actualizados -->
-  <div class="modal" id="companyModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2><i class="far fa-building" style="margin-right: 10px;"></i> Información completa de la empresa</h2>
-        <button class="close-modal" id="closeModalBtn">&times;</button>
-      </div>
-      <div class="subheader" style="color:#586f94; margin-bottom:10px; padding-left:10px; border-left:4px solid #1e3a8a;">
-        <i class="fas fa-info-circle"></i> Revise todos los datos antes de aprobar o rechazar
-      </div>
-      <div id="modalDynamicContent"></div>
-      <div class="modal-actions" id="modalActions"></div>
-    </div>
-  </div>
-
-  <!-- MODAL DE CONFIRMACIÓN con iconos actualizados -->
-  <div class="modal" id="confirmModal">
-    <div class="modal-content" style="max-width: 400px; text-align: center;">
-      <h3 style="margin-bottom: 16px;" id="confirmTitle"><i class="fas fa-question-circle"></i> ¿Aprobar empresa?</h3>
-      <p id="confirmMessage" style="margin-bottom: 24px; color:#3d5277;">La empresa será aprobada y podrá publicar vacantes.</p>
-      <div style="display: flex; gap: 12px; justify-content: center;">
-        <button class="btn" id="confirmCancel"><i class="fas fa-times"></i> Cancelar</button>
-        <button class="btn-approve" id="confirmAction" style="padding:10px 30px;"><i class="fas fa-check"></i> Sí, aprobar</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    (function() {
-      const companies = [
-        {
-          id: 1,
-          name: "Tecnología Industrial S.A. de C.V.",
-          rfc: "TIN950101ABC",
-          giro: "Tecnología de la información",
-          tipo: "Sociedad Anónima",
-          telefono: "(555) 123-4567",
-          correo: "contacto@tecnologiaindustrial.com",
-          fechaRegistro: "15 de enero, 2026",
-          direccion: "Av. Insurgentes Sur 1234, Col. Del Valle",
-          ciudad: "Ciudad de México",
-          estado: "CDMX",
-          sitioWeb: "www.tecnologiaindustrial.com",
-          contacto: "Carlos Mendoza",
-          cargo: "Director de Operaciones",
-          descripcion: "Empresa de desarrollo de software y consultoría TI con más de 15 años de experiencia."
-        },
-        {
-          id: 2,
-          name: "Construcciones del Norte",
-          rfc: "CNO870215KJ3",
-          giro: "Construcción",
-          tipo: "Sociedad de Responsabilidad Limitada",
-          telefono: "(555) 987-6543",
-          correo: "rh@construccionesnorte.mx",
-          fechaRegistro: "20 de enero, 2026",
-          direccion: "Blvd. Bernardo Quintana 500, Col. Carretas",
-          ciudad: "Querétaro",
-          estado: "QRO",
-          sitioWeb: "www.construccionesnorte.mx",
-          contacto: "Laura Fernández",
-          cargo: "Gerente de RH",
-          descripcion: "Constructora especializada en obra civil y edificación residencial y comercial."
-        },
-        {
-          id: 3,
-          name: "Servicios Financieros Modernos",
-          rfc: "SFM1207200EF",
-          giro: "Servicios financieros",
-          tipo: "Sociedad Anónima de Capital Variable",
-          telefono: "(555) 456-7890",
-          correo: "talentos@sfmodernos.com",
-          fechaRegistro: "25 de enero, 2026",
-          direccion: "Torre Corporativa, Piso 15, Av. Reforma 890",
-          ciudad: "Ciudad de México",
-          estado: "CDMX",
-          sitioWeb: "www.sfmodernos.com",
-          contacto: "Ana Patricia Ruiz",
-          cargo: "Coordinadora de Talento",
-          descripcion: "Institución financiera enfocada en servicios de inversión y asesoría financiera."
-        },
-        {
-          id: 4,
-          name: "Logística y Transporte Nacional",
-          rfc: "LTN230118H7R",
-          giro: "Logística",
-          tipo: "Sociedad Anónima",
-          telefono: "(555) 345-9870",
-          correo: "contacto@logisticanacional.mx",
-          fechaRegistro: "22 de enero, 2026",
-          direccion: "Calle Industria 234, Parque Industrial",
-          ciudad: "Monterrey",
-          estado: "NL",
-          sitioWeb: "www.logisticanacional.mx",
-          contacto: "Jorge Treviño",
-          cargo: "Director de Operaciones",
-          descripcion: "Empresa de logística y transporte de carga pesada a nivel nacional."
-        }
-      ];
-
-      const cardsGrid = document.getElementById('companyCards');
-      const modal = document.getElementById('companyModal');
-      const closeModalBtn = document.getElementById('closeModalBtn');
-      const modalDynamic = document.getElementById('modalDynamicContent');
-      const modalActions = document.getElementById('modalActions');
-      const confirmModal = document.getElementById('confirmModal');
-      const confirmTitle = document.getElementById('confirmTitle');
-      const confirmMessage = document.getElementById('confirmMessage');
-      const confirmCancel = document.getElementById('confirmCancel');
-      const confirmActionBtn = document.getElementById('confirmAction');
-
-      let currentCompanyId = null;
-      let currentAction = null;
-
-      function renderCards() {
-        cardsGrid.innerHTML = '';
-        companies.forEach(company => {
-          const card = document.createElement('div');
-          card.className = 'company-card';
-          card.dataset.id = company.id;
-          card.innerHTML = `
-            <div class="card-header">
-              <span class="company-name"><i class="fas fa-building" style="margin-right: 6px; color:#1e3a8a;"></i>${company.name}</span>
-              <span class="status-badge"><i class="far fa-hourglass"></i> PENDIENTE</span>
-            </div>
-            <div class="details-compact">
-              <div class="detail-line"><span class="tag"><i class="fas fa-industry" style="margin-right: 4px;"></i>GIRO</span><span class="value">${company.giro}</span></div>
-              <div class="detail-line"><span class="tag"><i class="fas fa-tag" style="margin-right: 4px;"></i>TIPO</span><span class="value">${company.tipo}</span></div>
-              <div class="detail-line"><span class="tag"><i class="fas fa-phone-alt" style="margin-right: 4px;"></i>TELÉFONO</span><span class="value">${company.telefono}</span></div>
-              <div class="detail-line"><span class="tag"><i class="far fa-envelope" style="margin-right: 4px;"></i>CORREO</span><span class="value">${company.correo}</span></div>
-              <div class="detail-line"><span class="tag"><i class="far fa-calendar" style="margin-right: 4px;"></i>FECHA</span><span class="value">${company.fechaRegistro}</span></div>
-            </div>
-            <div class="action-buttons">
-              <button class="btn btn-detail" data-id="${company.id}"><i class="far fa-eye"></i> Ver detalle</button>
-              <button class="btn btn-approve btn-aprobar" data-id="${company.id}"><i class="fas fa-check-circle"></i> Aprobar</button>
-              <button class="btn btn-reject btn-rechazar" data-id="${company.id}"><i class="fas fa-times-circle"></i> Rechazar</button>
-            </div>
-          `;
-          cardsGrid.appendChild(card);
-        });
-
-        document.querySelectorAll('.btn-detail').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const id = parseInt(btn.dataset.id);
-            openDetailModal(id);
-          });
-        });
-
-        document.querySelectorAll('.btn-aprobar').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const id = parseInt(btn.dataset.id);
-            currentCompanyId = id;
-            currentAction = 'approve';
-            confirmTitle.innerHTML = '<i class="fas fa-question-circle"></i> ¿Aprobar empresa?';
-            confirmMessage.innerText = 'La empresa será aprobada y podrá publicar vacantes.';
-            confirmActionBtn.innerHTML = '<i class="fas fa-check"></i> Sí, aprobar';
-            confirmActionBtn.className = 'btn-approve';
-            confirmModal.classList.add('active');
-          });
-        });
-
-        document.querySelectorAll('.btn-rechazar').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const id = parseInt(btn.dataset.id);
-            currentCompanyId = id;
-            currentAction = 'reject';
-            confirmTitle.innerHTML = '<i class="fas fa-question-circle"></i> ¿Rechazar empresa?';
-            confirmMessage.innerText = 'La empresa no será aprobada. Se notificará el motivo.';
-            confirmActionBtn.innerHTML = '<i class="fas fa-ban"></i> Sí, rechazar';
-            confirmActionBtn.className = 'btn-reject';
-            confirmModal.classList.add('active');
-          });
-        });
-      }
-
-      function openDetailModal(id) {
-        const company = companies.find(c => c.id === id);
-        if (!company) return;
-
-        currentCompanyId = id;
-
-        modalDynamic.innerHTML = `
-          <div class="company-detail">
-            <div style="display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap;">
-              <span style="font-weight:600; font-size:18px;"><i class="fas fa-building" style="margin-right: 8px; color:#1e3a8a;"></i>${company.name}</span>
-              <span class="rfc-chip"><i class="fas fa-id-card" style="margin-right: 4px;"></i>RFC: ${company.rfc}</span>
-            </div>
-
-            <div class="detail-section">
-              <div class="grid-2">
-                <div class="field"><span class="label"><i class="fas fa-building"></i> EMPRESA</span><div class="value">${company.name}</div></div>
-                <div class="field"><span class="label"><i class="fas fa-id-card"></i> RFC</span><div class="value">${company.rfc}</div></div>
-                <div class="field"><span class="label"><i class="fas fa-industry"></i> GIRO</span><div class="value">${company.giro}</div></div>
-                <div class="field"><span class="label"><i class="fas fa-tag"></i> TIPO</span><div class="value">${company.tipo}</div></div>
-              </div>
-              <div class="field"><span class="label"><i class="fas fa-map-marker-alt"></i> DIRECCIÓN</span><div class="value">${company.direccion}</div></div>
-              <div class="grid-2" style="margin-top:12px;">
-                <div class="field"><span class="label"><i class="fas fa-city"></i> CIUDAD</span><div class="value">${company.ciudad}</div></div>
-                <div class="field"><span class="label"><i class="fas fa-map-pin"></i> ESTADO</span><div class="value">${company.estado}</div></div>
-              </div>
-            </div>
-
-            <div class="grid-2" style="margin:8px 0;">
-              <div><span class="label"><i class="fas fa-phone-alt"></i> TELÉFONO</span><div class="value" style="font-size:18px;">${company.telefono}</div></div>
-              <div><span class="label"><i class="far fa-envelope"></i> CORREO</span><div class="value" style="font-size:18px;">${company.correo}</div></div>
-              <div><span class="label"><i class="fas fa-globe"></i> SITIO WEB</span><div class="value">${company.sitioWeb}</div></div>
-              <div><span class="label"><i class="far fa-calendar-alt"></i> FECHA REGISTRO</span><div class="value">${company.fechaRegistro}</div></div>
-            </div>
-
-            <div class="contact-row">
-              <i class="fas fa-user-tie" style="font-size:22px; color:#1e3a8a;"></i>
-              <div><strong>${company.contacto}</strong> — ${company.cargo}</div>
-            </div>
-
-            <div class="desc-box">
-              <i class="fas fa-align-left" style="margin-right:8px;"></i> ${company.descripcion}
-            </div>
-          </div>
-        `;
-
-        modalActions.innerHTML = `
-          <button class="btn-large btn-reject-large" id="modalRejectBtn"><i class="fas fa-times-circle"></i> Rechazar</button>
-          <button class="btn-large btn-approve-large" id="modalApproveBtn"><i class="fas fa-check-circle"></i> Aprobar</button>
-        `;
-
-        modal.classList.add('active');
-
-        document.getElementById('modalRejectBtn').addEventListener('click', () => {
-          modal.classList.remove('active');
-          currentAction = 'reject';
-          confirmTitle.innerHTML = '<i class="fas fa-question-circle"></i> ¿Rechazar empresa?';
-          confirmMessage.innerText = 'La empresa no será aprobada. Se notificará el motivo.';
-          confirmActionBtn.innerHTML = '<i class="fas fa-ban"></i> Sí, rechazar';
-          confirmActionBtn.className = 'btn-reject';
-          confirmModal.classList.add('active');
-        });
-
-        document.getElementById('modalApproveBtn').addEventListener('click', () => {
-          modal.classList.remove('active');
-          currentAction = 'approve';
-          confirmTitle.innerHTML = '<i class="fas fa-question-circle"></i> ¿Aprobar empresa?';
-          confirmMessage.innerText = 'La empresa será aprobada y podrá publicar vacantes.';
-          confirmActionBtn.innerHTML = '<i class="fas fa-check"></i> Sí, aprobar';
-          confirmActionBtn.className = 'btn-approve';
-          confirmModal.classList.add('active');
-        });
-      }
-
-      closeModalBtn.addEventListener('click', () => {
-        modal.classList.remove('active');
-      });
-
-      window.addEventListener('click', (e) => {
-        if (e.target === modal) modal.classList.remove('active');
-        if (e.target === confirmModal) confirmModal.classList.remove('active');
-      });
-
-      confirmCancel.addEventListener('click', () => {
-        confirmModal.classList.remove('active');
-      });
-
-      confirmActionBtn.addEventListener('click', () => {
-        if (!currentCompanyId || !currentAction) return;
-
-        alert(`Empresa ${currentAction === 'approve' ? 'APROBADA' : 'RECHAZADA'} (ID: ${currentCompanyId}) - simulación`);
-
-        const index = companies.findIndex(c => c.id === currentCompanyId);
-        if (index !== -1) companies.splice(index, 1);
-
-        renderCards();
-        confirmModal.classList.remove('active');
-        modal.classList.remove('active');
-      });
-
-      renderCards();
-    })();
-  </script>
 </body>
 </html>

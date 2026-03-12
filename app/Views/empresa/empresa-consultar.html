@@ -10,76 +10,62 @@
 </head>
 </head>
 
-<body>
-    <div class="dashboard-container">
-        <!-- Sidebar unificado -->
-        <aside class="sidebar">
-            <div class="sidebar-logo">
-                <i class="fas fa-building fa-3x" style="color: var(--dorado);"></i>
-                <h2>Panel de Empresa</h2>
+<body class="app-shell">
+
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <i class="fas fa-building"></i>
+            </div>
+            <div class="brand-text">
+                Panel de Empresa
+                <span>UT Oriental Emplea</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('empresa.inicio') }}" class="nav-item">
+                <i class="fas fa-home"></i> <span>Inicio</span>
+            </a>
+            <a href="{{ url_for('empresa.publicar') }}" class="nav-item">
+                <i class="fas fa-plus-circle"></i> <span>Publicar Vacante</span>
+            </a>
+            <a href="{{ url_for('empresa.consultar') }}" class="nav-item active">
+                <i class="fas fa-briefcase"></i> <span>Mis Vacantes</span>
+            </a>
+            <a href="{{ url_for('empresa.estadisticas') }}" class="nav-item">
+                <i class="fas fa-chart-bar"></i> <span>Estadísticas</span>
+            </a>
+            <a href="{{ url_for('empresa.perfil') }}" class="nav-item">
+                <i class="fas fa-user-cog"></i> <span>Mi Perfil</span>
+            </a>
+        </nav>
+    </div>
+
+    <div class="main-wrapper">
+        <header class="navbar-top">
+            <div class="nav-left">
+                <h1 class="page-title">Mis Vacantes</h1>
+                <p class="page-subtitle">Administre y edite las vacantes publicadas</p>
             </div>
 
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="/empresa" class="nav-link">
-                        <i class="fas fa-home"></i> Inicio
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/empresa/publicar" class="nav-link">
-                        <i class="fas fa-plus-circle"></i> Publicar Vacante
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/empresa/consultar" class="nav-link active">
-                        <i class="fas fa-briefcase"></i> Mis Vacantes
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/empresa/estadisticas" class="nav-link">
-                        <i class="fas fa-chart-bar"></i> Estadísticas
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/empresa/perfil" class="nav-link">
-                        <i class="fas fa-user-cog"></i> Mi Perfil
-                    </a>
-                </li>
-                <li class="nav-item sidebar-footer"
-                    style="padding: 1.5rem; text-align: center; margin-top: auto; position: absolute; bottom: 0; width: 100%;">
-                    <p style="color: rgba(255,255,255,0.6); font-size: 0.8rem;">&copy; 2026 UT Oriental</p>
-                </li>
-            </ul>
-        </aside>
-
-        <!-- Main Wrapper -->
-        <div class="main-content">
-            <!-- Top Header -->
-            <header class="page-header"
-                style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
-                <div>
-                    <div class="accent-strip mb-2"></div>
-                    <h1 style="margin: 0; color: #fff; font-size: 1.8rem;">Mis Vacantes y Postulados</h1>
-                    <p style="color: var(--texto-gris);">Administre y edite las vacantes publicadas por su empresa</p>
-                </div>
-
-                <div class="user-profile"
-                    style="display: flex; align-items: center; gap: 15px; background: white; padding: 10px 20px; border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                    <div class="avatar"
-                        style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--primario); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
-                        EM
+            <div class="user-menu">
+                <div class="profile-trigger">
+                    <div class="user-avatar">
+                        {{ current_user.correo[0]|upper }}
                     </div>
-                    <div style="margin-right: 10px;">
-                        <strong style="color: var(--texto-oscuro); display: block;">Usuario Empresa</strong>
-                        <span style="font-size: 0.8rem; color: var(--texto-gris);">Organización</span>
+                    <div class="user-meta">
+                        <h4>{{ current_user.correo }}</h4>
+                        <span>{{ current_user.rol }}</span>
                     </div>
-                    <div style="border-left: 1px solid var(--borde, #e2e8f0); height: 30px; margin: 0 10px;"></div>
-                    <a href="/logout" class="logout-btn"
-                        style="color: #e74c3c; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; font-weight: 600; transition: color 0.3s ease;">
-                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                    </a>
                 </div>
-            </header>
+                <a href="/logout" class="nav-logout-btn" title="Cerrar Sesión">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
+        </header>
+
+        <main class="app-content">
 
             <div class="card" style="padding: 2rem; background: transparent; box-shadow: none;">
 
@@ -108,7 +94,7 @@
                 </div>
 
                 <div class="d-flex justify-between align-center mb-2">
-                    <p><strong>5 vacantes encontradas</strong></p>
+                    <p><strong>{{ vacantes|length }} vacantes encontradas</strong></p>
                     <a href="/empresa/publicar" class="btn btn-accent">
                         <i class="fas fa-plus-circle"></i> Publicar nueva vacante
                     </a>
@@ -119,64 +105,36 @@
                         <thead>
                             <tr>
                                 <th>Título de la vacante</th>
-                                <th>Área / Departamento</th>
                                 <th>Fecha de publicación</th>
-                                <th>Fecha de vencimiento</th>
                                 <th>Estado</th>
                                 <th>Postulaciones</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
+                            {% for vacante in vacantes %}
                             <tr>
-                                <td>Analista de Datos Jr.</td>
-                                <td>Tecnología</td>
-                                <td>15/01/2026</td>
-                                <td>15/03/2026</td>
-                                <td><span class="badge badge-activa">Activa</span></td>
-                                <td>23</td>
+                                <td>{{ vacante[1] }}</td>
+                                <td>{{ vacante[2].strftime('%d/%m/%Y') if vacante[2] else 'N/A' }}</td>
                                 <td>
-                                    <i class="fas fa-eye" style="color: var(--verde); margin-right: 10px;"></i>
-                                    <i class="fas fa-edit" style="color: var(--dorado); margin-right: 10px;"></i>
-                                    <i class="fas fa-trash" style="color: var(--vino);"></i>
+                                    {% if vacante[3] == 'activa' %}
+                                    <span class="badge badge-activa">Activa</span>
+                                    {% else %}
+                                    <span class="badge badge-inactiva">{{ vacante[3] }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ vacante[4] }}</td>
+                                <td>
+                                    <a href="/empresa/vacante/{{ vacante[0] }}/postulaciones" title="Ver postulados"><i class="fas fa-eye" style="color: var(--verde); margin-right: 10px;"></i></a>
+                                    <a href="#" title="Editar vacante"><i class="fas fa-edit" style="color: var(--dorado); margin-right: 10px;"></i></a>
+                                    <a href="#" title="Eliminar vacante"><i class="fas fa-trash" style="color: var(--vino);"></i></a>
                                 </td>
                             </tr>
+                            {% else %}
                             <tr>
-                                <td>Asistente Administrativo</td>
-                                <td>Administración</td>
-                                <td>10/01/2026</td>
-                                <td>10/02/2026</td>
-                                <td><span class="badge badge-pendiente">Próxima a vencer</span></td>
-                                <td>45</td>
-                                <td><i class="fas fa-eye" style="color: var(--verde);"></i></td>
+                                <td colspan="5" style="text-align: center; padding: 20px;">No has publicado vacantes todavía.</td>
                             </tr>
-                            <tr>
-                                <td>Desarrollador Frontend</td>
-                                <td>Tecnología</td>
-                                <td>05/12/2025</td>
-                                <td>05/01/2026</td>
-                                <td><span class="badge badge-inactiva">Cerrada</span></td>
-                                <td>67</td>
-                                <td><i class="fas fa-eye" style="color: var(--verde);"></i></td>
-                            </tr>
-                            <tr>
-                                <td>Contador Jr.</td>
-                                <td>Finanzas</td>
-                                <td>20/01/2026</td>
-                                <td>20/03/2026</td>
-                                <td><span class="badge badge-activa">Activa</span></td>
-                                <td>12</td>
-                                <td><i class="fas fa-eye" style="color: var(--verde);"></i></td>
-                            </tr>
-                            <tr>
-                                <td>Diseñador Gráfico</td>
-                                <td>Marketing</td>
-                                <td>12/01/2026</td>
-                                <td>12/02/2026</td>
-                                <td><span class="badge badge-activa">Activa</span></td>
-                                <td>34</td>
-                                <td><i class="fas fa-eye" style="color: var(--verde);"></i></td>
-                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>

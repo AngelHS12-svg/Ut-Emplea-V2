@@ -1,147 +1,107 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estado de Postulaciones - UT Oriental Emplea</title>
     <link rel="stylesheet" href="/public/css/styles.css">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+<body class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <div class="brand-text">
+                UT Oriental
+                <span>Bolsa de Trabajo</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('candidato_dashboard') }}" class="nav-item">
+                <i class="fas fa-home"></i> <span>Inicio</span>
+            </a>
+            <a href="{{ url_for('candidato_buscar') }}" class="nav-item">
+                <i class="fas fa-search"></i> <span>Buscar Vacantes</span>
+            </a>
+            <a href="{{ url_for('candidato_ver') }}" class="nav-item">
+                <i class="fas fa-briefcase"></i> <span>Todas las Vacantes</span>
+            </a>
+            <a href="{{ url_for('candidato_postulaciones') }}" class="nav-item">
+                <i class="fas fa-paper-plane"></i> <span>Mis Postulaciones</span>
+            </a>
+            <a href="{{ url_for('candidato_estado_postulaciones') }}" class="nav-item active">
+                <i class="fas fa-clipboard-list"></i> <span>Estado de Aplicación</span>
+            </a>
+            <a href="{{ url_for('candidato_perfil') }}" class="nav-item">
+                <i class="fas fa-user"></i> <span>Mi Perfil</span>
+            </a>
+        </nav>
+        <div class="sidebar-divider"></div>
+        <div style="padding: 1.5rem; text-align: center; color: rgba(255,255,255,0.5); font-size: 0.75rem;">
+            &copy; 2026 UT Oriental
+        </div>
+    </aside>
 
-<body>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-logo">
-                    <i class="fas fa-graduation-cap"></i>
+    <div class="main-wrapper">
+        <header class="navbar-top">
+            <div class="nav-left">
+                <h1 class="page-title">Historial de Aplicaciones</h1>
+                <p class="page-subtitle"><i class="fas fa-clipboard-list"></i> Consulta el resultado de tus postulaciones</p>
+            </div>
+
+            <div class="user-menu">
+                <div class="profile-trigger">
+                    <div class="user-avatar">
+                        {{ current_user.correo[0:2]|upper }}
+                    </div>
+                    <div class="user-meta">
+                        <h4>{{ current_user.correo }}</h4>
+                        <span>{{ current_user.rol }}</span>
+                    </div>
+                </div>
+                <a href="/logout" class="nav-logout-btn" title="Cerrar Sesión">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
+        </header>
+
+        <main class="app-content">
+
+            {% for p in postulaciones %}
+            <div class="card" style="margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <div class="sidebar-title">UT Oriental</div>
-                        <div class="sidebar-subtitle">Bolsa de Trabajo</div>
+                        <h3 style="margin-bottom: 0.25rem;">{{ p[0] }}</h3>
+                        <p style="color: var(--texto-gris);"><i class="fas fa-building" style="margin-right: 5px;"></i>{{ p[1] }}</p>
+                    </div>
+                    <div>
+                        {% if p[3] == 'aceptado' %}
+                        <span class="badge badge-aceptado"><i class="fas fa-check-circle"></i> Aceptado</span>
+                        {% elif p[3] == 'rechazado' %}
+                        <span class="badge badge-rechazado"><i class="fas fa-times-circle"></i> Rechazado</span>
+                        {% else %}
+                        <span class="badge badge-pendiente"><i class="fas fa-clock"></i> En revisión</span>
+                        {% endif %}
                     </div>
                 </div>
-            </div>
-            <nav>
-                <ul class="sidebar-nav">
-                    <li><a href="/candidato-dashboard"><i class="fas fa-home"></i> Inicio</a></li>
-                    <li><a href="/candidato/buscar"><i class="fas fa-search"></i> Buscar vacantes</a></li>
-                    <li><a href="/candidato/ver"><i class="fas fa-briefcase"></i> Ver vacantes</a></li>
-                    <li><a href="/candidato/postulaciones"><i class="fas fa-paper-plane"></i> Mis postulaciones</a></li>
-                    <li><a href="/candidato/estado-postulaciones" class="active"><i class="fas fa-clipboard-list"></i>
-                            Estado de postulaciones</a></li>
-                    <li><a href="/candidato/perfil"><i class="fas fa-user"></i> Perfil del candidato</a></li>
-                </ul>
-            </nav>
-            <div class="sidebar-footer" style="padding: 1.5rem; text-align: center;">
-                <p style="color: var(--texto-gris); font-size: 0.8rem;">&copy; 2026 UT Oriental</p>
-            </div>
-        </aside>
-
-        <main class="main-content">
-            <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div>
-                    <div class="accent-strip mb-2"></div>
-                    <h1>Estado de Postulaciones</h1>
-                    <p>Revisa el progreso de tus solicitudes</p>
-                </div>
-
-                <!-- Perfil y Logout -->
-                <div style="display: flex; align-items: center; gap: 20px;">
-                    <div class="user-profile"
-                        style="display: flex; align-items: center; gap: 15px; background: var(--blanco); padding: 10px 20px; border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                        <div class="avatar"
-                            style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--primario); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
-                            CA
-                        </div>
-                        <div style="margin-right: 10px;">
-                            <strong style="color: var(--texto-oscuro); display: block;">Candidato</strong>
-                            <span style="font-size: 0.8rem; color: var(--texto-gris);">Estudiante</span>
-                        </div>
-                        <div style="border-left: 1px solid var(--borde); height: 30px; margin: 0 10px;"></div>
-                        <a href="/logout" class="logout-btn"
-                            style="color: #e74c3c; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; font-weight: 600; transition: color 0.3s ease;">
-                            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                        </a>
-                    </div>
+                <div style="margin-top: 0.75rem; color: var(--texto-gris); font-size: 0.9rem;">
+                    <i class="fas fa-calendar" style="margin-right: 5px;"></i> Postulado: {{ p[2].strftime('%d/%m/%Y') if p[2] else 'N/A' }}
+                    {% if p[4] %}
+                    <span style="margin-left: 1rem;"><i class="fas fa-comment" style="margin-right: 5px;"></i> {{ p[4] }}</span>
+                    {% endif %}
                 </div>
             </div>
-
-            <!-- Filter -->
-            <div class="filters">
-                <div class="filters-title">
-                    <i class="fas fa-filter"></i>
-                    Filtrar por Estado
-                </div>
-                <div>
-                    <select class="form-control" style="max-width: 300px;">
-                        <option>Todos</option>
-                        <option>En revisión</option>
-                        <option>Aceptado</option>
-                        <option>Rechazado</option>
-                    </select>
-                </div>
+            {% else %}
+            <div style="text-align: center; padding: 3rem; color: var(--texto-gris);">
+                <i class="fas fa-clipboard-list" style="font-size: 3rem; margin-bottom: 15px; color: var(--dorado);"></i>
+                <h3>No tienes postulaciones aún</h3>
+                <p>Busca vacantes y postúlate para ver el estado aquí.</p>
             </div>
-
-            <p style="color: var(--texto-gris); margin-bottom: 1.5rem;">Total de postulaciones: <strong>5</strong></p>
-
-            <!-- Status Table -->
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Vacante</th>
-                            <th>Empresa</th>
-                            <th>Estado</th>
-                            <th>Comentarios de la empresa</th>
-                            <th>Fecha de actualización</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Desarrollador Frontend Senior</strong></td>
-                            <td>Tech Solutions S.A.</td>
-                            <td><span class="badge badge-pendiente">En revisión</span></td>
-                            <td style="color: var(--texto-gris);">Estamos revisando tu perfil</td>
-                            <td>05/02/2026</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Diseñador UX/UI</strong></td>
-                            <td>Digital Agency</td>
-                            <td><span class="badge badge-aceptado">Aceptado</span></td>
-                            <td style="color: var(--texto-gris);">Felicidades, pasaste a la siguiente etapa. Te
-                                contactaremos pronto.</td>
-                            <td>03/02/2026</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Analista de Datos</strong></td>
-                            <td>Finance Corp.</td>
-                            <td><span class="badge badge-rechazado">Rechazado</span></td>
-                            <td style="color: var(--texto-gris);">Agradecemos tu interés, pero hemos decidido continuar
-                                con otros candidatos</td>
-                            <td>01/02/2026</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Gerente de Proyectos</strong></td>
-                            <td>Constructora ABC</td>
-                            <td><span class="badge badge-pendiente">En revisión</span></td>
-                            <td style="color: var(--texto-gris);">Tu postulación está en proceso de evaluación</td>
-                            <td>04/02/2026</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Desarrollador Backend</strong></td>
-                            <td>StartUp Innovate</td>
-                            <td><span class="badge badge-aceptado">Aceptado</span></td>
-                            <td style="color: var(--texto-gris);">Nos gustaría agendar una entrevista contigo</td>
-                            <td>02/02/2026</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            {% endfor %}
         </main>
     </div>
 </body>
-
 </html>

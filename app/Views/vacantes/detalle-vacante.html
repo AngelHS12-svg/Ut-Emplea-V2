@@ -1,197 +1,153 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalle de Vacante - UT Oriental Emplea</title>
     <link rel="stylesheet" href="/public/css/styles.css">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .detail-section {
-            background: var(--blanco);
-            border-radius: 10px;
-            padding: 2.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-
-        .salary-highlight {
-            background: linear-gradient(135deg, rgba(194, 145, 79, 0.1) 0%, rgba(194, 145, 79, 0.05) 100%);
-            border-left: 4px solid var(--dorado);
-            padding: 1.5rem;
-            border-radius: 8px;
-            margin: 1.5rem 0;
-        }
-    </style>
 </head>
+<body class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <div class="brand-text">
+                UT Oriental
+                <span>Bolsa de Trabajo</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('candidato_dashboard') }}" class="nav-item">
+                <i class="fas fa-home"></i> <span>Inicio</span>
+            </a>
+            <a href="{{ url_for('candidato_buscar') }}" class="nav-item">
+                <i class="fas fa-search"></i> <span>Buscar Vacantes</span>
+            </a>
+            <a href="{{ url_for('candidato_ver') }}" class="nav-item active">
+                <i class="fas fa-briefcase"></i> <span>Todas las Vacantes</span>
+            </a>
+            <a href="{{ url_for('candidato_postulaciones') }}" class="nav-item">
+                <i class="fas fa-paper-plane"></i> <span>Mis Postulaciones</span>
+            </a>
+            <a href="{{ url_for('candidato_estado_postulaciones') }}" class="nav-item">
+                <i class="fas fa-clipboard-list"></i> <span>Estado de Aplicación</span>
+            </a>
+            <a href="{{ url_for('candidato_perfil') }}" class="nav-item">
+                <i class="fas fa-user"></i> <span>Mi Perfil</span>
+            </a>
+        </nav>
+        <div class="sidebar-divider"></div>
+        <div style="padding: 1.5rem; text-align: center; color: rgba(255,255,255,0.5); font-size: 0.75rem;">
+            &copy; 2026 UT Oriental
+        </div>
+    </aside>
 
-<body>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-logo">
-                    <i class="fas fa-graduation-cap"></i>
-                    <div>
-                        <div class="sidebar-title">UT Oriental</div>
-                        <div class="sidebar-subtitle">Bolsa de Trabajo</div>
+    <div class="main-wrapper">
+        <header class="navbar-top">
+            <div class="nav-left">
+                <h1 class="page-title">Detalle de Vacante</h1>
+                <p class="page-subtitle"><i class="fas fa-info-circle"></i> Información completa de la oferta laboral</p>
+            </div>
+
+            <div class="user-menu">
+                <div class="profile-trigger">
+                    <div class="user-avatar">
+                        {{ current_user.correo[0:2]|upper }}
+                    </div>
+                    <div class="user-meta">
+                        <h4>{{ current_user.correo }}</h4>
+                        <span>{{ current_user.rol }}</span>
                     </div>
                 </div>
+                <a href="/logout" class="nav-logout-btn" title="Cerrar Sesión">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
             </div>
-            <nav>
-                <ul class="sidebar-nav">
-                    <li><a href="/candidato-dashboard"><i class="fas fa-home"></i> Inicio</a></li>
-                    <li><a href="/candidato/buscar" class="active"><i class="fas fa-search"></i> Buscar vacantes</a>
-                    </li>
-                    <li><a href="/candidato/ver"><i class="fas fa-briefcase"></i> Ver vacantes</a></li>
-                    <li><a href="/candidato/postulaciones"><i class="fas fa-paper-plane"></i> Mis postulaciones</a></li>
-                    <li><a href="/candidato/estado-postulaciones"><i class="fas fa-clipboard-list"></i> Estado de
-                            postulaciones</a></li>
-                    <li><a href="/candidato/perfil"><i class="fas fa-user"></i> Perfil del candidato</a></li>
+        </header>
+
+        <main class="app-content">
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                {% for message in messages %}
+                  <div class="alert alert-info" style="margin-bottom: 1.5rem;">{{ message }}</div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            {% if vacante %}
+            <div class="card">
+                <h2 style="font-size: 1.75rem; margin-bottom: 1rem;">{{ vacante[1] }}</h2>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                    <i class="fas fa-building" style="color: var(--dorado);"></i>
+                    <span style="font-size: 1.1rem; color: var(--texto-gris);">{{ vacante[8] }}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
+                    <i class="fas fa-map-marker-alt" style="color: var(--dorado);"></i>
+                    <span style="color: var(--texto-gris);">{{ vacante[6] or 'No especificado' }}</span>
+                </div>
+
+                <div class="accent-strip mb-3"></div>
+
+                <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Descripción del puesto</h3>
+                <p style="color: var(--texto-gris); line-height: 1.7; margin-bottom: 1.5rem;">{{ vacante[2] }}</p>
+
+                {% if vacante[9] or vacante[10] or vacante[11] %}
+                <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Requisitos</h3>
+                <ul style="color: var(--texto-gris); line-height: 2; margin-bottom: 1.5rem; padding-left: 1.5rem;">
+                    {% if vacante[9] %}<li>Escolaridad: {{ vacante[9] }}</li>{% endif %}
+                    {% if vacante[10] %}<li>Experiencia: {{ vacante[10] }}</li>{% endif %}
+                    {% if vacante[11] %}<li>{{ vacante[11] }}</li>{% endif %}
                 </ul>
-            </nav>
-            <div class="sidebar-footer" style="padding: 1.5rem; text-align: center;">
-                <p style="color: var(--texto-gris); font-size: 0.8rem;">&copy; 2026 UT Oriental</p>
-            </div>
-        </aside>
+                {% endif %}
 
-        <main class="main-content">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
-                <!-- Back Button -->
-                <div>
-                    <a href="/candidato/buscar"
-                        style="color: var(--texto-gris); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s;">
-                        <i class="fas fa-arrow-left"></i> Volver a búsqueda
-                    </a>
-                </div>
-
-                <!-- Perfil y Logout -->
-                <div class="user-profile"
-                    style="display: flex; align-items: center; gap: 15px; background: var(--blanco); padding: 10px 20px; border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                    <div class="avatar"
-                        style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--primario); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
-                        CA
-                    </div>
-                    <div style="margin-right: 10px;">
-                        <strong style="color: var(--texto-oscuro); display: block;">Candidato</strong>
-                        <span style="font-size: 0.8rem; color: var(--texto-gris);">Estudiante</span>
-                    </div>
-                    <div style="border-left: 1px solid var(--borde); height: 30px; margin: 0 10px;"></div>
-                    <a href="/logout" class="logout-btn"
-                        style="color: #e74c3c; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; font-weight: 600; transition: color 0.3s ease;">
-                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                    </a>
-                </div>
-            </div>
-    </div>
-
-    <div class="detail-section">
-        <!-- Header -->
-        <div style="margin-bottom: 2rem;">
-            <h1 style="font-size: 2.25rem; margin-bottom: 1rem; color: var(--texto-oscuro);">Desarrollador Full
-                Stack</h1>
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-                <i class="fas fa-building" style="color: var(--dorado); font-size: 1.2rem;"></i>
-                <span style="font-size: 1.15rem; color: var(--texto-gris);">Tech Solutions S.A.</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <i class="fas fa-map-marker-alt" style="color: var(--dorado);"></i>
-                <span style="color: var(--texto-gris);">Querétaro, Qro.</span>
-            </div>
-        </div>
-
-        <div class="accent-strip mb-3"></div>
-
-        <!-- Description -->
-        <section style="margin-bottom: 2.5rem;">
-            <h2 style="font-size: 1.35rem; margin-bottom: 1rem; color: var(--texto-oscuro);">
-                <i class="fas fa-align-left" style="color: var(--dorado); margin-right: 0.5rem;"></i>
-                Descripción del puesto
-            </h2>
-            <p style="color: var(--texto-gris); line-height: 1.8; font-size: 1rem;">
-                Buscamos desarrollador full stack con experiencia en tecnologías modernas para unirse a nuestro
-                equipo de desarrollo. Trabajarás en proyectos innovadores para clientes nacionales e
-                internacionales.
-            </p>
-        </section>
-
-        <!-- Requirements -->
-        <section style="margin-bottom: 2.5rem;">
-            <h2 style="font-size: 1.35rem; margin-bottom: 1rem; color: var(--texto-oscuro);">
-                <i class="fas fa-list-check" style="color: var(--dorado); margin-right: 0.5rem;"></i>
-                Requisitos
-            </h2>
-            <ul style="color: var(--texto-gris); line-height: 2.2; font-size: 1rem; padding-left: 1.5rem;">
-                <li>Licenciatura en Ingeniería en Sistemas o afín</li>
-                <li>Experiencia mínima de 2 años en desarrollo web</li>
-                <li>Conocimientos en React, Node.js y bases de datos</li>
-                <li>Inglés intermedio</li>
-                <li>Habilidades de trabajo en equipo</li>
-            </ul>
-        </section>
-
-        <!-- Schedule -->
-        <section style="margin-bottom: 2.5rem;">
-            <h2 style="font-size: 1.35rem; margin-bottom: 1rem; color: var(--texto-oscuro);">
-                <i class="fas fa-clock" style="color: var(--dorado); margin-right: 0.5rem;"></i>
-                Horario
-            </h2>
-            <p style="color: var(--texto-gris); font-size: 1rem;">
-                <i class="fas fa-calendar-days" style="color: var(--dorado); margin-right: 0.5rem;"></i>
-                <strong>Lunes a Viernes, 9:00 AM - 6:00 PM</strong>
-            </p>
-        </section>
-
-        <!-- Salary -->
-        <section style="margin-bottom: 2.5rem;">
-            <h2 style="font-size: 1.35rem; margin-bottom: 1rem; color: var(--texto-oscuro);">
-                <i class="fas fa-dollar-sign" style="color: var(--dorado); margin-right: 0.5rem;"></i>
-                Salario y Prestaciones
-            </h2>
-            <div class="salary-highlight">
-                <p style="font-size: 1.5rem; font-weight: 700; color: var(--verde); margin-bottom: 0.5rem;">
-                    $ $15,000 - $20,000 mensuales
+                {% if vacante[5] %}
+                <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Horario</h3>
+                <p style="color: var(--texto-gris); margin-bottom: 1.5rem;">
+                    <i class="fas fa-clock" style="color: var(--dorado);"></i> {{ vacante[5] }}
                 </p>
-                <p style="color: var(--texto-gris); font-size: 0.9rem;">+ prestaciones de ley</p>
+                {% endif %}
+
+                {% if vacante[4] %}
+                <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Modalidad</h3>
+                <p style="color: var(--texto-gris); margin-bottom: 1.5rem;">
+                    <i class="fas fa-briefcase" style="color: var(--dorado);"></i> {{ vacante[4] }}
+                </p>
+                {% endif %}
+
+                {% if vacante[3] %}
+                <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Salario</h3>
+                <p style="color: var(--texto-oscuro); font-weight: 600; font-size: 1.1rem; margin-bottom: 2rem;">
+                    ${{ '{:,.2f}'.format(vacante[3]) }} mensuales
+                </p>
+                {% endif %}
+
+                <div style="display: flex; gap: 1rem; border-top: 2px solid var(--borde); padding-top: 2rem;">
+                    {% if ya_postulado %}
+                    <button class="btn btn-outline" style="flex: 1;" disabled>
+                        <i class="fas fa-check"></i> YA TE POSTULASTE
+                    </button>
+                    {% else %}
+                    <form action="{{ url_for('candidato_postularse', id_vacante=vacante[0]) }}" method="POST" style="flex: 1;">
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            <i class="fas fa-paper-plane"></i> POSTULARME
+                        </button>
+                    </form>
+                    {% endif %}
+                    <a href="{{ url_for('candidato_ver') }}" class="btn btn-outline">
+                        <i class="fas fa-arrow-left"></i> VOLVER
+                    </a>
+                </div>
             </div>
-            <ul style="color: var(--texto-gris); line-height: 2.2; font-size: 1rem; padding-left: 1.5rem;">
-                <li>Seguro de gastos médicos mayores</li>
-                <li>Vales de despensa</li>
-                <li>Capacitación constante</li>
-                <li>Oportunidad de home office 2 días a la semana</li>
-            </ul>
-        </section>
-
-        <div class="accent-strip mb-3"></div>
-
-        <!-- Action Buttons -->
-        <div style="display: flex; gap: 1rem; padding-top: 2rem;">
-            <button class="btn btn-primary" style="flex: 1; font-size: 1.1rem; padding: 1rem 2rem;">
-                <i class="fas fa-paper-plane"></i> POSTULARME
-            </button>
-            <button class="btn btn-outline" style="padding: 1rem 2rem;">
-                <i class="fas fa-bookmark"></i> GUARDAR VACANTE
-            </button>
-        </div>
+            {% else %}
+            <div style="text-align: center; padding: 3rem; color: var(--texto-gris);">
+                <h3>Vacante no encontrada</h3>
+                <a href="{{ url_for('candidato_ver') }}" class="btn btn-primary" style="margin-top: 1rem;">Volver a vacantes</a>
+            </div>
+            {% endif %}
+        </main>
     </div>
-    </main>
-    </div>
-
-    <script>
-        document.querySelectorAll('.btn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const action = this.textContent.trim();
-                if (action.includes('POSTULARME')) {
-                    alert('¡Postulación enviada exitosamente!');
-                } else if (action.includes('GUARDAR')) {
-                    alert('Vacante guardada en favoritos');
-                }
-            });
-        });
-    </script>
 </body>
-
 </html>

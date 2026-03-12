@@ -1,278 +1,202 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inicio · Panel Administrativo</title>
-
-  <!-- Google Font -->
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap"
-    rel="stylesheet">
-
-  <!-- Font Awesome 6 (iconos innovadores) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="/public/css/inicio.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio · Panel Administrativo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/public/css/admin-child.css">
+    <style>
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .action-card {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .action-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+            box-shadow: var(--card-hover);
+        }
+        .action-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+            background: var(--accent);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .action-card:hover::before { opacity: 1; }
+        .action-icon {
+            font-size: 24px;
+            color: var(--primario);
+            margin-bottom: 12px;
+            background: rgba(14, 49, 45, 0.05);
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+        }
+        .action-card h3 { font-size: 1rem; margin-bottom: 8px; color: var(--primario); }
+        .action-card p { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px; flex-grow: 1; }
+        .action-meta { font-size: 0.75rem; font-weight: 600; color: var(--accent); display: flex; align-items: center; gap: 6px; }
+        
+        .recent-activity {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-avatar {
+            width: 32px; height: 32px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: var(--primario);
+        }
+    </style>
 </head>
-
 <body>
-  <!-- Acciones rápidas con iconos innovadores -->
-  <div class="quick-actions">
-    <a href="#" onclick="parent.cargarPagina('/admin/validar-empresa'); return false;" class="action-card">
-      <div class="action-icon">
-        <i class="fa-solid fa-building-circle-arrow-right"></i>
-      </div>
-      <h3>Validar empresa</h3>
-      <p>Revise y apruebe empresas registradas en el sistema. Historial y documentos fiscales.</p>
-      <div class="action-badge">
-        <i class="fa-regular fa-hourglass-clock"></i> 4 pendientes
-        <i class="fa-solid fa-arrow-right-long" style="margin-left: auto;"></i>
-      </div>
-    </a>
-
-    <a href="#" onclick="parent.cargarPagina('/admin/validar-candidato'); return false;" class="action-card">
-      <div class="action-icon">
-        <i class="fa-solid fa-user-check"></i>
-      </div>
-      <h3>Validar candidato</h3>
-      <p>Revise y apruebe estudiantes y egresados registrados. Verifica perfiles y documentos.</p>
-      <div class="action-badge">
-        <i class="fa-regular fa-hourglass-clock"></i> 9 pendientes
-        <i class="fa-solid fa-arrow-right-long" style="margin-left: auto;"></i>
-      </div>
-    </a>
-
-    <a href="#" onclick="parent.cargarPagina('/admin/vacantes'); return false;" class="action-card">
-      <div class="action-icon">
-        <i class="fa-solid fa-briefcase"></i>
-      </div>
-      <h3>Vacantes activas</h3>
-      <p>Consulte y administre todas las ofertas de empleo disponibles. 14 nuevas vacantes.</p>
-      <div class="action-badge">
-        <i class="fa-regular fa-eye"></i> Ver todas
-        <i class="fa-solid fa-arrow-right-long" style="margin-left: auto;"></i>
-      </div>
-    </a>
-
-    <a href="#" onclick="parent.cargarPagina('/admin/reportes'); return false;" class="action-card">
-      <div class="action-icon">
-        <i class="fa-solid fa-chart-simple"></i>
-      </div>
-      <h3>Generar reporte</h3>
-      <p>Genere reportes detallados de actividad, empresas registradas y colocaciones.</p>
-      <div class="action-badge">
-        <i class="fa-regular fa-file-pdf"></i> Exportar
-        <i class="fa-solid fa-arrow-right-long" style="margin-left: auto;"></i>
-      </div>
-    </a>
-  </div>
-
-  <!-- Estadísticas principales con iconos innovadores -->
-  <div class="section-title">
-    <i class="fa-solid fa-chart-line"></i>
-    <h2>Estadísticas generales</h2>
-  </div>
-
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="fa-solid fa-buildings"></i>
-      </div>
-      <div class="stat-info">
-        <h4>24</h4>
-        <p>Empresas activas</p>
-        <div class="stat-trend trend-up">
-          <i class="fa-solid fa-arrow-up"></i> +3 esta semana
+    <div class="container">
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <a href="#" onclick="parent.cargarPagina('/admin/validar-empresa'); return false;" class="action-card">
+                <div class="action-icon"><i class="fa-solid fa-building-circle-check"></i></div>
+                <h3>Validar Empresas</h3>
+                <p>Revise postulaciones de nuevas empresas.</p>
+                <div class="action-meta">
+                    <i class="fa-regular fa-clock"></i> {{ stats.empresas_pendientes }} pendientes
+                </div>
+            </a>
+            <a href="#" onclick="parent.cargarPagina('/admin/validar-candidato'); return false;" class="action-card">
+                <div class="action-icon"><i class="fa-solid fa-user-check"></i></div>
+                <h3>Validar Candidatos</h3>
+                <p>Nuevos estudiantes pendientes de aprobación.</p>
+                <div class="action-meta">
+                    <i class="fa-regular fa-clock"></i> {{ stats.candidatos_pendientes }} pendientes
+                </div>
+            </a>
+            <a href="#" onclick="parent.cargarPagina('/admin/vacantes'); return false;" class="action-card">
+                <div class="action-icon"><i class="fa-solid fa-briefcase"></i></div>
+                <h3>Vacantes</h3>
+                <p>Supervise las ofertas laborales activas.</p>
+                <div class="action-meta">
+                    <i class="fa-regular fa-eye"></i> {{ stats.vacantes_activas }} activas
+                </div>
+            </a>
+            <a href="#" onclick="parent.cargarPagina('/admin/reportes'); return false;" class="action-card">
+                <div class="action-icon"><i class="fa-solid fa-file-invoice"></i></div>
+                <h3>Reportes</h3>
+                <p>Analice el desempeño del sistema.</p>
+                <div class="action-meta">
+                    <i class="fa-solid fa-download"></i> Descargar
+                </div>
+            </a>
         </div>
-      </div>
+
+        <div class="section-header">
+            <h2>Estadísticas de Impacto</h2>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fa-solid fa-building"></i></div>
+                <div class="stat-info">
+                    <h3>{{ stats.empresas_activas }}</h3>
+                    <p>Empresas Aliadas</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+                <div class="stat-info">
+                    <h3>{{ stats.candidatos_total }}</h3>
+                    <p>Talento Registrado</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fa-solid fa-briefcase"></i></div>
+                <div class="stat-info">
+                    <h3>{{ stats.vacantes_activas }}</h3>
+                    <p>Oportunidades Abiertas</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fa-solid fa-check-double"></i></div>
+                <div class="stat-info">
+                    <h3>{{ stats.pendientes_total }}</h3>
+                    <p>Tareas Pendientes</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="recent-activity">
+            <div class="widget-card">
+                <div class="widget-title">
+                    <i class="fa-solid fa-building"></i> Empresas Recientes
+                </div>
+                {% for emp in actividad_empresas %}
+                <div class="activity-item">
+                    <div class="activity-avatar">{{ emp[0][0:2]|upper }}</div>
+                    <div style="flex-grow: 1;">
+                        <div style="font-weight: 600; font-size: 0.9rem;">{{ emp[0] }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ emp[1].strftime('%d/%m/%Y') if emp[1] else 'N/A' }}</div>
+                    </div>
+                    <span class="status-badge {% if emp[2] == 'aprobada' %}status-approved{% elif emp[2] == 'pendiente' %}status-pending{% else %}status-rejected{% endif %}">
+                        {{ emp[2] }}
+                    </span>
+                </div>
+                {% else %}
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Sin actividad reciente.</p>
+                {% endfor %}
+            </div>
+
+            <div class="widget-card">
+                <div class="widget-title">
+                    <i class="fa-solid fa-graduation-cap"></i> Candidatos Recientes
+                </div>
+                {% for cand in actividad_candidatos %}
+                <div class="activity-item">
+                    <div class="activity-avatar">{{ cand[0][0:2]|upper }}</div>
+                    <div style="flex-grow: 1;">
+                        <div style="font-weight: 600; font-size: 0.9rem;">{{ cand[0] }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ cand[1].strftime('%d/%m/%Y') if cand[1] else 'N/A' }}</div>
+                    </div>
+                    <span class="status-badge {% if cand[2] == 'aprobado' %}status-approved{% elif cand[2] == 'pendiente' %}status-pending{% else %}status-rejected{% endif %}">
+                        {{ cand[2] }}
+                    </span>
+                </div>
+                {% else %}
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Sin actividad reciente.</p>
+                {% endfor %}
+            </div>
+        </div>
     </div>
-
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="fa-solid fa-users"></i>
-      </div>
-      <div class="stat-info">
-        <h4>342</h4>
-        <p>Candidatos registrados</p>
-        <div class="stat-trend trend-up">
-          <i class="fa-solid fa-arrow-up"></i> +28 este mes
-        </div>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="fa-solid fa-briefcase"></i>
-      </div>
-      <div class="stat-info">
-        <h4>47</h4>
-        <p>Vacantes disponibles</p>
-        <div class="stat-trend trend-up">
-          <i class="fa-solid fa-arrow-up"></i> +12 nuevas
-        </div>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon">
-        <i class="fa-solid fa-hourglass"></i>
-      </div>
-      <div class="stat-info">
-        <h4>13</h4>
-        <p>Pendientes validación</p>
-        <div class="stat-trend">
-          <i class="fa-regular fa-clock"></i> 4 empresas, 9 candidatos
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Contenido de dos columnas -->
-  <div class="two-columns">
-    <!-- Avisos institucionales con iconos innovadores -->
-    <div class="avisos-card">
-      <div class="avisos-header">
-        <i class="fa-solid fa-megaphone"></i>
-        <h3>Avisos institucionales</h3>
-      </div>
-
-      <div class="aviso-item">
-        <h4><i class="fa-solid fa-bell"></i> Recordatorio: Feria de empleo próxima</h4>
-        <p>La feria de empleo se llevará a cabo el <strong>15 de febrero</strong> en el auditorio principal. Asegúrese
-          de confirmar la participación de las empresas registradas antes del 10 de febrero.</p>
-        <div class="aviso-meta">
-          <span><i class="fa-regular fa-calendar"></i> 1 de febrero, 2026</span>
-          <span><i class="fa-regular fa-clock"></i> 08:30 - 18:00</span>
-        </div>
-      </div>
-
-      <div class="aviso-item">
-        <h4><i class="fa-solid fa-cloud-arrow-up"></i> Actualización de sistema programada</h4>
-        <p>El sistema estará en mantenimiento el próximo sábado <strong>de 2:00 AM a 6:00 AM</strong>. Se recomienda
-          guardar reportes y cerrar sesión antes del mantenimiento.</p>
-        <div class="aviso-meta">
-          <span><i class="fa-regular fa-calendar"></i> 31 de enero, 2026</span>
-          <span><i class="fa-solid fa-moon"></i> mantenimiento nocturno</span>
-        </div>
-      </div>
-
-      <div class="aviso-item" style="border-left-color: #3b82f6;">
-        <h4><i class="fa-solid fa-newspaper"></i> Nueva convocatoria de prácticas</h4>
-        <p>Se han publicado 12 nuevas plazas de prácticas profesionales para estudiantes de últimos semestres.</p>
-        <div class="aviso-meta">
-          <span><i class="fa-regular fa-calendar"></i> 28 de enero, 2026</span>
-          <span><i class="fa-solid fa-buildings"></i> 8 empresas participantes</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Actividad reciente con iconos innovadores -->
-    <div class="actividad-card">
-      <div class="actividad-header">
-        <i class="fa-solid fa-timeline"></i>
-        <h3>Actividad reciente</h3>
-      </div>
-
-      <div class="actividad-item">
-        <div class="actividad-icon">
-          <i class="fa-solid fa-circle-check"></i>
-        </div>
-        <div class="actividad-info">
-          <p>Ana María Torres fue aprobada</p>
-          <span><i class="fa-solid fa-building"></i> Tecnología Industrial</span>
-        </div>
-        <div class="actividad-badge">Nuevo</div>
-      </div>
-
-      <div class="actividad-item">
-        <div class="actividad-icon">
-          <i class="fa-solid fa-building"></i>
-        </div>
-        <div class="actividad-info">
-          <p>Nueva empresa registrada</p>
-          <span><i class="fa-solid fa-building"></i> Tech Solutions México</span>
-        </div>
-        <span style="color: #8a9bb8; font-size: 13px;">Hace 2h</span>
-      </div>
-
-      <div class="actividad-item">
-        <div class="actividad-icon">
-          <i class="fa-solid fa-briefcase"></i>
-        </div>
-        <div class="actividad-info">
-          <p>Nueva vacante publicada</p>
-          <span><i class="fa-solid fa-building"></i> Desarrollador Backend</span>
-        </div>
-        <span style="color: #8a9bb8; font-size: 13px;">Hace 3h</span>
-      </div>
-
-      <div class="actividad-item">
-        <div class="actividad-icon">
-          <i class="fa-solid fa-user"></i>
-        </div>
-        <div class="actividad-info">
-          <p>Carlos Mendoza actualizó su perfil</p>
-          <span><i class="fa-solid fa-star"></i> Ingeniero Civil</span>
-        </div>
-        <span style="color: #8a9bb8; font-size: 13px;">Hace 5h</span>
-      </div>
-
-      <div class="actividad-item">
-        <div class="actividad-icon">
-          <i class="fa-solid fa-file-lines"></i>
-        </div>
-        <div class="actividad-info">
-          <p>Reporte mensual generado</p>
-          <span><i class="fa-regular fa-calendar"></i> Enero 2026</span>
-        </div>
-        <span style="color: #8a9bb8; font-size: 13px;">Ayer</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Próximos eventos con iconos innovadores -->
-  <div class="eventos-card">
-    <div class="eventos-header">
-      <i class="fa-solid fa-calendar-days"></i>
-      <h3>Próximos eventos</h3>
-    </div>
-
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-      <div class="evento-item" style="border-bottom: none; padding-top: 0;">
-        <div class="evento-fecha">
-          <div class="dia">15</div>
-          <div class="mes">FEB</div>
-        </div>
-        <div class="evento-info">
-          <p>Feria de empleo</p>
-          <span><i class="fa-regular fa-clock"></i> 08:30 - 18:00</span>
-        </div>
-      </div>
-
-      <div class="evento-item" style="border-bottom: none; padding-top: 0;">
-        <div class="evento-fecha" style="background: #3b82f6;">
-          <div class="dia">20</div>
-          <div class="mes">FEB</div>
-        </div>
-        <div class="evento-info">
-          <p>Taller de CV</p>
-          <span><i class="fa-regular fa-clock"></i> 10:00 - 12:00</span>
-        </div>
-      </div>
-
-      <div class="evento-item" style="border-bottom: none; padding-top: 0;">
-        <div class="evento-fecha" style="background: #2e7d32;">
-          <div class="dia">28</div>
-          <div class="mes">FEB</div>
-        </div>
-        <div class="evento-info">
-          <p>Reunión de seguimiento</p>
-          <span><i class="fa-regular fa-clock"></i> 09:00 - 10:30</span>
-        </div>
-      </div>
-    </div>
-  </div>
 </body>
-
+</html>
 </html>

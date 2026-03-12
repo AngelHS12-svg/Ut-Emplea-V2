@@ -10,76 +10,62 @@
 </head>
 </head>
 
-<body>
-    <div class="dashboard-container">
-        <!-- Sidebar unificado -->
-        <aside class="sidebar">
-            <div class="sidebar-logo">
-                <i class="fas fa-building fa-3x" style="color: var(--dorado);"></i>
-                <h2>Panel de Empresa</h2>
+<body class="app-shell">
+
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <i class="fas fa-building"></i>
+            </div>
+            <div class="brand-text">
+                Panel de Empresa
+                <span>UT Oriental Emplea</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('empresa.inicio') }}" class="nav-item">
+                <i class="fas fa-home"></i> <span>Inicio</span>
+            </a>
+            <a href="{{ url_for('empresa.publicar') }}" class="nav-item">
+                <i class="fas fa-plus-circle"></i> <span>Publicar Vacante</span>
+            </a>
+            <a href="{{ url_for('empresa.consultar') }}" class="nav-item">
+                <i class="fas fa-briefcase"></i> <span>Mis Vacantes</span>
+            </a>
+            <a href="{{ url_for('empresa.estadisticas') }}" class="nav-item">
+                <i class="fas fa-chart-bar"></i> <span>Estadísticas</span>
+            </a>
+            <a href="{{ url_for('empresa.perfil') }}" class="nav-item active">
+                <i class="fas fa-user-cog"></i> <span>Mi Perfil</span>
+            </a>
+        </nav>
+    </div>
+
+    <div class="main-wrapper">
+        <header class="navbar-top">
+            <div class="nav-left">
+                <h1 class="page-title">Mi Perfil</h1>
+                <p class="page-subtitle">Información general y datos de contacto</p>
             </div>
 
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="/empresa" class="nav-link">
-                        <i class="fas fa-home"></i> Inicio
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/empresa/publicar" class="nav-link">
-                        <i class="fas fa-plus-circle"></i> Publicar Vacante
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/empresa/consultar" class="nav-link">
-                        <i class="fas fa-briefcase"></i> Mis Vacantes
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/empresa/estadisticas" class="nav-link">
-                        <i class="fas fa-chart-bar"></i> Estadísticas
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/empresa/perfil" class="nav-link active">
-                        <i class="fas fa-user-cog"></i> Mi Perfil
-                    </a>
-                </li>
-                <li class="nav-item sidebar-footer"
-                    style="padding: 1.5rem; text-align: center; margin-top: auto; position: absolute; bottom: 0; width: 100%;">
-                    <p style="color: rgba(255,255,255,0.6); font-size: 0.8rem;">&copy; 2026 UT Oriental</p>
-                </li>
-            </ul>
-        </aside>
-
-        <!-- Main Wrapper -->
-        <div class="main-content">
-            <!-- Top Header -->
-            <header class="page-header"
-                style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
-                <div>
-                    <div class="accent-strip mb-2"></div>
-                    <h1 style="margin: 0; color: #fff; font-size: 1.8rem;">Perfil de la Empresa</h1>
-                    <p style="color: var(--texto-gris);">Información general y datos de contacto de la empresa</p>
-                </div>
-
-                <div class="user-profile"
-                    style="display: flex; align-items: center; gap: 15px; background: white; padding: 10px 20px; border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                    <div class="avatar"
-                        style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--primario); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
-                        EM
+            <div class="user-menu">
+                <div class="profile-trigger">
+                    <div class="user-avatar">
+                        {{ current_user.correo[0]|upper }}
                     </div>
-                    <div style="margin-right: 10px;">
-                        <strong style="color: var(--texto-oscuro); display: block;">Usuario Empresa</strong>
-                        <span style="font-size: 0.8rem; color: var(--texto-gris);">Organización</span>
+                    <div class="user-meta">
+                        <h4>{{ current_user.correo }}</h4>
+                        <span>{{ current_user.rol }}</span>
                     </div>
-                    <div style="border-left: 1px solid var(--borde, #e2e8f0); height: 30px; margin: 0 10px;"></div>
-                    <a href="/logout" class="logout-btn"
-                        style="color: #e74c3c; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; font-weight: 600; transition: color 0.3s ease;">
-                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                    </a>
                 </div>
-            </header>
+                <a href="/logout" class="nav-logout-btn" title="Cerrar Sesión">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
+        </header>
+
+        <main class="app-content">
 
             <div class="card" style="padding: 2rem; background: transparent; box-shadow: none;">
 
@@ -92,31 +78,31 @@
                             <div class="form-group">
                                 <label class="form-label">Nombre de la empresa / organización <span
                                         class="required">*</span></label>
-                                <input type="text" class="form-control" value="Empresa Ejemplo S.A. de C.V.">
+                                <input type="text" class="form-control" value="{{ empresa[0] if empresa else '' }}">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Giro de la empresa <span class="required">*</span></label>
-                                <input type="text" class="form-control" value="Tecnología de la información">
+                                <input type="text" class="form-control" value="{{ empresa[1] if empresa else '' }}">
                             </div>
                         </div>
                         <div class="grid grid-2">
                             <div class="form-group">
                                 <label class="form-label">Tipo de empresa <span class="required">*</span></label>
                                 <select class="form-control">
-                                    <option>Privada</option>
-                                    <option>Pública</option>
-                                    <option>Mixta</option>
-                                    <option>ONG</option>
+                                    <option {% if empresa and empresa[2] == 'Privada' %}selected{% endif %}>Privada</option>
+                                    <option {% if empresa and empresa[2] == 'Publica' %}selected{% endif %}>Pública</option>
+                                    <option {% if empresa and empresa[2] == 'Mixta' %}selected{% endif %}>Mixta</option>
+                                    <option {% if empresa and empresa[2] == 'ONG' %}selected{% endif %}>ONG</option>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Teléfono <span class="required">*</span></label>
-                                <input type="text" class="form-control" value="555-1234-5678">
+                                <input type="text" class="form-control" value="{{ empresa[3] if empresa else '' }}">
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Dirección <span class="required">*</span></label>
-                            <input type="text" class="form-control" value="Av. Universidad 123, Ciudad Universitaria">
+                            <input type="text" class="form-control" value="{{ empresa[4] if empresa else '' }}">
                         </div>
 
                         <h3 style="margin-top: 2rem; color: var(--verde);">Datos de acceso y contacto</h3>
@@ -125,26 +111,26 @@
                         <div class="grid grid-2">
                             <div class="form-group">
                                 <label class="form-label">Contraseña</label>
-                                <input type="password" class="form-control" value="********">
+                                <input type="password" class="form-control" value="********" readonly>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Nombre del director o jefe de RR.HH.</label>
-                                <input type="text" class="form-control" value="Juan Pérez García">
+                                <input type="text" class="form-control" value="{{ empresa[5] if empresa else '' }}">
                             </div>
                         </div>
                         <div class="grid grid-2">
                             <div class="form-group">
                                 <label class="form-label">Teléfono de Recursos Humanos</label>
-                                <input type="text" class="form-control" value="555-8765-4321">
+                                <input type="text" class="form-control" value="{{ empresa[6] if empresa else '' }}">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Correo electrónico de RR.HH.</label>
-                                <input type="email" class="form-control" value="rrhh@empresa.com">
+                                <input type="email" class="form-control" value="{{ empresa[7] if empresa else '' }}">
                             </div>
                         </div>
 
                         <div class="d-flex gap-2 justify-end">
-                            <button type="button" class="btn btn-outline">Cancelar</button>
+                            <a href="{{ url_for('empresa.inicio') }}" class="btn btn-outline" style="text-decoration: none; padding: 10px 20px; border: 1px solid #ccc; border-radius: 50px;">Cancelar</a>
                             <button type="submit" class="btn btn-primary">Guardar cambios</button>
                         </div>
                     </form>

@@ -1,188 +1,166 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil del Candidato - UT Oriental Emplea</title>
     <link rel="stylesheet" href="/public/css/styles.css">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+<body class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <div class="brand-text">
+                UT Oriental
+                <span>Bolsa de Trabajo</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('candidato_dashboard') }}" class="nav-item">
+                <i class="fas fa-home"></i> <span>Inicio</span>
+            </a>
+            <a href="{{ url_for('candidato_buscar') }}" class="nav-item">
+                <i class="fas fa-search"></i> <span>Buscar Vacantes</span>
+            </a>
+            <a href="{{ url_for('candidato_ver') }}" class="nav-item">
+                <i class="fas fa-briefcase"></i> <span>Todas las Vacantes</span>
+            </a>
+            <a href="{{ url_for('candidato_postulaciones') }}" class="nav-item">
+                <i class="fas fa-paper-plane"></i> <span>Mis Postulaciones</span>
+            </a>
+            <a href="{{ url_for('candidato_estado_postulaciones') }}" class="nav-item">
+                <i class="fas fa-clipboard-list"></i> <span>Estado de Aplicación</span>
+            </a>
+            <a href="{{ url_for('candidato_perfil') }}" class="nav-item active">
+                <i class="fas fa-user"></i> <span>Mi Perfil</span>
+            </a>
+        </nav>
+        <div class="sidebar-divider"></div>
+        <div style="padding: 1.5rem; text-align: center; color: rgba(255,255,255,0.5); font-size: 0.75rem;">
+            &copy; 2026 UT Oriental
+        </div>
+    </aside>
 
-<body>
-    <div class="layout">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-logo">
-                    <i class="fas fa-graduation-cap"></i>
-                    <div>
-                        <div class="sidebar-title">UT Oriental</div>
-                        <div class="sidebar-subtitle">Bolsa de Trabajo</div>
+    <div class="main-wrapper">
+        <header class="navbar-top">
+            <div class="nav-left">
+                <h1 class="page-title">Tu Perfil Profesional</h1>
+                <p class="page-subtitle"><i class="fas fa-user"></i> Información personal, académica y curricular</p>
+            </div>
+
+            <div class="user-menu">
+                <div class="profile-trigger">
+                    <div class="user-avatar">
+                        {{ current_user.correo[0:2]|upper }}
+                    </div>
+                    <div class="user-meta">
+                        <h4>{{ current_user.correo }}</h4>
+                        <span>{{ current_user.rol }}</span>
                     </div>
                 </div>
+                <a href="/logout" class="nav-logout-btn" title="Cerrar Sesión">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
             </div>
-            <nav>
-                <ul class="sidebar-nav">
-                    <li><a href="/candidato-dashboard"><i class="fas fa-home"></i> Inicio</a></li>
-                    <li><a href="/candidato/buscar"><i class="fas fa-search"></i> Buscar vacantes</a></li>
-                    <li><a href="/candidato/ver"><i class="fas fa-briefcase"></i> Ver vacantes</a></li>
-                    <li><a href="/candidato/postulaciones"><i class="fas fa-paper-plane"></i> Mis postulaciones</a></li>
-                    <li><a href="/candidato/estado-postulaciones"><i class="fas fa-clipboard-list"></i> Estado de
-                            postulaciones</a></li>
-                    <li><a href="/candidato/perfil" class="active"><i class="fas fa-user"></i> Perfil del candidato</a>
-                    </li>
-                </ul>
-            </nav>
-            <div class="sidebar-footer" style="padding: 1.5rem; text-align: center;">
-                <p style="color: var(--texto-gris); font-size: 0.8rem;">&copy; 2026 UT Oriental</p>
-            </div>
-        </aside>
+        </header>
 
-        <main class="main-content">
-            <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div>
-                    <div class="accent-strip mb-2"></div>
-                    <h1>Perfil del Candidato</h1>
-                    <p>Actualiza tu información personal y académica</p>
-                </div>
+        <main class="app-content">
 
-                <!-- Perfil y Logout -->
-                <div style="display: flex; align-items: center; gap: 20px;">
-                    <div class="user-profile"
-                        style="display: flex; align-items: center; gap: 15px; background: var(--blanco); padding: 10px 20px; border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                        <div class="avatar"
-                            style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--primario); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
-                            CA
-                        </div>
-                        <div style="margin-right: 10px;">
-                            <strong style="color: var(--texto-oscuro); display: block;">Candidato</strong>
-                            <span style="font-size: 0.8rem; color: var(--texto-gris);">Estudiante</span>
-                        </div>
-                        <div style="border-left: 1px solid var(--borde); height: 30px; margin: 0 10px;"></div>
-                        <a href="/logout" class="logout-btn"
-                            style="color: #e74c3c; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; font-weight: 600; transition: color 0.3s ease;">
-                            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                        </a>
-                    </div>
-                </div>
-            </div>
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                {% for message in messages %}
+                  <div style="padding: 10px; margin-top: 10px; background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; border-radius: 5px;">{{ message }}</div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
 
-            <form>
-                <!-- Personal Information -->
+            {% if candidato %}
+            <div class="grid grid-2">
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title"><i class="fas fa-user"></i> Información Personal</h2>
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Sexo <span class="required">*</span></label>
-                        <div style="display: flex; gap: 2rem;">
-                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                                <input type="radio" name="sexo" value="masculino" checked>
-                                <span>Masculino</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                                <input type="radio" name="sexo" value="femenino">
-                                <span>Femenino</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                                <input type="radio" name="sexo" value="otro">
-                                <span>Otro</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-2">
+                    <div class="grid grid-1">
                         <div class="form-group">
-                            <label class="form-label">Nombre completo <span class="required">*</span></label>
-                            <div class="input-icon">
-                                <i class="fas fa-user"></i>
-                                <input type="text" class="form-control" placeholder="Ej: Juan Pérez García"
-                                    value="Juan Pérez García">
-                            </div>
+                            <label class="form-label">Nombre completo</label>
+                            <input type="text" class="form-control" value="{{ candidato[0] or '' }}" readonly>
                         </div>
-
                         <div class="form-group">
-                            <label class="form-label">Carrera <span class="required">*</span></label>
-                            <div class="input-icon">
-                                <i class="fas fa-graduation-cap"></i>
-                                <select class="form-control">
-                                    <option>Selecciona tu carrera</option>
-                                    <option selected>Ingeniería en Sistemas</option>
-                                    <option>Administración</option>
-                                    <option>Contaduría Pública</option>
-                                </select>
-                            </div>
+                            <label class="form-label">Sexo</label>
+                            <input type="text" class="form-control" value="{{ candidato[1] or '' }}" readonly>
                         </div>
-                    </div>
-
-                    <div class="grid grid-2">
                         <div class="form-group">
-                            <label class="form-label">Año de egreso <span class="required">*</span></label>
-                            <div class="input-icon">
-                                <i class="fas fa-calendar"></i>
-                                <input type="text" class="form-control" placeholder="Ej: 2024" value="2024">
-                            </div>
+                            <label class="form-label">Teléfono</label>
+                            <input type="text" class="form-control" value="{{ candidato[2] or '' }}" readonly>
                         </div>
-
                         <div class="form-group">
-                            <label class="form-label">Número celular <span class="required">*</span></label>
-                            <div class="input-icon">
-                                <i class="fas fa-phone"></i>
-                                <input type="tel" class="form-control" placeholder="Ej: +52 123 456 7890"
-                                    value="+52 123 456 7890">
-                            </div>
+                            <label class="form-label">Año de egreso</label>
+                            <input type="text" class="form-control" value="{{ candidato[3] or '' }}" readonly>
                         </div>
-                    </div>
-
-                    <div class="grid grid-2">
                         <div class="form-group">
-                            <label class="form-label">Correo electrónico <span class="required">*</span></label>
-                            <div class="input-icon">
-                                <i class="fas fa-envelope"></i>
-                                <input type="email" class="form-control" placeholder="ejemplo@correo.com"
-                                    value="eduardo.martinez@utdeoriental.edu.mx">
-                            </div>
+                            <label class="form-label">Carrera</label>
+                            <input type="text" class="form-control" value="{{ candidato[4] or '' }}" readonly>
                         </div>
-
                         <div class="form-group">
-                            <label class="form-label">Contraseña <span class="required">*</span></label>
-                            <div class="input-icon">
-                                <i class="fas fa-lock"></i>
-                                <input type="password" class="form-control" placeholder="••••••••" value="password123">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Confirmar contraseña <span class="required">*</span></label>
-                        <div class="input-icon">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" class="form-control" placeholder="••••••••" value="password123">
+                            <label class="form-label">Correo electrónico</label>
+                            <input type="email" class="form-control" value="{{ candidato[5] or '' }}" readonly>
                         </div>
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
-                <div style="display: flex; justify-content: flex-end; gap: 1rem;">
-                    <button type="button" class="btn btn-outline">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Guardar cambios
-                    </button>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fas fa-file-pdf"></i> CV / Curriculum Vitae</h2>
+                    </div>
+                    
+                    {% if candidato[6] %}
+                    <div style="background: #f0fff4; border: 1px solid #c6f6d5; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                            <div style="font-size: 30px; color: #38a169;"><i class="fas fa-check-circle"></i></div>
+                            <div>
+                                <h4 style="margin: 0; color: #2f855a;">CV Registrado</h4>
+                                <p style="margin: 0; font-size: 0.85rem; color: #276749;">Tu CV ya está disponible en el sistema.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="/uploads/cv/{{ candidato[6] }}" target="_blank" class="btn btn-primary btn-small">
+                                <i class="fas fa-eye"></i> Ver CV Actual
+                            </a>
+                            <a href="/uploads/cv/{{ candidato[6] }}" download class="btn btn-secondary btn-small">
+                                <i class="fas fa-download"></i> Descargar
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div style="background: #fffaf0; border: 1px solid #feebc8; padding: 20px; border-radius: 12px; margin-bottom: 25px; text-align: center;">
+                        <div style="font-size: 40px; color: #dd6b20; margin-bottom: 10px;"><i class="fas fa-exclamation-triangle"></i></div>
+                        <h4 style="margin: 0; color: #9c4221;">Sin CV Registrado</h4>
+                        <p style="margin: 10px 0; font-size: 0.9rem; color: #7b341e;">Sube tu CV en formato PDF, DOC o DOCX para que las empresas puedan contactarte.</p>
+                    </div>
+                    {% endif %}
+
+                    <form action="/candidato/subir-cv" method="POST" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label class="form-label">{% if candidato[6] %}Actualizar CV{% else %}Subir nuevo CV{% endif %}</label>
+                            <input type="file" name="cv_file" class="form-control" accept=".pdf,.doc,.docx" required>
+                            <p style="font-size: 0.75rem; color: #718096; margin-top: 5px;">Máximo 16MB. Formatos permitidos: PDF, Word.</p>
+                        </div>
+                        <button type="submit" class="btn btn-accent" style="width: 100%; justify-content: center;">
+                            <i class="fas fa-upload"></i> {% if candidato[6] %}Reemplazar CV{% else %}Subir CV{% endif %}
+                        </button>
+                    </form>
                 </div>
-            </form>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 3rem; color: var(--texto-gris);">
+                <h3>No se encontró información del perfil</h3>
+            </div>
+            {% endif %}
         </main>
     </div>
-
-    <script>
-        document.querySelector('form').addEventListener('submit', function (e) {
-            e.preventDefault();
-            alert('Perfil actualizado exitosamente');
-        });
-    </script>
 </body>
-
 </html>

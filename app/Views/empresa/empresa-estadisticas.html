@@ -1,206 +1,130 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estadísticas - Empresa</title>
     <link rel="stylesheet" href="/public/css/styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-</head>
+<body class="app-shell">
 
-<body>
-    <div class="dashboard-container">
-        <!-- Sidebar unificado -->
-        <aside class="sidebar">
-            <div class="sidebar-logo">
-                <i class="fas fa-building fa-3x" style="color: var(--dorado);"></i>
-                <h2>Panel de Empresa</h2>
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <i class="fas fa-building"></i>
             </div>
-
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="/empresa" class="nav-link">
-                        <i class="fas fa-home"></i> Inicio
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/empresa/publicar" class="nav-link">
-                        <i class="fas fa-plus-circle"></i> Publicar Vacante
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/empresa/consultar" class="nav-link">
-                        <i class="fas fa-briefcase"></i> Mis Vacantes
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/empresa/estadisticas" class="nav-link active">
-                        <i class="fas fa-chart-bar"></i> Estadísticas
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/empresa/perfil" class="nav-link">
-                        <i class="fas fa-user-cog"></i> Mi Perfil
-                    </a>
-                </li>
-                <li class="nav-item sidebar-footer"
-                    style="padding: 1.5rem; text-align: center; margin-top: auto; position: absolute; bottom: 0; width: 100%;">
-                    <p style="color: rgba(255,255,255,0.6); font-size: 0.8rem;">&copy; 2026 UT Oriental</p>
-                </li>
-            </ul>
-        </aside>
-
-        <!-- Main Wrapper -->
-        <div class="main-content">
-            <!-- Top Header -->
-            <header class="page-header"
-                style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
-                <div>
-                    <div class="accent-strip mb-2"></div>
-                    <h1 style="margin: 0; color: #333; font-size: 1.8rem;">Estadísticas</h1>
-                    <p style="color: var(--texto-gris);">Visualice el rendimiento de sus vacantes publicadas</p>
-                </div>
-
-                <div class="user-profile"
-                    style="display: flex; align-items: center; gap: 15px; background: white; padding: 10px 20px; border-radius: 50px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                    <div class="avatar"
-                        style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--primario); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
-                        EM
-                    </div>
-                    <div style="margin-right: 10px;">
-                        <strong style="color: var(--texto-oscuro); display: block;">Usuario Empresa</strong>
-                        <span style="font-size: 0.8rem; color: var(--texto-gris);">Organización</span>
-                    </div>
-                    <div style="border-left: 1px solid var(--borde, #e2e8f0); height: 30px; margin: 0 10px;"></div>
-                    <a href="/logout" class="logout-btn"
-                        style="color: #e74c3c; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; font-weight: 600; transition: color 0.3s ease;">
-                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                    </a>
-                </div>
-            </header>
-
-            <div class="card" style="padding: 2rem; background: transparent; box-shadow: none;">
-
-                <!-- KPIs -->
-                <div class="grid grid-4 mb-3">
-                    <div class="card text-center">
-                        <h1 style="font-size: 2.5rem; color: var(--verde);">20</h1>
-                        <p>Total de vacantes publicadas</p>
-                    </div>
-                    <div class="card text-center">
-                        <h1 style="font-size: 2.5rem; color: var(--dorado);">12</h1>
-                        <p>Vacantes activas</p>
-                    </div>
-                    <div class="card text-center">
-                        <h1 style="font-size: 2.5rem; color: var(--vino);">164</h1>
-                        <p>Total de postulaciones recibidas</p>
-                    </div>
-                    <div class="card text-center">
-                        <h1 style="font-size: 2.5rem; color: var(--verde);">45</h1>
-                        <p>Vacante con más postulaciones</p>
-                        <small style="color: var(--texto-gris);">Desarrollador Frontend</small>
-                    </div>
-                </div>
-
-                <!-- Filtros de estadísticas -->
-                <div class="filters">
-                    <div class="filters-title">
-                        <i class="fas fa-filter"></i> Filtros
-                    </div>
-                    <div class="filters-grid">
-                        <div class="form-group">
-                            <label class="form-label">Rango de fechas</label>
-                            <div class="d-flex gap-1">
-                                <input type="date" class="form-control" value="2026-01-01">
-                                <input type="date" class="form-control" value="2026-02-06">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Vacante específica</label>
-                            <select class="form-control">
-                                <option>Todas las vacantes</option>
-                                <option>Desarrollador Frontend</option>
-                                <option>Diseñador UX/UI</option>
-                                <option>Analista de Datos</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Gráficas de ejemplo (representación visual) -->
-                <div class="grid grid-2">
-                    <div class="card">
-                        <h3 class="card-title"><i class="fas fa-chart-pie"></i> Postulaciones por vacante</h3>
-                        <div
-                            style="height: 200px; background: var(--gris-claro); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                            <span style="color: var(--texto-gris);">Gráfica: Postulaciones por vacante</span>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <h3 class="card-title"><i class="fas fa-chart-line"></i> Postulaciones por fecha</h3>
-                        <div
-                            style="height: 200px; background: var(--gris-claro); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                            <span style="color: var(--texto-gris);">Gráfica: Postulaciones por fecha</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Estado de vacantes y resumen -->
-                <div class="card">
-                    <h3 class="card-title"><i class="fas fa-tasks"></i> Estado de vacantes</h3>
-                    <div class="d-flex gap-2 mb-2">
-                        <span><strong>Activas:</strong> 12</span>
-                        <span><strong>Cerradas:</strong> 8</span>
-                    </div>
-                    <div class="accent-strip mb-2"></div>
-                    <table class="table-container">
-                        <thead>
-                            <tr>
-                                <th>Vacante</th>
-                                <th>Número de postulaciones</th>
-                                <th>Estado</th>
-                                <th>Fecha de publicación</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Desarrollador Frontend</td>
-                                <td>45</td>
-                                <td><span class="badge badge-activa">Activa</span></td>
-                                <td>15/01/2026</td>
-                            </tr>
-                            <tr>
-                                <td>Diseñador UX/UI</td>
-                                <td>32</td>
-                                <td><span class="badge badge-activa">Activa</span></td>
-                                <td>22/01/2026</td>
-                            </tr>
-                            <tr>
-                                <td>Analista de Datos</td>
-                                <td>28</td>
-                                <td><span class="badge badge-activa">Activa</span></td>
-                                <td>28/01/2026</td>
-                            </tr>
-                            <tr>
-                                <td>Gerente de Proyecto</td>
-                                <td>21</td>
-                                <td><span class="badge badge-inactiva">Cerrada</span></td>
-                                <td>05/02/2026</td>
-                            </tr>
-                            <tr>
-                                <td>Desarrollador Backend</td>
-                                <td>38</td>
-                                <td><span class="badge badge-activa">Activa</span></td>
-                                <td>10/02/2026</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div class="brand-text">
+                Panel de Empresa
+                <span>UT Oriental Emplea</span>
             </div>
         </div>
+
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('empresa.inicio') }}" class="nav-item">
+                <i class="fas fa-home"></i> <span>Inicio</span>
+            </a>
+            <a href="{{ url_for('empresa.publicar') }}" class="nav-item">
+                <i class="fas fa-plus-circle"></i> <span>Publicar Vacante</span>
+            </a>
+            <a href="{{ url_for('empresa.consultar') }}" class="nav-item">
+                <i class="fas fa-briefcase"></i> <span>Mis Vacantes</span>
+            </a>
+            <a href="{{ url_for('empresa.estadisticas') }}" class="nav-item active">
+                <i class="fas fa-chart-bar"></i> <span>Estadísticas</span>
+            </a>
+            <a href="{{ url_for('empresa.perfil') }}" class="nav-item">
+                <i class="fas fa-user-cog"></i> <span>Mi Perfil</span>
+            </a>
+        </nav>
+    </div>
+
+    <div class="main-wrapper">
+        <header class="navbar-top">
+            <div class="nav-left">
+                <h1 class="page-title">Estadísticas</h1>
+                <p class="page-subtitle">Resumen de tu actividad como empresa</p>
+            </div>
+
+            <div class="user-menu">
+                <div class="profile-trigger">
+                    <div class="user-avatar">
+                        {{ current_user.correo[0]|upper }}
+                    </div>
+                    <div class="user-meta">
+                        <h4>{{ current_user.correo }}</h4>
+                        <span>{{ current_user.rol }}</span>
+                    </div>
+                </div>
+                <a href="/logout" class="nav-logout-btn" title="Cerrar Sesión">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
+        </header>
+
+        <main class="app-content">
+
+            <div class="grid grid-3">
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 2.5rem; color: var(--verde); margin-bottom: 0.5rem;">{{ stats.vacantes_activas }}</div>
+                    <div style="color: var(--texto-gris); font-size: 0.95rem;">Vacantes activas</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 2.5rem; color: var(--dorado); margin-bottom: 0.5rem;">{{ stats.total_postulaciones }}</div>
+                    <div style="color: var(--texto-gris); font-size: 0.95rem;">Total postulaciones recibidas</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 2.5rem; color: var(--primario); margin-bottom: 0.5rem;">{{ stats.en_revision }}</div>
+                    <div style="color: var(--texto-gris); font-size: 0.95rem;">En revisión</div>
+                </div>
+            </div>
+
+            <div class="grid grid-3" style="margin-top: 1rem;">
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 2.5rem; color: #2e7d32; margin-bottom: 0.5rem;">{{ stats.aceptadas }}</div>
+                    <div style="color: var(--texto-gris); font-size: 0.95rem;">Aceptadas</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 2.5rem; color: #c62828; margin-bottom: 0.5rem;">{{ stats.rechazadas }}</div>
+                    <div style="color: var(--texto-gris); font-size: 0.95rem;">Rechazadas</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 2.5rem; color: var(--texto-gris); margin-bottom: 0.5rem;">{{ stats.vacantes_inactivas }}</div>
+                    <div style="color: var(--texto-gris); font-size: 0.95rem;">Vacantes inactivas</div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 2rem;">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-chart-bar"></i> Detalle por vacante</h2>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Vacante</th>
+                            <th>Total postulaciones</th>
+                            <th>En revisión</th>
+                            <th>Aceptadas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for v in vacantes_detalle %}
+                        <tr>
+                            <td><strong>{{ v[0] }}</strong></td>
+                            <td>{{ v[1] }}</td>
+                            <td>{{ v[2] }}</td>
+                            <td>{{ v[3] }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: var(--texto-gris); padding: 2rem;">No hay vacantes publicadas aún</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </main>
     </div>
 </body>
-
 </html>
