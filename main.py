@@ -55,6 +55,82 @@ def get_connection():
         port=os.getenv("DB_PORT", "5432")
     )
 
+def crear_notificacion(id_usuario, tipo, mensaje, url=""):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            INSERT INTO notificaciones (id_usuario, tipo, mensaje, url)
+            VALUES (%s, %s, %s, %s)
+        """, (id_usuario, tipo, mensaje, url))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"Error creando notificación: {e}")
+    finally:
+        cur.close()
+        conn.close()
+
+def notificar_admins(tipo, mensaje, url=""):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT id_usuario FROM usuarios WHERE id_rol = 1")
+        admins = cur.fetchall()
+        for admin in admins:
+            crear_notificacion(admin[0], tipo, mensaje, url)
+    except Exception as e:
+        print(f"Error notificando admins: {e}")
+    finally:
+        cur.close()
+        conn.close()
+
+# ================= NOTIFICACIONES =================
+@app.route("/api/notificaciones", methods=["GET"])
+@login_required
+def obtener_notificaciones():
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT id_notificacion, tipo, mensaje, url, fecha 
+            FROM notificaciones 
+            WHERE id_usuario = %s AND leida = FALSE
+            ORDER BY fecha DESC
+        """, (current_user.id,))
+        notificaciones = [{
+            "id": row[0],
+            "tipo": row[1],
+            "mensaje": row[2],
+            "url": row[3],
+            "fecha": row[4].strftime("%d/%m/%Y %H:%M") if row[4] else ""
+        } for row in cur.fetchall()]
+        return jsonify(notificaciones)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+@app.route("/api/notificaciones/leer/<int:id_notificacion>", methods=["POST"])
+@login_required
+def leer_notificacion(id_notificacion):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            UPDATE notificaciones SET leida = TRUE 
+            WHERE id_notificacion = %s AND id_usuario = %s
+        """, (id_notificacion, current_user.id))
+        conn.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
 # ================= HOME =================
 @app.route("/")
 def home():
@@ -154,6 +230,12 @@ def admin_aprobar_empresa(id_empresa):
         VALUES (%s, true, 'Aprobada por administrador')
     """, (id_empresa,))
     conn.commit()
+    
+    cur.execute("SELECT id_usuario FROM empresas WHERE id_empresa = %s", (id_empresa,))
+    emp_user = cur.fetchone()
+    if emp_user:
+        crear_notificacion(emp_user[0], "aprobacion", "Tu registro de empresa ha sido aprobado.", "/empresa")
+        
     cur.close()
     conn.close()
     flash("Empresa aprobada exitosamente.")
@@ -171,6 +253,12 @@ def admin_rechazar_empresa(id_empresa):
         VALUES (%s, false, 'Rechazada por administrador')
     """, (id_empresa,))
     conn.commit()
+    
+    cur.execute("SELECT id_usuario FROM empresas WHERE id_empresa = %s", (id_empresa,))
+    emp_user = cur.fetchone()
+    if emp_user:
+        crear_notificacion(emp_user[0], "rechazo", "Tu registro de empresa ha sido rechazado.", "/home")
+        
     cur.close()
     conn.close()
     flash("Empresa rechazada.")
@@ -228,6 +316,12 @@ def admin_aprobar_candidato(id_candidato):
         VALUES (%s, true, 'Aprobado por administrador')
     """, (id_candidato,))
     conn.commit()
+    
+    cur.execute("SELECT id_usuario FROM candidatos WHERE id_candidato = %s", (id_candidato,))
+    cand_user = cur.fetchone()
+    if cand_user:
+        crear_notificacion(cand_user[0], "aprobacion", "Tu registro de candidato ha sido aprobado.", "/candidato-dashboard")
+        
     cur.close()
     conn.close()
     flash("Candidato aprobado exitosamente.")
@@ -245,6 +339,12 @@ def admin_rechazar_candidato(id_candidato):
         VALUES (%s, false, 'Rechazado por administrador')
     """, (id_candidato,))
     conn.commit()
+    
+    cur.execute("SELECT id_usuario FROM candidatos WHERE id_candidato = %s", (id_candidato,))
+    cand_user = cur.fetchone()
+    if cand_user:
+        crear_notificacion(cand_user[0], "rechazo", "Tu registro de candidato ha sido rechazado.", "/home")
+        
     cur.close()
     conn.close()
     flash("Candidato rechazado.")
@@ -372,6 +472,7 @@ def registro_empresa():
                 VALUES (%s, %s, %s, %s)
             """, (id_empresa, responsable_rrhh, telefono_rrhh, correo_rrhh))
             conn.commit()
+            notificar_admins("registro", f"Nueva empresa registrada: {nombre_empresa}", "/admin/validar-empresa")
             flash("Empresa registrada exitosamente. Su cuenta será validada por un administrador.")
             return redirect(url_for("home"))
         except Exception as e:
@@ -413,6 +514,7 @@ def registro_candidato():
                 VALUES (%s, %s, %s, %s, %s, %s, 'pendiente')
             """, (id_usuario, nombre, sexo, telefono, id_carrera, anio_egreso))
             conn.commit()
+            notificar_admins("registro", f"Nuevo candidato registrado: {nombre}", "/admin/validar-candidato")
             flash("Registro exitoso. Su cuenta será validada por un administrador.")
             return redirect(url_for("home"))
         except Exception as e:
@@ -636,9 +738,16 @@ def candidato_detalle_vacante(id_vacante):
                      (id_vacante, cand[0]))
         ya_postulado = cur.fetchone() is not None
     
+    # Verificar si ya la guardó
+    ya_guardada = False
+    if cand:
+        cur.execute("SELECT id_guardada FROM vacantes_guardadas WHERE id_vacante = %s AND id_candidato = %s",
+                     (id_vacante, cand[0]))
+        ya_guardada = cur.fetchone() is not None
+        
     cur.close()
     conn.close()
-    return render_template("vacantes/detalle-vacante.html", vacante=vacante, ya_postulado=ya_postulado)
+    return render_template("vacantes/detalle-vacante.html", vacante=vacante, ya_postulado=ya_postulado, ya_guardada=ya_guardada)
 
 @app.route("/candidato/postularse/<int:id_vacante>", methods=["POST"])
 @login_required
@@ -660,10 +769,62 @@ def candidato_postularse(id_vacante):
             VALUES (%s, %s, 'en revision')
         """, (id_vacante, cand[0]))
         conn.commit()
+        
+        cur.execute("""
+            SELECT u.id_usuario FROM empresas e 
+            JOIN vacantes v ON e.id_empresa = v.id_empresa 
+            JOIN usuarios u ON e.id_usuario = u.id_usuario
+            WHERE v.id_vacante = %s
+        """, (id_vacante,))
+        emp_user = cur.fetchone()
+        if emp_user:
+            crear_notificacion(emp_user[0], "postulacion", "Nueva postulación a tu vacante.", "/empresa/consultar")
+            
+        notificar_admins("postulacion", f"Un candidato se ha postulado a una vacante.", "/admin/seguimiento")
         flash("Te has postulado exitosamente.")
     except Exception as e:
         conn.rollback()
         flash(f"Error al postularse: {str(e)}")
+    finally:
+        cur.close()
+        conn.close()
+    return redirect(url_for("candidato_detalle_vacante", id_vacante=id_vacante))
+
+@app.route("/candidato/guardar-vacante/<int:id_vacante>", methods=["POST"])
+@login_required
+def candidato_guardar_vacante(id_vacante):
+    if current_user.rol != "Candidato": return redirect(url_for("home"))
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT id_candidato FROM candidatos WHERE id_usuario = %s", (current_user.id,))
+    cand = cur.fetchone()
+    if not cand:
+        flash("Perfil de candidato no encontrado.")
+        cur.close()
+        conn.close()
+        return redirect(url_for("candidato_dashboard"))
+        
+    try:
+        cur.execute("""
+            INSERT INTO vacantes_guardadas (id_vacante, id_candidato)
+            VALUES (%s, %s)
+        """, (id_vacante, cand[0]))
+        conn.commit()
+        
+        cur.execute("""
+            SELECT u.id_usuario FROM empresas e 
+            JOIN vacantes v ON e.id_empresa = v.id_empresa 
+            JOIN usuarios u ON e.id_usuario = u.id_usuario
+            WHERE v.id_vacante = %s
+        """, (id_vacante,))
+        emp_user = cur.fetchone()
+        if emp_user:
+            crear_notificacion(emp_user[0], "guardado", "Un candidato ha guardado tu vacante.", "/empresa")
+            
+        flash("Vacante guardada exitosamente.")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Error al guardar vacante: {str(e)}")
     finally:
         cur.close()
         conn.close()
@@ -742,6 +903,7 @@ def candidato_subir_cv():
         cur = conn.cursor()
         cur.execute("UPDATE candidatos SET cv_url = %s WHERE id_usuario = %s", (filename, current_user.id))
         conn.commit()
+        crear_notificacion(current_user.id, "sistema", "Has actualizado tu CV exitosamente.", "/candidato/perfil")
         cur.close()
         conn.close()
         flash("CV subido exitosamente.")
@@ -754,8 +916,11 @@ def candidato_subir_cv():
 def ver_cv(id_candidato):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT cv_url FROM candidatos WHERE id_candidato = %s", (id_candidato,))
+    cur.execute("SELECT cv_url, id_usuario FROM candidatos WHERE id_candidato = %s", (id_candidato,))
     result = cur.fetchone()
+    if result and current_user.rol == 'Empresa':
+        crear_notificacion(result[1], "vista", "Una empresa ha visto tu perfil/CV.", "/candidato/estado-postulaciones")
+
     cur.close()
     conn.close()
     if result and result[0]:
@@ -842,7 +1007,7 @@ def empresa_ver_vacante(id_vacante):
     cur.execute("""
         SELECT p.id_postulacion, c.id_candidato, c.nombre, u.correo, c.telefono,
                p.fecha_postulacion, p.estado, c.cv_url,
-               COALESCE(ca.nombre, 'N/A') as carrera
+               COALESCE(ca.nombre, 'N/A') as carrera, u.id_usuario
         FROM postulaciones p
         JOIN candidatos c ON p.id_candidato = c.id_candidato
         JOIN usuarios u ON c.id_usuario = u.id_usuario
@@ -850,8 +1015,24 @@ def empresa_ver_vacante(id_vacante):
         WHERE p.id_vacante = %s
         ORDER BY p.fecha_postulacion DESC
     """, (id_vacante,))
-    postulaciones = cur.fetchall()
+    postulaciones_db = cur.fetchall()
     
+    # Notify those who are "en revision" and change to "visto"
+    postulaciones = []
+    for p in postulaciones_db:
+        estado_actual = p[6]
+        if estado_actual == 'en revision':
+            cur.execute("UPDATE postulaciones SET estado = 'visto' WHERE id_postulacion = %s", (p[0],))
+            crear_notificacion(p[9], "vista", f"La empresa está revisando tu postulación a {vacante[1]}.", "/candidato/estado-postulaciones")
+            estado_actual = 'visto'
+        
+        # Build the tuple back (tuples are immutable so we construct a dict or fake it, but template uses indices)
+        # Template uses indices 0..8 usually. Let's make a new list of elements
+        new_p = list(p)
+        new_p[6] = estado_actual
+        postulaciones.append(new_p)
+    
+    conn.commit()
     cur.close()
     conn.close()
     return render_template("empresa/empresa-postulaciones.html", vacante=vacante, postulaciones=postulaciones)
@@ -926,6 +1107,7 @@ def empresa_eliminar_vacante(id_vacante):
         cur.execute("DELETE FROM postulaciones WHERE id_vacante = %s", (id_vacante,))
         cur.execute("DELETE FROM vacantes WHERE id_vacante = %s", (id_vacante,))
         conn.commit()
+        notificar_admins("vacantes", "Una empresa ha eliminado una vacante.", "/admin/vacantes")
         flash("Vacante eliminada.")
     except Exception as e:
         conn.rollback()
@@ -942,8 +1124,15 @@ def empresa_aceptar_postulacion(id_postulacion):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("UPDATE postulaciones SET estado = 'aceptado' WHERE id_postulacion = %s", (id_postulacion,))
-    cur.execute("SELECT id_vacante FROM postulaciones WHERE id_postulacion = %s", (id_postulacion,))
-    vacante = cur.fetchone()
+    cur.execute("SELECT id_vacante, id_candidato FROM postulaciones WHERE id_postulacion = %s", (id_postulacion,))
+    result = cur.fetchone()
+    vacante = (result[0],) if result else None
+    if result:
+        cur.execute("SELECT id_usuario FROM candidatos WHERE id_candidato = %s", (result[1],))
+        cand_user = cur.fetchone()
+        if cand_user:
+            crear_notificacion(cand_user[0], "aceptado", "Has sido aceptado en una vacante.", "/candidato/estado-postulaciones")
+        notificar_admins("seleccion", "Una empresa ha aceptado a un candidato.", "/admin/seguimiento")
     conn.commit()
     cur.close()
     conn.close()
@@ -959,8 +1148,15 @@ def empresa_rechazar_postulacion(id_postulacion):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("UPDATE postulaciones SET estado = 'rechazado' WHERE id_postulacion = %s", (id_postulacion,))
-    cur.execute("SELECT id_vacante FROM postulaciones WHERE id_postulacion = %s", (id_postulacion,))
-    vacante = cur.fetchone()
+    cur.execute("SELECT id_vacante, id_candidato FROM postulaciones WHERE id_postulacion = %s", (id_postulacion,))
+    result = cur.fetchone()
+    vacante = (result[0],) if result else None
+    if result:
+        cur.execute("SELECT id_usuario FROM candidatos WHERE id_candidato = %s", (result[1],))
+        cand_user = cur.fetchone()
+        if cand_user:
+            crear_notificacion(cand_user[0], "rechazado", "Has sido rechazado de una vacante.", "/candidato/estado-postulaciones")
+        notificar_admins("seleccion", "Una empresa ha rechazado a un candidato.", "/admin/seguimiento")
     conn.commit()
     cur.close()
     conn.close()
@@ -971,4 +1167,4 @@ def empresa_rechazar_postulacion(id_postulacion):
 
 # ================= MAIN =================
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5001, debug=True)

@@ -491,24 +491,38 @@ body {
 .login-box {
     width: 420px;
     text-align: center;
+    background: linear-gradient(145deg, #ffffff, #f5f7f9);
+    border: 1px solid rgba(194, 145, 79, 0.3);
+    border-top: 5px solid var(--verde);
+    padding: 2.5rem 2rem;
 }
 
 .logo-box {
     display: flex;
     justify-content: center;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
 .login-logo {
-    width: 90px;
+    width: 100px;
     height: auto;
+    filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.1));
+}
+
+.login-box h2 {
+    color: var(--verde);
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-bottom: 5px;
 }
 
 #roleIndicator {
-    font-size: 1.1rem;
-    margin-bottom: 18px;
-    color: #333;
+    font-size: 1rem;
+    margin-bottom: 25px;
+    color: var(--dorado);
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 /* FORMULARIO */
@@ -516,53 +530,119 @@ body {
 #loginForm {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    margin-top: 10px;
+    gap: 18px;
+}
+
+.input-container {
+    position: relative;
+    width: 100%;
+}
+
+.input-container i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--texto-gris);
+    font-size: 1.1rem;
+    transition: color 0.3s ease;
+    z-index: 10;
+}
+
+#togglePassword {
+    left: auto;
+    right: 15px;
+    cursor: pointer;
+}
+
+#togglePassword:hover {
+    color: var(--dorado);
 }
 
 #loginForm input {
-    padding: 14px;
-    border-radius: 10px;
-    border: 1px solid #ccc;
+    width: 100%;
+    padding: 14px 14px 14px 45px;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    background-color: #f8fafc;
     font-size: 1rem;
+    color: #333;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
 }
 
 #loginForm input:focus {
     outline: none;
-    border-color: #8b1e2d;
+    border-color: var(--dorado);
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgba(194, 145, 79, 0.1);
+}
+
+#loginForm .input-container:focus-within i {
+    color: var(--dorado);
 }
 
 /* BOTÓN LOGIN */
 
 .login-box .login-btn {
-    background: #8b1e2d;
+    background: linear-gradient(135deg, var(--dorado) 0%, #b8843e 100%);
     border: none;
-    padding: 14px;
+    padding: 15px;
     border-radius: 12px;
     color: white;
     font-weight: 700;
+    letter-spacing: 0.5px;
+    font-size: 1.1rem;
     cursor: pointer;
-    margin-top: 5px;
-    transition: .25s;
+    margin-top: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 15px rgba(194, 145, 79, 0.3);
 }
 
 .login-box .login-btn:hover {
-    background: #6b1522;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(194, 145, 79, 0.4);
+    background: linear-gradient(135deg, #b8843e 0%, var(--dorado) 100%);
 }
 
 .forgot {
-    display: block;
-    margin-top: 12px;
-    color: #6b1d2c;
+    display: inline-block;
+    margin-top: 18px;
+    color: var(--texto-gris);
     text-decoration: none;
     font-weight: 500;
+    font-size: 0.95rem;
+    transition: color 0.3s ease;
+}
+
+.forgot:hover {
+    color: var(--verde);
+    text-decoration: underline;
+}
+
+.login-box hr {
+    margin: 25px 0 20px;
+    border: 0;
+    border-top: 1px solid #e2e8f0;
 }
 
 .register-btn {
-    margin-top: 10px;
-    padding: 10px 14px;
-    border-radius: 10px;
-    border: 1px solid #aaa;
-    background: white;
+    display: block;
+    width: 100%;
+    margin: 15px auto 0;
+    padding: 14px;
+    border-radius: 12px;
+    border: 2px solid var(--verde);
+    color: var(--verde);
+    background: transparent;
+    font-weight: 700;
+    font-size: 1rem;
     cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.register-btn:hover {
+    background: var(--verde);
+    color: var(--blanco);
+    box-shadow: 0 6px 15px rgba(10, 36, 32, 0.2);
 }

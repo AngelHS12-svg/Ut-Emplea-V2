@@ -203,12 +203,20 @@
 
             <form id="loginForm" method="POST" action="/auth/login">
 
-                <input type="text" name="correo" id="username" placeholder="Correo" required>
-                <input type="password" name="password" id="password" placeholder="Contraseña" required>
+                <div class="input-container">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" name="correo" id="username" placeholder="Correo electrónico" required>
+                </div>
+                
+                <div class="input-container">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="password" id="password" placeholder="Contraseña" required>
+                    <i class="fas fa-eye" id="togglePassword" title="Mostrar/ocultar contraseña"></i>
+                </div>
+                
                 <input type="hidden" name="rol" id="inputRol" value="">
 
-                <button type="submit"
-                    style="width: 100%; padding: 12px; background: var(--dorado, #D4AF37); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: background 0.3s; margin-top: 10px;">
+                <button type="submit" class="login-btn">
                     INICIAR SESIÓN
                 </button>
 
@@ -222,6 +230,16 @@
                 style="display: block; margin: 15px auto 0;">Registrar usuario</button>
         </div>
     </div>
+    <script>
+        // Toggle Password Visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            // Toggle eye icon
+            this.classList.toggle('fa-eye-slash');
+        });
+    </script>
     <script src="/public/js/script.js" defer></script>
 </body>
 

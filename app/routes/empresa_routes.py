@@ -85,6 +85,20 @@ def publicar():
                 VALUES (%s, %s, %s, %s)
             """, (id_vacante, escolaridad, experiencia, conocimientos))
             
+            cur.execute("SELECT id_usuario FROM usuarios WHERE id_rol = 1")
+            for admin_user in cur.fetchall():
+                cur.execute("""
+                    INSERT INTO notificaciones (id_usuario, tipo, mensaje, url)
+                    VALUES (%s, 'vacantes', %s, '/admin/vacantes')
+                """, (admin_user[0], f"Nueva vacante publicada: {titulo}"))
+                
+            cur.execute("SELECT id_usuario FROM usuarios WHERE id_rol = 3")
+            for cand_user in cur.fetchall():
+                cur.execute("""
+                    INSERT INTO notificaciones (id_usuario, tipo, mensaje, url)
+                    VALUES (%s, 'vacantes', %s, %s)
+                """, (cand_user[0], f"Nueva vacante disponible: {titulo}", f"/candidato/detalle-vacante/{id_vacante}"))
+            
             conn.commit()
             flash("Vacante publicada exitosamente")
             return redirect(url_for("empresa.inicio"))

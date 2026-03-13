@@ -139,6 +139,18 @@
                     <a href="{{ url_for('candidato_ver') }}" class="btn btn-outline">
                         <i class="fas fa-arrow-left"></i> VOLVER
                     </a>
+                    
+                    {% if ya_guardada %}
+                    <button class="btn btn-outline" style="flex: 1; border-color: var(--dorado); color: var(--dorado);" disabled>
+                        <i class="fas fa-bookmark"></i> GUARDADA
+                    </button>
+                    {% else %}
+                    <form action="{{ url_for('candidato_guardar_vacante', id_vacante=vacante[0]) }}" method="POST" style="flex: 1;">
+                        <button type="submit" class="btn btn-outline" style="width: 100%;">
+                            <i class="fas fa-bookmark"></i> GUARDAR
+                        </button>
+                    </form>
+                    {% endif %}
                 </div>
             </div>
             {% else %}

@@ -58,8 +58,84 @@
                         <h4>{{ current_user.correo }}</h4>
                         <span>{{ current_user.rol }}</span>
                     </div>
-                </div>
-                <a href="/logout" class="nav-logout-btn" title="Cerrar Sesión">
+                    
+                    <!-- Notificaciones CSS -->
+                    <style>
+                        .notifications-dropdown {
+                            position: relative;
+                            margin-right: 15px;
+                        }
+                        .notif-btn {
+                            background: none;
+                            border: none;
+                            font-size: 1.2rem;
+                            color: var(--text-color, #333);
+                            cursor: pointer;
+                            position: relative;
+                        }
+                        .notif-badge {
+                            position: absolute;
+                            top: -5px;
+                            right: -5px;
+                            background: #e53e3e;
+                            color: white;
+                            font-size: 0.65rem;
+                            padding: 2px 5px;
+                            border-radius: 50%;
+                            display: none;
+                        }
+                        .notif-menu {
+                            position: absolute;
+                            right: 0;
+                            top: 100%;
+                            background: white;
+                            border: 1px solid var(--border-color, #e2e8f0);
+                            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                            border-radius: 8px;
+                            width: 300px;
+                            max-height: 400px;
+                            overflow-y: auto;
+                            display: none;
+                            z-index: 1000;
+                        }
+                        .notif-menu.show {
+                            display: block;
+                        }
+                        .notif-item {
+                            padding: 12px 15px;
+                            border-bottom: 1px solid var(--border-color, #e2e8f0);
+                            cursor: pointer;
+                            display: block;
+                            text-decoration: none;
+                            color: inherit;
+                            transition: background 0.2s;
+                        }
+                        .notif-item:hover {
+                            background: #f7fafc;
+                        }
+                        .notif-item.last {
+                            border-bottom: none;
+                            text-align: center;
+                            font-size: 0.85rem;
+                            color: #718096;
+                            cursor: default;
+                        }
+                        .notif-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 3px; }
+                        .notif-msg { font-size: 0.8rem; color: #4a5568; margin-bottom: 5px; }
+                        .notif-date { font-size: 0.7rem; color: #a0aec0; }
+                    </style>
+
+                    <div class="notifications-dropdown">
+                        <button class="notif-btn" id="notifDropdownBtn">
+                            <i class="fa-regular fa-bell"></i>
+                            <span class="notif-badge" id="notifBadge">0</span>
+                        </button>
+                        <div class="notif-menu" id="notifMenu">
+                            <!-- Notifications will be loaded here via JS -->
+                        </div>
+                    </div>
+
+                    <a href="/logout" class="nav-logout-btn" title="Cerrar Sesión">
                     <i class="fas fa-sign-out-alt"></i>
                 </a>
             </div>
@@ -148,6 +224,71 @@
 
         </main>
     </div>
+
+    <!-- Script Notificaciones -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const notifBtn = document.getElementById('notifDropdownBtn');
+            const notifMenu = document.getElementById('notifMenu');
+            const notifBadge = document.getElementById('notifBadge');
+            
+            notifBtn.addEventListener('click', () => {
+                notifMenu.classList.toggle('show');
+            });
+
+            window.addEventListener('click', function(e) {
+                if (!document.querySelector('.notifications-dropdown').contains(e.target)){
+                    notifMenu.classList.remove('show');
+                }
+            });
+
+            async function fetchNotificaciones() {
+                try {
+                    const response = await fetch('/api/notificaciones');
+                    const data = await response.json();
+                    
+                    if (data.length > 0) {
+                        notifBadge.textContent = data.length;
+                        notifBadge.style.display = 'block';
+                        
+                        let html = '';
+                        data.forEach(notif => {
+                            html += `
+                                <div class="notif-item" onclick="marcarLeida(${notif.id}, '${notif.url || '#'}')">
+                                    <div class="notif-title">${notif.tipo.toUpperCase()}</div>
+                                    <div class="notif-msg">${notif.mensaje}</div>
+                                    <div class="notif-date">${notif.fecha}</div>
+                                </div>
+                            `;
+                        });
+                        notifMenu.innerHTML = html;
+                    } else {
+                        notifBadge.style.display = 'none';
+                        notifMenu.innerHTML = '<div class="notif-item last">No tienes notificaciones nuevas.</div>';
+                    }
+                } catch (error) {
+                    console.error("No se pudieron cargar las notificaciones", error);
+                }
+            }
+
+            window.marcarLeida = async function(id, url) {
+                try {
+                    await fetch(`/api/notificaciones/leer/${id}`, { method: 'POST' });
+                    if (url && url !== '#' && url !== 'None') {
+                        window.location.href = url;
+                    } else {
+                        fetchNotificaciones();
+                        notifMenu.classList.remove('show');
+                    }
+                } catch (error) {
+                    console.error("Error al marcar notificacion", error);
+                }
+            };
+
+            fetchNotificaciones();
+            setInterval(fetchNotificaciones, 60000);
+        });
+    </script>
 </body>
 
 </html>
