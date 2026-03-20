@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curriculum Vitae - {{ c[0] }} {{ c[1] }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0e312d; /* Verde UT */
+            --accent: #c2914f;  /* Dorado UT */
+            --text-dark: #1a202c;
+            --text-light: #718096;
+            --bg-sidebar: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text-dark);
+            line-height: 1.6;
+            background-color: #e2e8f0;
+            padding: 40px 0;
+        }
+
+        .cv-page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background-color: var(--bg-sidebar);
+            padding: 40px 30px;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .profile-photo {
+            width: 180px;
+            height: 180px;
+            border-radius: 15px;
+            object-fit: cover;
+            margin-bottom: 30px;
+            border: 5px solid white;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-section {
+            margin-bottom: 35px;
+        }
+
+        .sidebar-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-title::after {
+            content: "";
+            flex: 1;
+            height: 2px;
+            background: var(--accent);
+            opacity: 0.3;
+        }
+
+        .contact-item {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.85rem;
+            color: var(--text-dark);
+        }
+
+        .contact-item i {
+            color: var(--accent);
+            width: 16px;
+            text-align: center;
+        }
+
+        .skill-tag {
+            display: inline-block;
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin: 0 4px 8px 0;
+            font-weight: 500;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 60px 50px;
+        }
+
+        header {
+            margin-bottom: 50px;
+        }
+
+        header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.2rem;
+            line-height: 1.1;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        header .subtitle {
+            font-size: 1.25rem;
+            color: var(--accent);
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .section {
+            margin-bottom: 45px;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .section-title i {
+            color: var(--accent);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 30px;
+            border-left: 2px solid #e2e8f0;
+            margin-bottom: 30px;
+        }
+
+        .timeline-item::before {
+            content: "";
+            position: absolute;
+            left: -7px;
+            top: 0;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 3px solid white;
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .item-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-dark);
+        }
+
+        .item-org {
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .item-date {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .item-desc {
+            font-size: 0.9rem;
+            color: #4a5568;
+            margin-top: 10px;
+        }
+
+        /* Print Actions */
+        .print-actions {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .btn-print {
+            padding: 15px 30px;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            font-family: 'Montserrat', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+
+        .btn-pdf {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-back {
+            background: white;
+            color: var(--primary);
+        }
+
+        .btn-print:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+
+        @media print {
+            body { padding: 0; background: white; }
+            .cv-page { box-shadow: none; margin: 0; width: 100%; }
+            .print-actions { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="print-actions">
+        <a href="/candidato/perfil" class="btn-print btn-back">
+            <i class="fas fa-arrow-left"></i> Volver al Perfil
+        </a>
+        <button class="btn-print btn-pdf" onclick="window.print()">
+            <i class="fas fa-file-pdf"></i> Guardar como PDF
+        </button>
+    </div>
+
+    <div class="cv-page">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            {% if c[23] %}
+            <img src="{{ c[23] }}" alt="Foto" class="profile-photo">
+            {% else %}
+            <img src="https://ui-avatars.com/api/?name={{ c[0] }}+{{ c[1] }}&background=c2914f&color=fff&size=200" class="profile-photo">
+            {% endif %}
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Contacto</h3>
+                <div class="contact-item">
+                    <i class="fas fa-phone"></i>
+                    <span>{{ c[4] }}</span>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <span>{{ c[7] }}</span>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>{{ c[9] or 'Puebla, México' }}</span>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-id-card"></i>
+                    <span>CP {{ c[8] or 'N/A' }}</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Especialidades</h3>
+                <div class="tag-cloud">
+                    {% if c[22] %}
+                        {% for tag in c[22].split(',') %}
+                        <span class="skill-tag">{{ tag.strip() }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="skill-tag">{{ c[21] or 'Aspirante' }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Idiomas</h3>
+                <div class="contact-item"><span>Español (Nativo)</span></div>
+                <div class="contact-item"><span>Inglés (Básico-Intermedio)</span></div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <header>
+                <h1>{{ c[0] }}<br>{{ c[1] }} {{ c[2] or '' }}</h1>
+                <div class="subtitle">{{ c[18] or 'Egresado de UT Oriental' }}</div>
+            </header>
+
+            <div class="section">
+                <h3 class="section-title"><i class="fas fa-graduation-cap"></i> Educación</h3>
+                <div class="timeline-item">
+                    <div class="item-header">
+                        <div class="item-title">{{ c[10] or 'TSU' }} en {{ c[12] or c[6] }}</div>
+                        <div class="item-date">Graduado en {{ c[5] }}</div>
+                    </div>
+                    <div class="item-org">{{ c[11] or 'Universidad Tecnológica de Oriental' }}</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3 class="section-title"><i class="fas fa-briefcase"></i> Experiencia Profesional</h3>
+                {% if c[13] %}
+                <div class="timeline-item">
+                    <div class="item-header">
+                        <div class="item-title">{{ c[13] }}</div>
+                        <div class="item-date">{{ c[15] or '' }} - {{ c[16] or 'Actualidad' }}</div>
+                    </div>
+                    <div class="item-org">{{ c[14] }}</div>
+                    <div class="item-desc">
+                        {{ c[17] }}
+                    </div>
+                </div>
+                {% else %}
+                <div class="timeline-item">
+                    <div class="item-header">
+                        <div class="item-title">Prácticas Profesionales / Estadías</div>
+                        <div class="item-date">{{ c[5]|int - 1 }} - {{ c[5] }}</div>
+                    </div>
+                    <div class="item-org">Universidad Tecnológica de Oriental</div>
+                    <div class="item-desc">
+                        Desarrollo de proyectos académicos, aplicación de conocimientos técnicos en entornos controlados y preparación para el mundo laboral.
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="section">
+                <h3 class="section-title"><i class="fas fa-bullseye"></i> Perfil y Objetivos</h3>
+                <p style="font-size: 0.95rem; color: #4a5568;">
+                    Egresado de la **Universidad Tecnológica de Oriental** con enfoque en **{{ c[20] or c[6] }}**. 
+                    Busco una oportunidad en el área de **{{ c[18] or c[20] }}** para aplicar mis conocimientos en **{{ c[21] or 'tecnología y administración' }}** 
+                    y contribuir al crecimiento de la empresa aportando proactividad y excelencia técnica.
+                </p>
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>

@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from app.config.database import get_connection
 from werkzeug.security import generate_password_hash
 from datetime import datetime
+from app.utils.security import strip_tags
 
 empresa_bp = Blueprint('empresa', __name__)
 
@@ -49,19 +50,19 @@ def publicar():
     if current_user.rol != "Empresa": return redirect(url_for("home"))
     
     if request.method == "POST":
-        titulo = request.form.get("titulo")
-        descripcion = request.form.get("descripcion")
+        titulo = strip_tags(request.form.get("titulo"))
+        descripcion = strip_tags(request.form.get("descripcion"))
         salario = request.form.get("salario")
-        modalidad = request.form.get("modalidad")
-        horario = request.form.get("horario")
-        lugar = request.form.get("lugar")
+        modalidad = strip_tags(request.form.get("modalidad"))
+        horario = strip_tags(request.form.get("horario"))
+        lugar = strip_tags(request.form.get("lugar"))
         fecha_vencimiento = request.form.get("fecha_vencimiento")
         
         # Requisitos
-        escolaridad = request.form.get("escolaridad")
-        experiencia = request.form.get("experiencia")
-        conocimientos = request.form.get("conocimientos")
-        perfil = request.form.get("perfil")
+        escolaridad = strip_tags(request.form.get("escolaridad"))
+        experiencia = strip_tags(request.form.get("experiencia"))
+        conocimientos = strip_tags(request.form.get("conocimientos"))
+        perfil = strip_tags(request.form.get("perfil"))
         num_vacantes = request.form.get("num_vacantes")
 
         conn = get_connection()
@@ -117,6 +118,10 @@ def publicar():
 def consultar():
     if current_user.rol != "Empresa": return redirect(url_for("home"))
     
+    page = request.args.get('page', 1, type=int)
+    per_page = 6  # Mostramos 6 vacantes por página
+    offset = (page - 1) * per_page
+
     conn = get_connection()
     cur = conn.cursor()
     
@@ -130,9 +135,54 @@ def consultar():
     
     id_empresa = id_empresa_row[0]
     
+    # Contar total para paginación
+    cur.execute("SELECT COUNT(*) FROM vacantes WHERE id_empresa = %s", (id_empresa,))
+    total_vacantes = cur.fetchone()[0]
+    total_pages = (total_vacantes + per_page - 1) // per_page
+
+    # Obtener vacantes paginadas
     cur.execute("""
         SELECT v.id_vacante, v.titulo, v.fecha_publicacion, v.estatus, 
         (SELECT COUNT(*) FROM postulaciones p WHERE p.id_vacante = v.id_vacante) as num_postulados
+        FROM vacantes v
+        WHERE v.id_empresa = %s
+        ORDER BY v.fecha_publicacion DESC
+        LIMIT %s OFFSET %s
+    """, (id_empresa, per_page, offset))
+    
+    vacantes = cur.fetchall()
+    cur.close()
+    conn.close()
+    
+    return render_template('empresa/empresa-consultar.html', 
+                           vacantes=vacantes, 
+                           page=page, 
+                           total_pages=total_pages)
+
+# ================= GESTIÓN DE CANDIDATOS =================
+@empresa_bp.route("/candidatos")
+@login_required
+def candidatos():
+    if current_user.rol != "Empresa": return redirect(url_for("home"))
+    
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    cur.execute("SELECT id_empresa FROM empresas WHERE id_usuario = %s", (current_user.id,))
+    id_empresa_row = cur.fetchone()
+    
+    if not id_empresa_row:
+        cur.close()
+        conn.close()
+        return redirect(url_for("home"))
+    
+    id_empresa = id_empresa_row[0]
+    
+    # Obtener vacantes y conteo de postulados
+    cur.execute("""
+        SELECT v.id_vacante, v.titulo, v.fecha_publicacion, v.estatus,
+               (SELECT COUNT(*) FROM postulaciones p WHERE p.id_vacante = v.id_vacante) as total,
+               (SELECT COUNT(*) FROM postulaciones p WHERE p.id_vacante = v.id_vacante AND (p.estado = 'en revision' OR p.estado = 'visto')) as pendientes
         FROM vacantes v
         WHERE v.id_empresa = %s
         ORDER BY v.fecha_publicacion DESC
@@ -142,7 +192,7 @@ def consultar():
     cur.close()
     conn.close()
     
-    return render_template('empresa/empresa-consultar.html', vacantes=vacantes)
+    return render_template('empresa/empresa-candidatos-lista.html', vacantes=vacantes)
 
 # ================= PERFIL =================
 @empresa_bp.route("/perfil")
@@ -204,7 +254,7 @@ def estadisticas():
         cur.execute("""
             SELECT COUNT(p.id_postulacion)
             FROM postulaciones p JOIN vacantes v ON p.id_vacante = v.id_vacante
-            WHERE v.id_empresa = %s AND p.estado = 'en revision'
+            WHERE v.id_empresa = %s AND (p.estado = 'en revision' OR p.estado = 'visto')
         """, (id_empresa,))
         stats['en_revision'] = cur.fetchone()[0]
         cur.execute("""
@@ -224,7 +274,7 @@ def estadisticas():
         cur.execute("""
             SELECT v.titulo,
                    (SELECT COUNT(*) FROM postulaciones p WHERE p.id_vacante = v.id_vacante) as total,
-                   (SELECT COUNT(*) FROM postulaciones p WHERE p.id_vacante = v.id_vacante AND p.estado = 'en revision') as revision,
+                   (SELECT COUNT(*) FROM postulaciones p WHERE p.id_vacante = v.id_vacante AND (p.estado = 'en revision' OR p.estado = 'visto')) as revision,
                    (SELECT COUNT(*) FROM postulaciones p WHERE p.id_vacante = v.id_vacante AND p.estado = 'aceptado') as aceptadas
             FROM vacantes v WHERE v.id_empresa = %s
             ORDER BY v.fecha_publicacion DESC
@@ -245,17 +295,17 @@ def registrar_empresa():
     conn = get_connection()
     cur = conn.cursor()
     try:
-        cur.execute("INSERT INTO usuarios (id_rol, correo, password) VALUES (2, %s, %s) RETURNING id_usuario", 
+        cur.execute("INSERT INTO usuarios (id_rol, correo, password, activo) VALUES (2, %s, %s, false) RETURNING id_usuario", 
                    (data.get("correo"), hashed_password))
         id_usuario = cur.fetchone()[0]
         
         cur.execute("INSERT INTO empresas (id_usuario, nombre, giro, tipo_empresa, telefono) VALUES (%s, %s, %s, %s, %s) RETURNING id_empresa",
-                   (id_usuario, data.get("empresa"), data.get("giro"), data.get("tipo_empresa"), data.get("telefono")))
+                   (id_usuario, strip_tags(data.get("empresa")), strip_tags(data.get("giro")), strip_tags(data.get("tipo_empresa")), strip_tags(data.get("telefono"))))
         id_empresa = cur.fetchone()[0]
         
-        cur.execute("INSERT INTO direcciones_empresa (id_empresa, calle) VALUES (%s, %s)", (id_empresa, data.get("direccion")))
+        cur.execute("INSERT INTO direcciones_empresa (id_empresa, calle) VALUES (%s, %s)", (id_empresa, strip_tags(data.get("direccion"))))
         cur.execute("INSERT INTO recursos_humanos (id_empresa, nombre, telefono, correo) VALUES (%s, %s, %s, %s)",
-                   (id_empresa, data.get("responsable_rrhh"), data.get("telefono_rrhh"), data.get("correo_rrhh")))
+                   (id_empresa, strip_tags(data.get("responsable_rrhh")), strip_tags(data.get("telefono_rrhh")), strip_tags(data.get("correo_rrhh"))))
         
         conn.commit()
         flash("Registro exitoso")

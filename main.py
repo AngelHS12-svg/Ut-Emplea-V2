@@ -1,15 +1,88 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
 import psycopg2
+from psycopg2 import pool
 import os
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.header import Header
 
 from app.routes.empresa_routes import empresa_bp
+from app.utils.security import strip_tags
+import re
 
 app = Flask(__name__, template_folder="app/Views", static_folder="public")
+
+def validar_registro_datos(correo, password, telefono, cp=None):
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", correo):
+        return "Correo electrónico no válido."
+    
+    # Validar Contraseña (mín 12, mayus, minus, num, especial)
+    if len(password) < 12:
+        return "La contraseña debe tener al menos 12 caracteres."
+    if not re.search(r"[A-Z]", password) or not re.search(r"[a-z]", password) or \
+       not re.search(r"\d", password) or not re.search(r"[@$!%*?&]", password):
+        return "La contraseña debe incluir mayúscula, minúscula, número y símbolo especial."
+    
+    # Validar Teléfono (10 dígitos)
+    if not telefono or len(telefono) != 10 or not telefono.isdigit():
+        return "El teléfono debe tener exactamente 10 dígitos numéricos."
+    
+    # Validar CP (5 dígitos)
+    if cp is not None:
+        if not cp or len(cp) != 5 or not cp.isdigit():
+            return "El código postal debe tener 5 dígitos."
+            
+    return None
 app.register_blueprint(empresa_bp, url_prefix='/empresa')
 app.secret_key = "secret_key_prueba"
+
+# ================= DATABASE CONNECTION POOL =================
+class ConnectionWrapper:
+    def __init__(self, conn, pool_instance=None):
+        self._conn = conn
+        self._pool = pool_instance
+    def __getattr__(self, name):
+        return getattr(self._conn, name)
+    def cursor(self, *args, **kwargs):
+        return self._conn.cursor(*args, **kwargs)
+    def commit(self):
+        return self._conn.commit()
+    def rollback(self):
+        return self._conn.rollback()
+    def close(self):
+        if self._pool:
+            self._pool.putconn(self._conn)
+        else:
+            self._conn.close()
+
+db_pool = None
+try:
+    db_pool = pool.ThreadedConnectionPool(
+        1, 120,  # Aumentamos a 120 conexiones para soportar 100+ usuarios concurrentes
+        host=os.getenv("DB_HOST", "localhost"),
+        database=os.getenv("DB_NAME", "bolsa_trabajo_uto"),
+        user=os.getenv("DB_USER", "postgres"),
+        password=os.getenv("DB_PASS", "angel123"),
+        port=os.getenv("DB_PORT", "5432")
+    )
+    print("Pool de conexiones creado con éxito.")
+except Exception as e:
+    print(f"Error al crear el pool de conexiones: {e}")
+
+def get_connection():
+    if db_pool:
+        return ConnectionWrapper(db_pool.getconn(), db_pool)
+    return ConnectionWrapper(psycopg2.connect(
+        host=os.getenv("DB_HOST", "localhost"),
+        database=os.getenv("DB_NAME", "bolsa_trabajo_uto"),
+        user=os.getenv("DB_USER", "postgres"),
+        password=os.getenv("DB_PASS", "angel123"),
+        port=os.getenv("DB_PORT", "5432")
+    ))
 
 # Configuración de uploads
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads', 'cv')
@@ -17,10 +90,50 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024  # 32MB max
 
+# Configuración de Correo (Gmail SMTP SSL)
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USERNAME'] = 'angelhsnew123@gmail.com'
+app.config['MAIL_PASSWORD'] = 'nxjwdgnrmtgdndoa' # App Password de la cuenta personal
+app.config['MAIL_DEFAULT_SENDER'] = ('UT Oriental Emplea', 'angelhsnew123@gmail.com')
+
+def enviar_email(destinatario, asunto, mensaje_texto):
+    """Envía un correo electrónico utilizando smtplib."""
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = f"{Header('UT Oriental Emplea', 'utf-8')} <{app.config['MAIL_USERNAME']}>"
+        msg['To'] = destinatario
+        msg['Subject'] = Header(asunto, 'utf-8')
+        
+        # Cuerpo del mensaje
+        msg.attach(MIMEText(mensaje_texto, 'plain', 'utf-8'))
+        
+        # Configuración del servidor con SSL
+        server = smtplib.SMTP_SSL(app.config['MAIL_SERVER'], app.config['MAIL_PORT'])
+        server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+        server.sendmail(app.config['MAIL_USERNAME'], destinatario, msg.as_string())
+        server.quit()
+        print(f"📧 Correo enviado a {destinatario}: {asunto}")
+        return True
+    except Exception as e:
+        print(f"❌ Error al enviar correo a {destinatario}: {e}")
+        return False
+
 # Configuración de Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "home"
+
+# Seguridad: Cabeceras de protección global
+@app.after_request
+def add_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    # CSP básica para permitir recursos locales y Google Fonts/CDNs conocidos
+    response.headers['Content-Security-Policy'] = "default-src 'self' mailto: tel:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://ui-avatars.com; connect-src 'self';"
+    return response
 
 class User(UserMixin):
     def __init__(self, id_usuario, correo, id_rol, nombre_rol):
@@ -33,39 +146,53 @@ class User(UserMixin):
 def load_user(user_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("""
-        SELECT u.id_usuario, u.correo, u.id_rol, r.nombre 
-        FROM usuarios u 
-        JOIN roles r ON u.id_rol = r.id_rol 
-        WHERE u.id_usuario = %s
-    """, (user_id,))
-    user_data = cur.fetchone()
-    cur.close()
-    conn.close()
-    if user_data:
-        return User(user_data[0], user_data[1], user_data[2], user_data[3])
+    try:
+        cur.execute("""
+            SELECT u.id_usuario, u.correo, u.id_rol, r.nombre 
+            FROM usuarios u 
+            JOIN roles r ON u.id_rol = r.id_rol 
+            WHERE u.id_usuario = %s
+        """, (user_id,))
+        user_data = cur.fetchone()
+        if user_data:
+            return User(user_data[0], user_data[1], user_data[2], user_data[3])
+    except Exception as e:
+        print(f"Error en load_user: {e}")
+    finally:
+        cur.close()
+        conn.close()
     return None
 
-def get_connection():
-    return psycopg2.connect(
-        host=os.getenv("DB_HOST", "localhost"),
-        database=os.getenv("DB_NAME", "bolsa_trabajo_uto"),
-        user=os.getenv("DB_USER", "postgres"),
-        password=os.getenv("DB_PASS", "angel123"),
-        port=os.getenv("DB_PORT", "5432")
-    )
+def release_connection(conn):
+    conn.close()  # Ahora ConnectionWrapper.close() hace el putconn automáticamente
+
 
 def crear_notificacion(id_usuario, tipo, mensaje, url=""):
     conn = get_connection()
     cur = conn.cursor()
     try:
+        # 1. Guardar en base de datos (Notificación interna)
         cur.execute("""
             INSERT INTO notificaciones (id_usuario, tipo, mensaje, url)
             VALUES (%s, %s, %s, %s)
         """, (id_usuario, tipo, mensaje, url))
         conn.commit()
+        
+        # 2. Enviar por correo electrónico
+        cur.execute("SELECT correo FROM usuarios WHERE id_usuario = %s", (id_usuario,))
+        user_row = cur.fetchone()
+        if user_row and user_row[0]:
+            destinatario = user_row[0]
+            asunto = f"Notificación: {tipo.capitalize()}"
+            # Limpiar URL si es relativa para que sea informativa
+            link_info = f"\n\nPuedes ver más detalles aquí: http://localhost:5001{url}" if url else ""
+            cuerpo = f"Hola,\n\nTienes una nueva notificación en UT Oriental Emplea:\n\n{mensaje}{link_info}\n\nSaludos,\nEl equipo de UT Oriental."
+            
+            # Enviar de forma asíncrona no es posible aquí sin hilos, pero lo haremos directo
+            enviar_email(destinatario, asunto, cuerpo)
+
     except Exception as e:
-        conn.rollback()
+        if conn: conn.rollback()
         print(f"Error creando notificación: {e}")
     finally:
         cur.close()
@@ -225,16 +352,22 @@ def admin_aprobar_empresa(id_empresa):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("UPDATE empresas SET estatus = 'aprobada' WHERE id_empresa = %s", (id_empresa,))
+    cur.execute("UPDATE usuarios SET activo = true WHERE id_usuario = (SELECT id_usuario FROM empresas WHERE id_empresa = %s)", (id_empresa,))
     cur.execute("""
         INSERT INTO validacion_empresas (id_empresa, aprobado, comentario)
         VALUES (%s, true, 'Aprobada por administrador')
     """, (id_empresa,))
     conn.commit()
     
-    cur.execute("SELECT id_usuario FROM empresas WHERE id_empresa = %s", (id_empresa,))
-    emp_user = cur.fetchone()
-    if emp_user:
-        crear_notificacion(emp_user[0], "aprobacion", "Tu registro de empresa ha sido aprobado.", "/empresa")
+    cur.execute("SELECT u.id_usuario, u.correo, e.nombre FROM empresas e JOIN usuarios u ON e.id_usuario = u.id_usuario WHERE e.id_empresa = %s", (id_empresa,))
+    emp_data = cur.fetchone()
+    if emp_data:
+        id_user, correo, nombre_empresa = emp_data
+        crear_notificacion(id_user, "aprobacion", "Tu registro de empresa ha sido aprobado. Ya puedes iniciar sesión.", "/empresa")
+        enviar_email(correo, "¡Cuenta Aprobada! - Bolsa de Trabajo UT", 
+                    f"Hola {nombre_empresa},\n\nTu registro en la Bolsa de Trabajo UT ha sido aprobado por el administrador. "
+                    f"Ya puedes iniciar sesión y comenzar a publicar vacantes.\n\n"
+                    f"Acceso: {url_for('home', _external=True)}")
         
     cur.close()
     conn.close()
@@ -311,16 +444,22 @@ def admin_aprobar_candidato(id_candidato):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("UPDATE candidatos SET estatus = 'aprobado' WHERE id_candidato = %s", (id_candidato,))
+    cur.execute("UPDATE usuarios SET activo = true WHERE id_usuario = (SELECT id_usuario FROM candidatos WHERE id_candidato = %s)", (id_candidato,))
     cur.execute("""
         INSERT INTO validacion_candidatos (id_candidato, aprobado, comentario)
         VALUES (%s, true, 'Aprobado por administrador')
     """, (id_candidato,))
     conn.commit()
     
-    cur.execute("SELECT id_usuario FROM candidatos WHERE id_candidato = %s", (id_candidato,))
-    cand_user = cur.fetchone()
-    if cand_user:
-        crear_notificacion(cand_user[0], "aprobacion", "Tu registro de candidato ha sido aprobado.", "/candidato-dashboard")
+    cur.execute("SELECT u.id_usuario, u.correo, c.nombre FROM candidatos c JOIN usuarios u ON c.id_usuario = u.id_usuario WHERE c.id_candidato = %s", (id_candidato,))
+    cand_data = cur.fetchone()
+    if cand_data:
+        id_user, correo, nombre_cand = cand_data
+        crear_notificacion(id_user, "aprobacion", "Tu registro de candidato ha sido aprobado. Ya puedes iniciar sesión.", "/candidato-dashboard")
+        enviar_email(correo, "¡Cuenta Aprobada! - Bolsa de Trabajo UT", 
+                    f"Hola {nombre_cand},\n\nTu perfil profesional en la Bolsa de Trabajo UT ha sido aprobado por el administrador. "
+                    f"Ya puedes iniciar sesión y postularte a las mejores vacantes.\n\n"
+                    f"Acceso: {url_for('home', _external=True)}")
         
     cur.close()
     conn.close()
@@ -380,15 +519,63 @@ def admin_vacantes():
     cur.execute("""
         SELECT v.id_vacante, v.titulo, e.nombre as empresa, v.fecha_publicacion,
                v.fecha_vencimiento, v.estatus, v.salario,
-               (SELECT COUNT(*) FROM postulaciones p WHERE p.id_vacante = v.id_vacante) as num_postulaciones
+               (SELECT COUNT(*) FROM postulaciones p WHERE p.id_vacante = v.id_vacante) as num_postulaciones,
+               v.descripcion, v.modalidad, v.horario, v.lugar_trabajo, v.perfil,
+               u.id_usuario as id_usuario_empresa
         FROM vacantes v
         JOIN empresas e ON v.id_empresa = e.id_empresa
+        JOIN usuarios u ON e.id_usuario = u.id_usuario
         ORDER BY v.fecha_publicacion DESC
     """)
     vacantes = cur.fetchall()
     cur.close()
     conn.close()
     return render_template("admi/vacantes.html", vacantes=vacantes)
+
+@app.route("/admin/eliminar-vacante/<int:id_vacante>", methods=["POST"])
+@login_required
+def admin_eliminar_vacante(id_vacante):
+    if current_user.rol != "Administrador":
+        return redirect(url_for("home"))
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        # Get vacancy title and the empresa's user id for notification
+        cur.execute("""
+            SELECT v.titulo, u.id_usuario
+            FROM vacantes v
+            JOIN empresas e ON v.id_empresa = e.id_empresa
+            JOIN usuarios u ON e.id_usuario = u.id_usuario
+            WHERE v.id_vacante = %s
+        """, (id_vacante,))
+        row = cur.fetchone()
+        if row:
+            titulo_vacante = row[0]
+            id_usuario_empresa = row[1]
+            # Delete related records first
+            cur.execute("DELETE FROM postulaciones WHERE id_vacante = %s", (id_vacante,))
+            cur.execute("DELETE FROM requisitos_vacante WHERE id_vacante = %s", (id_vacante,))
+            cur.execute("DELETE FROM vacantes_guardadas WHERE id_vacante = %s", (id_vacante,))
+            cur.execute("DELETE FROM vacantes WHERE id_vacante = %s", (id_vacante,))
+            conn.commit()
+            # Notify the empresa
+            crear_notificacion(
+                id_usuario_empresa,
+                "vacantes",
+                f"Tu vacante '{titulo_vacante}' fue eliminada por un administrador.",
+                "/empresa/ver-vacantes"
+            )
+            flash(f"Vacante '{titulo_vacante}' eliminada correctamente.")
+        else:
+            flash("La vacante no fue encontrada.")
+    except Exception as e:
+        conn.rollback()
+        print(f"Error al eliminar vacante: {e}")
+        flash("Error al eliminar la vacante.")
+    finally:
+        cur.close()
+        conn.close()
+    return redirect(url_for("admin_vacantes"))
 
 @app.route("/admin/seguimiento")
 @login_required
@@ -398,11 +585,16 @@ def admin_seguimiento():
     cur = conn.cursor()
     cur.execute("""
         SELECT p.id_postulacion, v.titulo, e.nombre as empresa,
-               c.nombre as candidato, p.estado, p.fecha_postulacion
+               c.nombre as candidato, p.estado, p.fecha_postulacion,
+               v.salario, v.descripcion, v.modalidad,
+               ue.correo as correo_empresa, uc.correo as correo_candidato,
+               v.lugar_trabajo
         FROM postulaciones p
         JOIN vacantes v ON p.id_vacante = v.id_vacante
         JOIN empresas e ON v.id_empresa = e.id_empresa
         JOIN candidatos c ON p.id_candidato = c.id_candidato
+        JOIN usuarios ue ON e.id_usuario = ue.id_usuario
+        JOIN usuarios uc ON c.id_usuario = uc.id_usuario
         ORDER BY p.fecha_postulacion DESC
         LIMIT 50
     """)
@@ -417,6 +609,8 @@ def admin_reportes():
     if current_user.rol != "Administrador": return redirect(url_for("home"))
     conn = get_connection()
     cur = conn.cursor()
+
+    # Totales
     cur.execute("SELECT COUNT(*) FROM empresas")
     total_empresas = cur.fetchone()[0]
     cur.execute("SELECT COUNT(*) FROM candidatos")
@@ -425,13 +619,46 @@ def admin_reportes():
     total_vacantes = cur.fetchone()[0]
     cur.execute("SELECT COUNT(*) FROM postulaciones")
     total_postulaciones = cur.fetchone()[0]
+
+    # Empresas por estatus
+    cur.execute("SELECT estatus, COUNT(*) FROM empresas GROUP BY estatus")
+    empresas_estatus = {row[0]: row[1] for row in cur.fetchall()}
+
+    # Vacantes por estatus
+    cur.execute("SELECT estatus, COUNT(*) FROM vacantes GROUP BY estatus")
+    vacantes_estatus = {row[0]: row[1] for row in cur.fetchall()}
+
+    # Postulaciones por estado
+    cur.execute("SELECT estado, COUNT(*) FROM postulaciones GROUP BY estado")
+    postulaciones_estado = {row[0]: row[1] for row in cur.fetchall()}
+
+    # Top 5 empresas con más vacantes
+    cur.execute("""
+        SELECT e.nombre, COUNT(v.id_vacante) as total
+        FROM empresas e
+        LEFT JOIN vacantes v ON e.id_empresa = v.id_empresa
+        GROUP BY e.nombre ORDER BY total DESC LIMIT 5
+    """)
+    top_empresas = cur.fetchall()
+
     cur.close()
     conn.close()
+
     reportes = {
         'total_empresas': total_empresas,
         'total_candidatos': total_candidatos,
         'total_vacantes': total_vacantes,
-        'total_postulaciones': total_postulaciones
+        'total_postulaciones': total_postulaciones,
+        'empresas_aprobadas': empresas_estatus.get('aprobada', 0),
+        'empresas_pendientes': empresas_estatus.get('pendiente', 0),
+        'empresas_rechazadas': empresas_estatus.get('rechazada', 0),
+        'vacantes_activas': vacantes_estatus.get('activa', 0),
+        'vacantes_inactivas': vacantes_estatus.get('inactiva', 0) + vacantes_estatus.get('vencida', 0),
+        'post_pendientes': postulaciones_estado.get('pendiente', 0),
+        'post_aceptados': postulaciones_estado.get('aceptado', 0),
+        'post_rechazados': postulaciones_estado.get('rechazado', 0),
+        'top_empresas_nombres': [r[0] for r in top_empresas],
+        'top_empresas_vacantes': [r[1] for r in top_empresas],
     }
     return render_template("admi/reportes.html", reportes=reportes)
 
@@ -439,24 +666,31 @@ def admin_reportes():
 @app.route("/registro-empresa", methods=["GET", "POST"])
 def registro_empresa():
     if request.method == "POST":
-        nombre_empresa = request.form.get("empresa")
-        giro = request.form.get("giro")
-        tipo_empresa = request.form.get("tipo_empresa")
-        telefono = request.form.get("telefono")
-        direccion = request.form.get("direccion")
+        nombre_empresa = strip_tags(request.form.get("empresa"))
+        giro = strip_tags(request.form.get("giro"))
+        tipo_empresa = strip_tags(request.form.get("tipo_empresa"))
+        telefono = strip_tags(request.form.get("telefono"))
+        direccion = strip_tags(request.form.get("direccion"))
         correo = request.form.get("correo")
         password = request.form.get("password")
-        responsable_rrhh = request.form.get("responsable_rrhh")
-        telefono_rrhh = request.form.get("telefono_rrhh")
-        correo_rrhh = request.form.get("correo_rrhh")
+        responsable_rrhh = strip_tags(request.form.get("responsable_rrhh"))
+        telefono_rrhh = strip_tags(request.form.get("telefono_rrhh"))
+        correo_rrhh = strip_tags(request.form.get("correo_rrhh"))
+        codigo_postal = strip_tags(request.form.get("codigo_postal"))
+
+        # Validaciones
+        error = validar_registro_datos(correo, password, telefono, codigo_postal)
+        if error:
+            flash(error)
+            return redirect(url_for("registro_empresa"))
 
         hashed_password = generate_password_hash(password)
         conn = get_connection()
         cur = conn.cursor()
         try:
             cur.execute("""
-                INSERT INTO usuarios (id_rol, correo, password) 
-                VALUES (2, %s, %s) RETURNING id_usuario
+                INSERT INTO usuarios (id_rol, correo, password, activo) 
+                VALUES (2, %s, %s, false) RETURNING id_usuario
             """, (correo, hashed_password))
             id_usuario = cur.fetchone()[0]
             cur.execute("""
@@ -465,8 +699,8 @@ def registro_empresa():
             """, (id_usuario, nombre_empresa, giro, tipo_empresa, telefono))
             id_empresa = cur.fetchone()[0]
             cur.execute("""
-                INSERT INTO direcciones_empresa (id_empresa, calle) VALUES (%s, %s)
-            """, (id_empresa, direccion))
+                INSERT INTO direcciones_empresa (id_empresa, calle, codigo_postal) VALUES (%s, %s, %s)
+            """, (id_empresa, direccion, codigo_postal))
             cur.execute("""
                 INSERT INTO recursos_humanos (id_empresa, nombre, telefono, correo) 
                 VALUES (%s, %s, %s, %s)
@@ -488,52 +722,110 @@ def registro_empresa():
 @app.route("/registro-candidato", methods=["GET", "POST"])
 def registro_candidato():
     if request.method == "POST":
-        sexo = request.form.get("sexo")
-        nombre = request.form.get("nombre")
-        carrera_nombre = request.form.get("carrera")
-        anio_egreso = request.form.get("egreso")
-        telefono = request.form.get("telefono")
+        # Datos de Usuario
         correo = request.form.get("correo")
         password = request.form.get("password")
+        
+        # Datos Personales
+        nombre = strip_tags(request.form.get("nombre"))
+        apellido_paterno = strip_tags(request.form.get("apellido_paterno"))
+        apellido_materno = strip_tags(request.form.get("apellido_materno"))
+        sexo = strip_tags(request.form.get("sexo"))
+        telefono = strip_tags(request.form.get("telefono"))
+        codigo_postal = strip_tags(request.form.get("codigo_postal"))
+        ubicacion = strip_tags(request.form.get("ubicacion"))
+        
+        # Validaciones
+        error = validar_registro_datos(correo, password, telefono, codigo_postal)
+        if error:
+            flash(error)
+            return redirect(url_for("registro_candidato"))
+        
+        # Datos Profesionales (Educación)
+        id_carrera = request.form.get("id_carrera")
+        id_carrera = int(id_carrera) if id_carrera and id_carrera.isdigit() else None
+        
+        anio_egreso = request.form.get("egreso")
+        anio_egreso = int(anio_egreso) if anio_egreso and anio_egreso.isdigit() else None
+        
+        ultimo_grado_estudios = strip_tags(request.form.get("ultimo_grado_estudios"))
+        institucion_estudios = strip_tags(request.form.get("institucion_estudios"))
+        carrera_estudios = strip_tags(request.form.get("carrera_estudios"))
+        
+        # Datos Laborales
+        ultimo_puesto = strip_tags(request.form.get("ultimo_puesto"))
+        ultima_empresa = strip_tags(request.form.get("ultima_empresa"))
+        fecha_inicio_laboral = strip_tags(request.form.get("fecha_inicio_laboral"))
+        fecha_fin_laboral = strip_tags(request.form.get("fecha_fin_laboral"))
+        actividades_logros = strip_tags(request.form.get("actividades_logros"))
+        
+        # Intereses
+        puesto_deseado = strip_tags(request.form.get("puesto_deseado"))
+        sueldo_deseado = request.form.get("sueldo_deseado")
+        sueldo_deseado = float(sueldo_deseado) if sueldo_deseado and sueldo_deseado.strip() else 0
+        
+        area_trabajo = strip_tags(request.form.get("area_trabajo"))
+        especialidad = strip_tags(request.form.get("especialidad"))
+        tags_especialidad = strip_tags(request.form.get("tags_especialidad"))
 
         hashed_password = generate_password_hash(password)
         conn = get_connection()
         cur = conn.cursor()
         try:
-            cur.execute("SELECT id_carrera FROM carreras WHERE nombre = %s", (carrera_nombre,))
-            carrera_data = cur.fetchone()
-            id_carrera = carrera_data[0] if carrera_data else None
-
+            # 1. Crear Usuario
             cur.execute("""
-                INSERT INTO usuarios (id_rol, correo, password) 
-                VALUES (3, %s, %s) RETURNING id_usuario
+                INSERT INTO usuarios (id_rol, correo, password, activo) 
+                VALUES (3, %s, %s, false) RETURNING id_usuario
             """, (correo, hashed_password))
             id_usuario = cur.fetchone()[0]
+
+            # 2. Crear Candidato con todos los campos
             cur.execute("""
-                INSERT INTO candidatos (id_usuario, nombre, sexo, telefono, id_carrera, anio_egreso, estatus) 
-                VALUES (%s, %s, %s, %s, %s, %s, 'pendiente')
-            """, (id_usuario, nombre, sexo, telefono, id_carrera, anio_egreso))
+                INSERT INTO candidatos (
+                    id_usuario, nombre, apellido_paterno, apellido_materno, 
+                    sexo, telefono, codigo_postal, ubicacion,
+                    id_carrera, ultimo_grado_estudios, institucion_estudios, carrera_estudios, anio_egreso,
+                    ultimo_puesto, ultima_empresa, fecha_inicio_laboral, fecha_fin_laboral, actividades_logros,
+                    puesto_deseado, sueldo_deseado, area_trabajo, especialidad, tags_especialidad,
+                    estatus
+                ) VALUES (
+                    %s, %s, %s, %s,
+                    %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s,
+                    'pendiente'
+                )
+            """, (
+                id_usuario, nombre, apellido_paterno, apellido_materno,
+                sexo, telefono, codigo_postal, ubicacion,
+                id_carrera, ultimo_grado_estudios, institucion_estudios, carrera_estudios, anio_egreso,
+                ultimo_puesto, ultima_empresa, fecha_inicio_laboral, fecha_fin_laboral, actividades_logros,
+                puesto_deseado, sueldo_deseado, area_trabajo, especialidad, tags_especialidad
+            ))
+            
             conn.commit()
-            notificar_admins("registro", f"Nuevo candidato registrado: {nombre}", "/admin/validar-candidato")
+            notificar_admins("registro", f"Nuevo candidato registrado: {nombre} {apellido_paterno}", "/admin/validar-candidato")
             flash("Registro exitoso. Su cuenta será validada por un administrador.")
             return redirect(url_for("home"))
         except Exception as e:
             conn.rollback()
+            print(f"Error al registrar candidato: {e}")
             flash(f"Error al registrar: {str(e)}")
             return redirect(url_for("registro_candidato"))
         finally:
             cur.close()
             conn.close()
     
-    # Cargar carreras para el formulario
+    # Cargar carreras para el formulario (GET)
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("SELECT id_carrera, nombre FROM carreras ORDER BY nombre")
     carreras = cur.fetchall()
     cur.close()
     conn.close()
-    return render_template("vacantes/registro-vacante.html", carreras=carreras)
-
+    return render_template("vacantes/registro-candidato.html", carreras=carreras)
+    
 @app.route("/candidato-dashboard")
 @login_required
 def candidato_dashboard():
@@ -642,7 +934,7 @@ def candidato_postulaciones():
     
     id_candidato = cand[0]
     cur.execute("""
-        SELECT v.titulo, e.nombre, p.fecha_postulacion, p.estado, p.id_postulacion
+        SELECT v.titulo, e.nombre, p.fecha_postulacion, p.estado, p.id_postulacion, v.id_vacante, p.comentarios
         FROM postulaciones p
         JOIN vacantes v ON p.id_vacante = v.id_vacante
         JOIN empresas e ON v.id_empresa = e.id_empresa
@@ -696,8 +988,14 @@ def candidato_perfil():
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
-        SELECT c.id_candidato, c.nombre, c.sexo, c.telefono, c.anio_egreso,
-               COALESCE(ca.nombre, '') as carrera, u.correo, c.cv_url
+        SELECT c.id_candidato, c.nombre, c.apellido_paterno, c.apellido_materno,
+               c.sexo, c.telefono, c.anio_egreso, COALESCE(ca.nombre, '') as carrera, 
+               u.correo, c.cv_url, c.codigo_postal, c.ubicacion,
+               c.ultimo_grado_estudios, c.institucion_estudios, c.carrera_estudios,
+               c.ultimo_puesto, c.ultima_empresa, c.fecha_inicio_laboral, c.fecha_fin_laboral,
+               c.actividades_logros, c.puesto_deseado, c.sueldo_deseado,
+               c.area_trabajo, c.especialidad, c.tags_especialidad, c.foto_perfil_url,
+               c.id_carrera
         FROM candidatos c
         JOIN usuarios u ON c.id_usuario = u.id_usuario
         LEFT JOIN carreras ca ON c.id_carrera = ca.id_carrera
@@ -711,6 +1009,135 @@ def candidato_perfil():
     cur.close()
     conn.close()
     return render_template("vacantes/perfil-candidato.html", candidato=candidato, carreras=carreras)
+
+@app.route("/candidato/subir-foto", methods=["POST"])
+@login_required
+def candidato_subir_foto():
+    if current_user.rol != "Candidato": return redirect(url_for("home"))
+    if 'foto' not in request.files:
+        flash("No se seleccionó ninguna imagen.")
+        return redirect(url_for("candidato_perfil"))
+    
+    file = request.files['foto']
+    if file.filename == '':
+        flash("No se seleccionó ningún archivo.")
+        return redirect(url_for("candidato_perfil"))
+    
+    if file:
+        filename = secure_filename(f"foto_{current_user.id}_{file.filename}")
+        upload_path = os.path.join("public", "uploads", "fotos", filename)
+        
+        # Guardar archivo
+        file.save(upload_path)
+        
+        # Actualizar DB
+        foto_url = f"/public/uploads/fotos/{filename}"
+        conn = get_connection()
+        cur = conn.cursor()
+        try:
+            cur.execute("UPDATE candidatos SET foto_perfil_url = %s WHERE id_usuario = %s", (foto_url, current_user.id))
+            conn.commit()
+            flash("Foto de perfil actualizada exitosamente.")
+        except Exception as e:
+            conn.rollback()
+            flash(f"Error al actualizar foto: {e}")
+        finally:
+            cur.close()
+            conn.close()
+            
+    return redirect(url_for("candidato_perfil"))
+
+@app.route("/candidato/generar-cv")
+@login_required
+def candidato_generar_cv():
+    if current_user.rol != "Candidato": return redirect(url_for("home"))
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT c.nombre, c.apellido_paterno, c.apellido_materno,
+               c.sexo, c.telefono, c.anio_egreso, COALESCE(ca.nombre, '') as carrera, 
+               u.correo, c.codigo_postal, c.ubicacion,
+               c.ultimo_grado_estudios, c.institucion_estudios, c.carrera_estudios,
+               c.ultimo_puesto, c.ultima_empresa, c.fecha_inicio_laboral, c.fecha_fin_laboral,
+               c.actividades_logros, c.puesto_deseado, c.sueldo_deseado,
+               c.area_trabajo, c.especialidad, c.tags_especialidad, c.foto_perfil_url,
+               c.id_candidato
+        FROM candidatos c
+        JOIN usuarios u ON c.id_usuario = u.id_usuario
+        LEFT JOIN carreras ca ON c.id_carrera = ca.id_carrera
+        WHERE c.id_usuario = %s
+    """, (current_user.id,))
+    candidato = cur.fetchone()
+    cur.close()
+    conn.close()
+    return render_template("vacantes/cv-template.html", c=candidato)
+
+@app.route("/candidato/actualizar-perfil", methods=["POST"])
+@login_required
+def candidato_actualizar_perfil():
+    if current_user.rol != "Candidato": return redirect(url_for("home"))
+    
+    # Recoger todos los campos sanitizados
+    nombre = strip_tags(request.form.get("nombre"))
+    apellido_paterno = strip_tags(request.form.get("apellido_paterno"))
+    apellido_materno = strip_tags(request.form.get("apellido_materno"))
+    sexo = strip_tags(request.form.get("sexo"))
+    telefono = strip_tags(request.form.get("telefono"))
+    codigo_postal = strip_tags(request.form.get("codigo_postal"))
+    ubicacion = strip_tags(request.form.get("ubicacion"))
+    id_carrera = request.form.get("id_carrera")
+    id_carrera = int(id_carrera) if id_carrera and id_carrera.isdigit() else None
+    egreso = request.form.get("egreso")
+    egreso = int(egreso) if egreso and egreso.isdigit() else None
+    ultimo_grado_estudios = strip_tags(request.form.get("ultimo_grado_estudios"))
+    institucion_estudios = strip_tags(request.form.get("institucion_estudios"))
+    carrera_estudios = strip_tags(request.form.get("carrera_estudios"))
+    ultimo_puesto = strip_tags(request.form.get("ultimo_puesto"))
+    ultima_empresa = strip_tags(request.form.get("ultima_empresa"))
+    fecha_inicio_laboral = strip_tags(request.form.get("fecha_inicio_laboral"))
+    fecha_fin_laboral = strip_tags(request.form.get("fecha_fin_laboral"))
+    actividades_logros = strip_tags(request.form.get("actividades_logros"))
+    puesto_deseado = strip_tags(request.form.get("puesto_deseado"))
+    sueldo_deseado = request.form.get("sueldo_deseado")
+    sueldo_deseado = float(sueldo_deseado) if sueldo_deseado and sueldo_deseado.strip() else 0
+    area_trabajo = strip_tags(request.form.get("area_trabajo"))
+    especialidad = strip_tags(request.form.get("especialidad"))
+    tags_especialidad = strip_tags(request.form.get("tags_especialidad"))
+
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            UPDATE candidatos SET
+                nombre = %s, apellido_paterno = %s, apellido_materno = %s,
+                sexo = %s, telefono = %s, codigo_postal = %s, ubicacion = %s,
+                id_carrera = %s, anio_egreso = %s,
+                ultimo_grado_estudios = %s, institucion_estudios = %s, carrera_estudios = %s,
+                ultimo_puesto = %s, ultima_empresa = %s, 
+                fecha_inicio_laboral = %s, fecha_fin_laboral = %s, actividades_logros = %s,
+                puesto_deseado = %s, sueldo_deseado = %s, area_trabajo = %s,
+                especialidad = %s, tags_especialidad = %s
+            WHERE id_usuario = %s
+        """, (
+            nombre, apellido_paterno, apellido_materno,
+            sexo, telefono, codigo_postal, ubicacion,
+            id_carrera, egreso,
+            ultimo_grado_estudios, institucion_estudios, carrera_estudios,
+            ultimo_puesto, ultima_empresa,
+            fecha_inicio_laboral, fecha_fin_laboral, actividades_logros,
+            puesto_deseado, sueldo_deseado, area_trabajo,
+            especialidad, tags_especialidad,
+            current_user.id
+        ))
+        conn.commit()
+        flash("Perfil actualizado correctamente.")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Error al actualizar perfil: {e}")
+    finally:
+        cur.close()
+        conn.close()
+    return redirect(url_for("candidato_perfil"))
 
 @app.route("/candidato/detalle-vacante/<int:id_vacante>")
 @login_required
@@ -840,7 +1267,7 @@ def auth_login():
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
-        SELECT u.id_usuario, u.correo, u.password, r.nombre AS rol, u.id_rol
+        SELECT u.id_usuario, u.correo, u.password, r.nombre AS rol, u.id_rol, u.activo
         FROM usuarios u
         JOIN roles r ON u.id_rol = r.id_rol
         WHERE u.correo = %s
@@ -850,8 +1277,13 @@ def auth_login():
     conn.close()
 
     if user_data:
-        id_usuario, user_correo, hashed_password, rol_real, id_rol = user_data
+        id_usuario, user_correo, hashed_password, rol_real, id_rol, is_active = user_data
         if check_password_hash(hashed_password, password):
+            # Verificar si la cuenta está activa
+            if not is_active and rol_real != "Administrador":
+                flash("Su cuenta está pendiente de aprobación por un administrador.")
+                return redirect(url_for("home"))
+
             if (rol_seleccionado == "admin" and rol_real == "Administrador") or \
                (rol_seleccionado == "empresa" and rol_real == "Empresa") or \
                (rol_seleccionado == "candidato" and rol_real == "Candidato"):
@@ -872,6 +1304,43 @@ def auth_login():
     else:
         flash("El correo no está registrado.")
         return redirect(url_for("home"))
+
+# ================= API ENDPOINTS =================
+@app.route("/api/vacante/<int:id_vacante>")
+@login_required
+def api_get_vacante(id_vacante):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT v.id_vacante, v.titulo, v.descripcion, v.salario, v.modalidad,
+               v.horario, v.lugar_trabajo, v.fecha_publicacion,
+               e.nombre as empresa, r.escolaridad, r.experiencia, r.descripcion as req_desc
+        FROM vacantes v
+        JOIN empresas e ON v.id_empresa = e.id_empresa
+        LEFT JOIN requisitos_vacante r ON v.id_vacante = r.id_vacante
+        WHERE v.id_vacante = %s
+    """, (id_vacante,))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    
+    if not row:
+        return {"error": "Vacante no encontrada"}, 404
+        
+    return {
+        "id_vacante": row[0],
+        "titulo": row[1],
+        "descripcion": row[2],
+        "salario": f"${row[3]:,.2f}" if row[3] else "No especificado",
+        "modalidad": row[4],
+        "horario": row[5],
+        "lugar": row[6],
+        "fecha": row[7].strftime('%d/%m/%y') if row[7] else "N/A",
+        "empresa": row[8],
+        "escolaridad": row[9] or "No especificada",
+        "experiencia": row[10] or "No especificada",
+        "requisitos": row[11] or "No especificados"
+    }
 
 @app.route("/logout")
 @login_required
@@ -1121,9 +1590,10 @@ def empresa_eliminar_vacante(id_vacante):
 @login_required
 def empresa_aceptar_postulacion(id_postulacion):
     if current_user.rol != "Empresa": return redirect(url_for("home"))
+    comentario = request.form.get("comentario", "")
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("UPDATE postulaciones SET estado = 'aceptado' WHERE id_postulacion = %s", (id_postulacion,))
+    cur.execute("UPDATE postulaciones SET estado = 'aceptado', comentarios = %s WHERE id_postulacion = %s", (comentario, id_postulacion))
     cur.execute("SELECT id_vacante, id_candidato FROM postulaciones WHERE id_postulacion = %s", (id_postulacion,))
     result = cur.fetchone()
     vacante = (result[0],) if result else None
@@ -1131,12 +1601,14 @@ def empresa_aceptar_postulacion(id_postulacion):
         cur.execute("SELECT id_usuario FROM candidatos WHERE id_candidato = %s", (result[1],))
         cand_user = cur.fetchone()
         if cand_user:
-            crear_notificacion(cand_user[0], "aceptado", "Has sido aceptado en una vacante.", "/candidato/estado-postulaciones")
+            msg = "Has sido aceptado en una vacante."
+            if comentario: msg += f" Mensaje: {comentario}"
+            crear_notificacion(cand_user[0], "aceptado", msg, "/candidato/estado-postulaciones")
         notificar_admins("seleccion", "Una empresa ha aceptado a un candidato.", "/admin/seguimiento")
     conn.commit()
     cur.close()
     conn.close()
-    flash("Candidato aceptado.")
+    flash("Candidato aceptado con éxito.")
     if vacante:
         return redirect(url_for("empresa_ver_vacante", id_vacante=vacante[0]))
     return redirect(url_for("empresa.consultar"))
@@ -1145,9 +1617,10 @@ def empresa_aceptar_postulacion(id_postulacion):
 @login_required
 def empresa_rechazar_postulacion(id_postulacion):
     if current_user.rol != "Empresa": return redirect(url_for("home"))
+    comentario = request.form.get("comentario", "")
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("UPDATE postulaciones SET estado = 'rechazado' WHERE id_postulacion = %s", (id_postulacion,))
+    cur.execute("UPDATE postulaciones SET estado = 'rechazado', comentarios = %s WHERE id_postulacion = %s", (comentario, id_postulacion))
     cur.execute("SELECT id_vacante, id_candidato FROM postulaciones WHERE id_postulacion = %s", (id_postulacion,))
     result = cur.fetchone()
     vacante = (result[0],) if result else None
@@ -1155,12 +1628,14 @@ def empresa_rechazar_postulacion(id_postulacion):
         cur.execute("SELECT id_usuario FROM candidatos WHERE id_candidato = %s", (result[1],))
         cand_user = cur.fetchone()
         if cand_user:
-            crear_notificacion(cand_user[0], "rechazado", "Has sido rechazado de una vacante.", "/candidato/estado-postulaciones")
+            msg = "Tu postulación ha sido rechazada."
+            if comentario: msg += f" Motivo: {comentario}"
+            crear_notificacion(cand_user[0], "rechazado", msg, "/candidato/estado-postulaciones")
         notificar_admins("seleccion", "Una empresa ha rechazado a un candidato.", "/admin/seguimiento")
     conn.commit()
     cur.close()
     conn.close()
-    flash("Candidato rechazado.")
+    flash("Candidato rechazado con éxito.")
     if vacante:
         return redirect(url_for("empresa_ver_vacante", id_vacante=vacante[0]))
     return redirect(url_for("empresa.consultar"))

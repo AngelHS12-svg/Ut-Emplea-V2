@@ -3,164 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfil del Candidato - UT Oriental Emplea</title>
+    <title>Mi Perfil Profesional | UT Emplea</title>
     <link rel="stylesheet" href="/public/css/styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .profile-header-card { background: linear-gradient(135deg, var(--verde) 0%, #1a4d46 100%); color: white; padding: 40px; border-radius: 20px; display: flex; align-items: center; gap: 30px; margin-bottom: 30px; position: relative; overflow: hidden; }
+        .profile-photo { width: 140px; height: 140px; border-radius: 20px; object-fit: cover; border: 4px solid rgba(255,255,255,0.2); background: white; }
+        .photo-edit-btn { position: absolute; bottom: -10px; right: -10px; background: var(--dorado); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid #1a4d46; transition: all 0.2s; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--gris-claro); padding-bottom: 10px; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; }
+        .info-item label { display: block; font-size: 0.7rem; color: var(--texto-gris); font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+        .info-item p { font-weight: 600; color: var(--texto-oscuro); margin: 0; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: white; width: 100%; max-width: 800px; max-height: 90vh; border-radius: 20px; overflow-y: auto; position: relative; padding: 40px; }
+    </style>
 </head>
 <body class="app-shell">
     <aside class="sidebar">
         <div class="sidebar-brand">
-            <div class="brand-icon">
-                <i class="fas fa-graduation-cap"></i>
-            </div>
-            <div class="brand-text">
-                UT Oriental
-                <span>Bolsa de Trabajo</span>
-            </div>
+            <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+            <div class="brand-text">UT Oriental<span>Bolsa de Trabajo</span></div>
         </div>
         <nav class="sidebar-nav">
-            <a href="{{ url_for('candidato_dashboard') }}" class="nav-item">
-                <i class="fas fa-home"></i> <span>Inicio</span>
-            </a>
-            <a href="{{ url_for('candidato_buscar') }}" class="nav-item">
-                <i class="fas fa-search"></i> <span>Buscar Vacantes</span>
-            </a>
-            <a href="{{ url_for('candidato_ver') }}" class="nav-item">
-                <i class="fas fa-briefcase"></i> <span>Todas las Vacantes</span>
-            </a>
-            <a href="{{ url_for('candidato_postulaciones') }}" class="nav-item">
-                <i class="fas fa-paper-plane"></i> <span>Mis Postulaciones</span>
-            </a>
-            <a href="{{ url_for('candidato_estado_postulaciones') }}" class="nav-item">
-                <i class="fas fa-clipboard-list"></i> <span>Estado de Aplicación</span>
-            </a>
-            <a href="{{ url_for('candidato_perfil') }}" class="nav-item active">
-                <i class="fas fa-user"></i> <span>Mi Perfil</span>
-            </a>
+            <a href="{{ url_for('candidato_dashboard') }}" class="nav-item"><i class="fas fa-home"></i> <span>Inicio</span></a>
+            <a href="{{ url_for('candidato_buscar') }}" class="nav-item"><i class="fas fa-search"></i> <span>Buscar Vacantes</span></a>
+            <a href="{{ url_for('candidato_ver') }}" class="nav-item"><i class="fas fa-briefcase"></i> <span>Todas las Vacantes</span></a>
+            <a href="{{ url_for('candidato_postulaciones') }}" class="nav-item"><i class="fas fa-paper-plane"></i> <span>Mis Postulaciones</span></a>
+            <a href="{{ url_for('candidato_estado_postulaciones') }}" class="nav-item"><i class="fas fa-clipboard-list"></i> <span>Estado de Aplicación</span></a>
+            <a href="{{ url_for('candidato_perfil') }}" class="nav-item active"><i class="fas fa-user"></i> <span>Mi Perfil</span></a>
         </nav>
-        <div class="sidebar-divider"></div>
-        <div style="padding: 1.5rem; text-align: center; color: rgba(255,255,255,0.5); font-size: 0.75rem;">
-            &copy; 2026 UT Oriental
-        </div>
     </aside>
 
     <div class="main-wrapper">
         <header class="navbar-top">
             <div class="nav-left">
-                <h1 class="page-title">Tu Perfil Profesional</h1>
-                <p class="page-subtitle"><i class="fas fa-user"></i> Información personal, académica y curricular</p>
+                <h1 class="page-title">Mi Perfil</h1>
             </div>
-
             <div class="user-menu">
-                <div class="profile-trigger">
-                    <div class="user-avatar">
-                        {{ current_user.correo[0:2]|upper }}
-                    </div>
-                    <div class="user-meta">
-                        <h4>{{ current_user.correo }}</h4>
-                        <span>{{ current_user.rol }}</span>
-                    </div>
-                </div>
-                <a href="/logout" class="nav-logout-btn" title="Cerrar Sesión">
-                    <i class="fas fa-sign-out-alt"></i>
-                </a>
+                <button class="btn btn-secondary btn-small" onclick="document.getElementById('editModal').style.display='flex'"><i class="fas fa-edit"></i> Editar Perfil</button>
+                <a href="/logout" class="nav-logout-btn"><i class="fas fa-sign-out-alt"></i></a>
             </div>
         </header>
 
         <main class="app-content">
-
-            {% with messages = get_flashed_messages() %}
-              {% if messages %}
-                {% for message in messages %}
-                  <div style="padding: 10px; margin-top: 10px; background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; border-radius: 5px;">{{ message }}</div>
-                {% endfor %}
-              {% endif %}
-            {% endwith %}
+            {% with msgs = get_flashed_messages() %}{% if msgs %}{% for m in msgs %}
+                <div style="padding:15px; margin-bottom:20px; background:#d1ecf1; color:#0c5460; border-radius:10px;">{{ m }}</div>
+            {% endfor %}{% endif %}{% endwith %}
 
             {% if candidato %}
-            <div class="grid grid-2">
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title"><i class="fas fa-user"></i> Información Personal</h2>
-                    </div>
-                    <div class="grid grid-1">
-                        <div class="form-group">
-                            <label class="form-label">Nombre completo</label>
-                            <input type="text" class="form-control" value="{{ candidato[1] or '' }}" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Sexo</label>
-                            <input type="text" class="form-control" value="{{ candidato[2] or '' }}" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Teléfono</label>
-                            <input type="text" class="form-control" value="{{ candidato[3] or '' }}" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Año de egreso</label>
-                            <input type="text" class="form-control" value="{{ candidato[4] or '' }}" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Carrera</label>
-                            <input type="text" class="form-control" value="{{ candidato[5] or '' }}" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Correo electrónico</label>
-                            <input type="email" class="form-control" value="{{ candidato[6] or '' }}" readonly>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title"><i class="fas fa-file-pdf"></i> CV / Curriculum Vitae</h2>
-                    </div>
-                    
-                    {% if candidato[7] %}
-                    <div style="background: #f0fff4; border: 1px solid #c6f6d5; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
-                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-                            <div style="font-size: 30px; color: #38a169;"><i class="fas fa-check-circle"></i></div>
-                            <div>
-                                <h4 style="margin: 0; color: #2f855a;">CV Registrado</h4>
-                                <p style="margin: 0; font-size: 0.85rem; color: #276749;">Tu CV ya está disponible en el sistema.</p>
-                            </div>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <a href="/ver-cv/{{ candidato[0] }}" target="_blank" class="btn btn-primary btn-small">
-                                <i class="fas fa-eye"></i> Ver CV Actual
-                            </a>
-                            <a href="/descargar-cv/{{ candidato[0] }}" class="btn btn-secondary btn-small">
-                                <i class="fas fa-download"></i> Descargar
-                            </a>
-                        </div>
-                    </div>
-                    {% else %}
-                    <div style="background: #fffaf0; border: 1px solid #feebc8; padding: 20px; border-radius: 12px; margin-bottom: 25px; text-align: center;">
-                        <div style="font-size: 40px; color: #dd6b20; margin-bottom: 10px;"><i class="fas fa-exclamation-triangle"></i></div>
-                        <h4 style="margin: 0; color: #9c4221;">Sin CV Registrado</h4>
-                        <p style="margin: 10px 0; font-size: 0.9rem; color: #7b341e;">Sube tu CV en formato PDF, DOC o DOCX para que las empresas puedan contactarte.</p>
-                    </div>
-                    {% endif %}
-
-                    <form action="/candidato/subir-cv" method="POST" enctype="multipart/form-data">
-                        <div class="form-group">
-                            <label class="form-label">{% if candidato[7] %}Actualizar CV{% else %}Subir nuevo CV{% endif %}</label>
-                            <input type="file" name="cv" class="form-control" accept=".pdf,.doc,.docx" required>
-                            <p style="font-size: 0.75rem; color: #718096; margin-top: 5px;">Máximo 16MB. Formatos permitidos: PDF, Word.</p>
-                        </div>
-                        <button type="submit" class="btn btn-accent" style="width: 100%; justify-content: center;">
-                            <i class="fas fa-upload"></i> {% if candidato[7] %}Reemplazar CV{% else %}Subir CV{% endif %}
-                        </button>
+            <div class="profile-header-card">
+                <div style="position:relative;">
+                    <img src="{{ candidato[25] or 'https://ui-avatars.com/api/?name=' ~ (candidato[1]|urlencode) ~ '+' ~ (candidato[2]|urlencode) ~ '&background=c2914f&color=fff&size=140' }}" class="profile-photo">
+                    <label for="photoInp" class="photo-edit-btn"><i class="fas fa-camera"></i></label>
+                    <form id="fPhoto" action="/candidato/subir-foto" method="POST" enctype="multipart/form-data" style="display:none;">
+                        <input type="file" id="photoInp" name="foto" onchange="this.form.submit()">
                     </form>
                 </div>
+                <div>
+                    <h2>{{ candidato[1] }} {{ candidato[2] }} {{ candidato[3] or '' }}</h2>
+                    <p>{{ candidato[20] or 'Egresado UT de Oriental' }}</p>
+                    <div style="display:flex; gap:15px; margin-top:15px; flex-wrap:wrap;">
+                        <span style="background:rgba(255,255,255,0.15); padding:5px 12px; border-radius:20px; font-size:0.8rem;">{{ candidato[7] or 'Carrera' }}</span>
+                        <span style="background:rgba(255,255,255,0.15); padding:5px 12px; border-radius:20px; font-size:0.8rem;">{{ candidato[8] or 'Email' }}</span>
+                    </div>
+                </div>
+                <div style="margin-left:auto;">
+                    <a href="/candidato/generar-cv" target="_blank" class="btn btn-accent"><i class="fas fa-file-pdf"></i> Generar CV</a>
+                </div>
             </div>
-            {% else %}
-            <div style="text-align: center; padding: 3rem; color: var(--texto-gris);">
-                <h3>No se encontró información del perfil</h3>
+
+            <div class="grid grid-2">
+                <div class="card">
+                    <div class="section-header"><h3><i class="fas fa-user-circle"></i> Personales</h3></div>
+                    <div class="info-grid">
+                        <div class="info-item"><label>Teléfono</label><p>{{ candidato[5] or '-' }}</p></div>
+                        <div class="info-item"><label>Ubicación</label><p>{{ candidato[11] or '-' }}</p></div>
+                        <div class="info-item"><label>C.P.</label><p>{{ candidato[10] or '-' }}</p></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="section-header"><h3><i class="fas fa-file-pdf"></i> Mi Currículum</h3></div>
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        {% if candidato[9] %}
+                        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-check-circle" style="color: #16a34a; font-size: 1.2rem;"></i>
+                            <div>
+                                <p style="margin: 0; font-weight: 600; color: #166534;">CV cargado correctamente</p>
+                                <a href="/ver-cv/{{ candidato[0] }}" target="_blank" style="font-size: 0.8rem; color: #15803d; text-decoration: underline;">Ver mi archivo actual</a>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div style="background: #fffafa; border: 1px solid #fecaca; padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-exclamation-triangle" style="color: #dc2626; font-size: 1.2rem;"></i>
+                            <p style="margin: 0; font-size: 0.9rem; color: #991b1b;">Aún no has subido tu CV. Las empresas no podrán ver tu perfil completo.</p>
+                        </div>
+                        {% endif %}
+                        
+                        <form action="/candidato/subir-cv" method="POST" enctype="multipart/form-data" style="margin-top: 5px;">
+                            <label style="display: block; font-size: 0.7rem; color: var(--texto-gris); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">Subir nuevo archivo (PDF)</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="file" name="cv" accept=".pdf" class="form-control" style="flex: 1;" required>
+                                <button type="submit" class="btn btn-primary btn-small">Subir</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 30px;">
+                <div class="section-header"><h3><i class="fas fa-graduation-cap"></i> Educación</h3></div>
+                <div class="info-grid">
+                    <div class="info-item"><label>Grado</label><p>{{ candidato[12] or '-' }}</p></div>
+                    <div class="info-item"><label>Institución</label><p>{{ candidato[13] or '-' }}</p></div>
+                    <div class="info-item"><label>Carrera</label><p>{{ candidato[14] or '-' }}</p></div>
+                    <div class="info-item"><label>Año de Egreso</label><p>{{ candidato[6] or '-' }}</p></div>
+                </div>
             </div>
             {% endif %}
         </main>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span style="position:absolute; top:20px; right:20px; cursor:pointer;" onclick="this.parentElement.parentElement.style.display='none'">&times;</span>
+            <h2>Editar Perfil</h2>
+            <form action="/candidato/actualizar-perfil" method="POST">
+                <h4 style="margin:0 0 15px 0; border-bottom:1px solid #eee; padding-bottom:5px; color:var(--verde);"><i class="fas fa-user"></i> Datos Personales</h4>
+                <div class="grid grid-2">
+                    <div class="form-group"><label>Nombre(s)</label><input type="text" name="nombre" class="form-control" value="{{ candidato[1] or '' }}" required></div>
+                    <div class="form-group"><label>Apellido Paterno</label><input type="text" name="apellido_paterno" class="form-control" value="{{ candidato[2] or '' }}" required></div>
+                </div>
+                <div class="grid grid-3">
+                    <div class="form-group"><label>Apellido Materno</label><input type="text" name="apellido_materno" class="form-control" value="{{ candidato[3] or '' }}"></div>
+                    <div class="form-group">
+                        <label>Sexo</label>
+                        <select name="sexo" class="form-control">
+                            <option value="M" {{ 'selected' if candidato[4] == 'M' }}>Masculino</option>
+                            <option value="F" {{ 'selected' if candidato[4] == 'F' }}>Femenino</option>
+                            <option value="O" {{ 'selected' if candidato[4] == 'O' }}>Otro</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Teléfono</label><input type="text" name="telefono" class="form-control" value="{{ candidato[5] or '' }}"></div>
+                </div>
+                <div class="grid grid-2">
+                    <div class="form-group"><label>Ubicación (Ciudad, Estado)</label><input type="text" name="ubicacion" class="form-control" value="{{ candidato[11] or '' }}"></div>
+                    <div class="form-group"><label>Código Postal</label><input type="text" name="codigo_postal" class="form-control" value="{{ candidato[10] or '' }}"></div>
+                </div>
+
+                <h4 style="margin:25px 0 15px 0; border-bottom:1px solid #eee; padding-bottom:5px; color:var(--verde);"><i class="fas fa-graduation-cap"></i> Formación Académica</h4>
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label>Carrera en UT Oriental</label>
+                        <select name="id_carrera" class="form-control">
+                            <option value="">-- Selecciona tu carrera --</option>
+                            {% for car in carreras %}
+                            <option value="{{ car[0] }}" {{ 'selected' if candidato[26] == car[0] }}>{{ car[1] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Año de Egreso (UT)</label><input type="number" name="egreso" class="form-control" value="{{ candidato[6] or '' }}"></div>
+                </div>
+                <div class="grid grid-3">
+                    <div class="form-group"><label>Último Grado (Ej: TSU, Ing)</label><input type="text" name="ultimo_grado_estudios" class="form-control" value="{{ candidato[12] or '' }}"></div>
+                    <div class="form-group"><label>Institución</label><input type="text" name="institucion_estudios" class="form-control" value="{{ candidato[13] or '' }}"></div>
+                    <div class="form-group"><label>Carrera/Especialidad</label><input type="text" name="carrera_estudios" class="form-control" value="{{ candidato[14] or '' }}"></div>
+                </div>
+
+                <h4 style="margin:25px 0 15px 0; border-bottom:1px solid #eee; padding-bottom:5px; color:var(--verde);"><i class="fas fa-briefcase"></i> Última Experiencia Laboral</h4>
+                <div class="grid grid-2">
+                    <div class="form-group"><label>Puesto</label><input type="text" name="ultimo_puesto" class="form-control" value="{{ candidato[15] or '' }}"></div>
+                    <div class="form-group"><label>Empresa</label><input type="text" name="ultima_empresa" class="form-control" value="{{ candidato[16] or '' }}"></div>
+                </div>
+                <div class="grid grid-2">
+                    <div class="form-group"><label>Fecha Inicio</label><input type="text" name="fecha_inicio_laboral" class="form-control" placeholder="Ej: Enero 2022" value="{{ candidato[17] or '' }}"></div>
+                    <div class="form-group"><label>Fecha Fin (o 'Actual')</label><input type="text" name="fecha_fin_laboral" class="form-control" value="{{ candidato[18] or '' }}"></div>
+                </div>
+                <div class="form-group">
+                    <label>Actividades y Logros</label>
+                    <textarea name="actividades_logros" class="form-control" rows="3" placeholder="Describe brevemente tus responsabilidades...">{{ candidato[19] or '' }}</textarea>
+                </div>
+
+                <h4 style="margin:25px 0 15px 0; border-bottom:1px solid #eee; padding-bottom:5px; color:var(--verde);"><i class="fas fa-bullseye"></i> Intereses y Especialidad</h4>
+                <div class="grid grid-2">
+                    <div class="form-group"><label>Puesto que buscas</label><input type="text" name="puesto_deseado" class="form-control" value="{{ candidato[20] or '' }}"></div>
+                    <div class="form-group"><label>Sueldo Mensual Deseado</label><input type="number" step="0.01" name="sueldo_deseado" class="form-control" value="{{ candidato[21] or '' }}"></div>
+                </div>
+                <div class="grid grid-2">
+                    <div class="form-group"><label>Área de Trabajo</label><input type="text" name="area_trabajo" class="form-control" placeholder="Ej: TI, Administración" value="{{ candidato[22] or '' }}"></div>
+                    <div class="form-group"><label>Especialidad Principal</label><input type="text" name="especialidad" class="form-control" value="{{ candidato[23] or '' }}"></div>
+                </div>
+                <div class="form-group">
+                    <label>Tags de Especialidad (Separados por coma)</label>
+                    <input type="text" name="tags_especialidad" class="form-control" placeholder="Ej: Python, Excel, Contabilidad" value="{{ candidato[24] or '' }}">
+                </div>
+                
+                <div style="margin-top:30px; display:flex; gap:15px;">
+                    <button type="button" class="btn btn-outline" style="flex:1;" onclick="document.getElementById('editModal').style.display='none'">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="flex:2;">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
     </div>
 </body>
 </html>

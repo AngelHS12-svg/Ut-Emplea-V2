@@ -24,22 +24,22 @@
             </div>
         </div>
         <nav class="sidebar-nav">
-            <a href="/candidato-dashboard" class="nav-item">
+            <a href="{{ url_for('candidato_dashboard') }}" class="nav-item">
                 <i class="fas fa-home"></i> <span>Inicio</span>
             </a>
-            <a href="/candidato/buscar" class="nav-item active">
+            <a href="{{ url_for('candidato_buscar') }}" class="nav-item active">
                 <i class="fas fa-search"></i> <span>Buscar Vacantes</span>
             </a>
-            <a href="/candidato/ver" class="nav-item">
+            <a href="{{ url_for('candidato_ver') }}" class="nav-item">
                 <i class="fas fa-briefcase"></i> <span>Todas las Vacantes</span>
             </a>
-            <a href="/candidato/postulaciones" class="nav-item">
+            <a href="{{ url_for('candidato_postulaciones') }}" class="nav-item">
                 <i class="fas fa-paper-plane"></i> <span>Mis Postulaciones</span>
             </a>
-            <a href="/candidato/estado-postulaciones" class="nav-item">
+            <a href="{{ url_for('candidato_estado_postulaciones') }}" class="nav-item">
                 <i class="fas fa-clipboard-list"></i> <span>Estado de Aplicación</span>
             </a>
-            <a href="/candidato/perfil" class="nav-item">
+            <a href="{{ url_for('candidato_perfil') }}" class="nav-item">
                 <i class="fas fa-user"></i> <span>Mi Perfil</span>
             </a>
         </nav>

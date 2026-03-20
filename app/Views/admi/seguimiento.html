@@ -24,9 +24,36 @@
             </div>
         </div>
 
-        <div class="cards-grid">
+        <!-- Filters -->
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; align-items: center; background: white; padding: 16px 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+            <div style="flex: 1; min-width: 200px; position: relative;">
+                <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                <input type="text" id="filtroTexto" placeholder="Buscar por vacante o candidato..." oninput="aplicarFiltros()" style="width: 100%; padding: 10px 10px 10px 38px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 0.9rem; box-sizing: border-box; transition: border-color 0.3s;" onfocus="this.style.borderColor='#c2914f'" onblur="this.style.borderColor='#e2e8f0'">
+            </div>
+            <select id="filtroEstado" onchange="aplicarFiltros()" style="padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 0.9rem; cursor: pointer; min-width: 150px; background: white;">
+                <option value="">Todos los estados</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="aceptado">Aceptado</option>
+                <option value="rechazado">Rechazado</option>
+            </select>
+            <select id="filtroEmpresa" onchange="aplicarFiltros()" style="padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 0.9rem; cursor: pointer; min-width: 180px; background: white;">
+                <option value="">Todas las empresas</option>
+                {% set empresas_unicas = [] %}
+                {% for s in seguimiento %}
+                    {% if s[2] not in empresas_unicas %}
+                        {% if empresas_unicas.append(s[2]) %}{% endif %}
+                        <option value="{{ s[2] }}">{{ s[2] }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+            <button onclick="ordenarAlfabetico()" id="btnOrdenar" style="padding: 10px 16px; border: 2px solid #e2e8f0; border-radius: 10px; background: white; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; transition: all 0.3s;" onmouseover="this.style.borderColor='#c2914f'" onmouseout="this.style.borderColor='#e2e8f0'">
+                <i class="fas fa-sort-alpha-down"></i> A-Z
+            </button>
+        </div>
+
+        <div class="cards-grid" id="cardsGrid">
             {% for s in seguimiento %}
-            <div class="item-card">
+            <div class="item-card seg-card" data-titulo="{{ s[1] }}" data-empresa="{{ s[2] }}" data-candidato="{{ s[3] }}" data-estado="{{ s[4] }}">
                 <div class="card-top">
                     <div>
                         <h4 class="card-title">{{ s[1] }}</h4>
@@ -49,7 +76,19 @@
                 </div>
 
                 <div class="card-actions">
-                    <button class="btn btn-outline" style="width: 100%; justify-content: center;">
+                    <button class="btn btn-outline" style="width: 100%; justify-content: center;"
+                        data-titulo="{{ s[1] }}"
+                        data-empresa="{{ s[2] }}"
+                        data-candidato="{{ s[3] }}"
+                        data-estado="{{ s[4] }}"
+                        data-fecha="{{ s[5].strftime('%d/%m/%Y') if s[5] else 'N/A' }}"
+                        data-salario="{{ '{:,.2f}'.format(s[6]) if s[6] else 'No especificado' }}"
+                        data-descripcion="{{ s[7] or 'Sin descripción' }}"
+                        data-modalidad="{{ s[8] or 'No especificada' }}"
+                        data-correo-empresa="{{ s[9] or '' }}"
+                        data-correo-candidato="{{ s[10] or '' }}"
+                        data-lugar="{{ s[11] or 'No especificado' }}"
+                        onclick="abrirSeguimiento(this)">
                         <i class="fas fa-history"></i> Ver Historial
                     </button>
                 </div>
@@ -63,5 +102,302 @@
             {% endfor %}
         </div>
     </div>
+
+    <!-- Seguimiento Modal -->
+    <div id="modalSeguimiento" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background: white; border-radius: 16px; width: 580px; max-width: 92%; max-height: 90vh; overflow-y: auto; padding: 30px; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease-out;">
+            <button onclick="cerrarSeguimiento()" style="position: absolute; top: 15px; right: 20px; background: none; border: none; font-size: 1.5rem; color: #888; cursor: pointer;">&times;</button>
+
+            <!-- Header -->
+            <div style="margin-bottom: 25px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px;">
+                <h2 id="seg-titulo" style="margin: 0 0 5px; font-size: 1.3rem; color: #1e293b;">Título</h2>
+                <p id="seg-empresa" style="margin: 0; font-size: 0.9rem; color: #64748b;"><i class="fas fa-building" style="margin-right: 5px;"></i>Empresa</p>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div style="margin-bottom: 28px;">
+                <p style="font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Progreso de la Postulación</p>
+                <div style="display: flex; align-items: center; gap: 0; position: relative;">
+                    <!-- Step 1: Postulado -->
+                    <div style="flex: 1; text-align: center;">
+                        <div id="step-1" style="width: 40px; height: 40px; border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: white; background: #94a3b8; transition: all 0.3s;">
+                            <i class="fas fa-paper-plane"></i>
+                        </div>
+                        <span style="font-size: 0.75rem; font-weight: 600; color: #64748b;">Postulado</span>
+                    </div>
+                    <!-- Line 1-2 -->
+                    <div id="line-1" style="flex: 1; height: 4px; background: #e2e8f0; border-radius: 2px; margin-bottom: 22px;"></div>
+                    <!-- Step 2: En Revisión -->
+                    <div style="flex: 1; text-align: center;">
+                        <div id="step-2" style="width: 40px; height: 40px; border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: white; background: #94a3b8; transition: all 0.3s;">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <span style="font-size: 0.75rem; font-weight: 600; color: #64748b;">En Revisión</span>
+                    </div>
+                    <!-- Line 2-3 -->
+                    <div id="line-2" style="flex: 1; height: 4px; background: #e2e8f0; border-radius: 2px; margin-bottom: 22px;"></div>
+                    <!-- Step 3: Resolución -->
+                    <div style="flex: 1; text-align: center;">
+                        <div id="step-3" style="width: 40px; height: 40px; border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: white; background: #94a3b8; transition: all 0.3s;">
+                            <i id="step-3-icon" class="fas fa-flag-checkered"></i>
+                        </div>
+                        <span id="step-3-label" style="font-size: 0.75rem; font-weight: 600; color: #64748b;">Resolución</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Banner -->
+            <div id="seg-status-banner" style="padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-weight: 600;">
+                <i id="seg-status-icon" class="fas fa-info-circle"></i>
+                <span id="seg-status-text">Estado actual</span>
+            </div>
+
+            <!-- Detailed Info -->
+            <div style="display: grid; gap: 1rem;">
+                <!-- Participantes -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                        <p style="margin: 0; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;"><i class="fas fa-user"></i> Candidato</p>
+                        <p id="seg-candidato" style="margin: 5px 0 0; color: #1e293b; font-weight: 500;">—</p>
+                        <p id="seg-correo-cand" style="margin: 3px 0 0; font-size: 0.8rem; color: #64748b;">—</p>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                        <p style="margin: 0; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;"><i class="fas fa-building"></i> Empresa</p>
+                        <p id="seg-empresa-info" style="margin: 5px 0 0; color: #1e293b; font-weight: 500;">—</p>
+                        <p id="seg-correo-emp" style="margin: 3px 0 0; font-size: 0.8rem; color: #64748b;">—</p>
+                    </div>
+                </div>
+
+                <!-- Vacante Info -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                        <p style="margin: 0; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;"><i class="fas fa-dollar-sign"></i> Salario</p>
+                        <p id="seg-salario" style="margin: 5px 0 0; color: #1e293b; font-weight: 600;">—</p>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                        <p style="margin: 0; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;"><i class="far fa-calendar-alt"></i> Fecha Postulación</p>
+                        <p id="seg-fecha" style="margin: 5px 0 0; color: #1e293b; font-weight: 500;">—</p>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                        <p style="margin: 0; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;"><i class="fas fa-briefcase"></i> Modalidad</p>
+                        <p id="seg-modalidad" style="margin: 5px 0 0; color: #1e293b; font-weight: 500;">—</p>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                        <p style="margin: 0; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;"><i class="fas fa-map-marker-alt"></i> Lugar</p>
+                        <p id="seg-lugar" style="margin: 5px 0 0; color: #1e293b; font-weight: 500;">—</p>
+                    </div>
+                </div>
+                
+                <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                    <p style="margin: 0; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;"><i class="fas fa-file-alt"></i> Descripción de la Vacante</p>
+                    <p id="seg-descripcion" style="margin: 5px 0 0; color: #1e293b; font-weight: 400; line-height: 1.6;">—</p>
+                </div>
+
+                <!-- Timeline -->
+                <div style="background: #f8fafc; padding: 15px; border-radius: 10px;">
+                    <p style="margin: 0 0 12px; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;"><i class="fas fa-stream"></i> Línea de Tiempo</p>
+                    <div id="seg-timeline" style="padding-left: 18px; border-left: 3px solid #e2e8f0;">
+                        <!-- Timeline items will be injected by JS -->
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 25px; text-align: center;">
+                <button onclick="cerrarSeguimiento()" class="btn btn-outline" style="padding: 10px 30px;">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+
+    <script>
+        function abrirSeguimiento(btn) {
+            const d = {
+                titulo: btn.getAttribute('data-titulo'),
+                empresa: btn.getAttribute('data-empresa'),
+                candidato: btn.getAttribute('data-candidato'),
+                estado: btn.getAttribute('data-estado'),
+                fecha: btn.getAttribute('data-fecha'),
+                salario: btn.getAttribute('data-salario'),
+                descripcion: btn.getAttribute('data-descripcion'),
+                modalidad: btn.getAttribute('data-modalidad'),
+                correoEmpresa: btn.getAttribute('data-correo-empresa'),
+                correoCandidato: btn.getAttribute('data-correo-candidato'),
+                lugar: btn.getAttribute('data-lugar')
+            };
+
+            // Fill basic info
+            document.getElementById('seg-titulo').textContent = d.titulo || 'Sin título';
+            document.getElementById('seg-empresa').innerHTML = '<i class="fas fa-building" style="margin-right: 5px;"></i>' + (d.empresa || '—');
+            document.getElementById('seg-candidato').textContent = d.candidato || '—';
+            document.getElementById('seg-correo-cand').textContent = d.correoCandidato || '—';
+            document.getElementById('seg-empresa-info').textContent = d.empresa || '—';
+            document.getElementById('seg-correo-emp').textContent = d.correoEmpresa || '—';
+            document.getElementById('seg-salario').textContent = '$' + (d.salario || '0');
+            document.getElementById('seg-fecha').textContent = d.fecha || '—';
+            document.getElementById('seg-modalidad').textContent = d.modalidad || '—';
+            document.getElementById('seg-lugar').textContent = d.lugar || '—';
+            document.getElementById('seg-descripcion').textContent = d.descripcion || '—';
+
+            // Update progress bar
+            const step1 = document.getElementById('step-1');
+            const step2 = document.getElementById('step-2');
+            const step3 = document.getElementById('step-3');
+            const line1 = document.getElementById('line-1');
+            const line2 = document.getElementById('line-2');
+            const step3Icon = document.getElementById('step-3-icon');
+            const step3Label = document.getElementById('step-3-label');
+            const banner = document.getElementById('seg-status-banner');
+            const bannerIcon = document.getElementById('seg-status-icon');
+            const bannerText = document.getElementById('seg-status-text');
+
+            // Reset all steps
+            const gray = '#94a3b8';
+            const green = '#10b981';
+            const red = '#ef4444';
+            const gold = '#c2914f';
+            [step1, step2, step3].forEach(s => s.style.background = gray);
+            [line1, line2].forEach(l => l.style.background = '#e2e8f0');
+
+            const estado = (d.estado || 'pendiente').toLowerCase();
+
+            if (estado === 'pendiente') {
+                step1.style.background = green;
+                line1.style.background = gold;
+                step2.style.background = gold;
+                step3Label.textContent = 'Resolución';
+                step3Icon.className = 'fas fa-flag-checkered';
+                banner.style.background = '#fef3c7';
+                banner.style.color = '#92400e';
+                bannerIcon.className = 'fas fa-hourglass-half';
+                bannerText.textContent = 'Pendiente — La empresa aún no ha tomado una decisión sobre esta postulación.';
+            } else if (estado === 'aceptado') {
+                step1.style.background = green;
+                line1.style.background = green;
+                step2.style.background = green;
+                line2.style.background = green;
+                step3.style.background = green;
+                step3Label.textContent = 'Aceptado';
+                step3Icon.className = 'fas fa-check';
+                banner.style.background = '#d1fae5';
+                banner.style.color = '#065f46';
+                bannerIcon.className = 'fas fa-check-circle';
+                bannerText.textContent = 'Aceptado — La empresa aceptó al candidato para esta vacante. ¡Proceso exitoso!';
+            } else if (estado === 'rechazado') {
+                step1.style.background = green;
+                line1.style.background = green;
+                step2.style.background = green;
+                line2.style.background = red;
+                step3.style.background = red;
+                step3Label.textContent = 'Rechazado';
+                step3Icon.className = 'fas fa-times';
+                banner.style.background = '#fee2e2';
+                banner.style.color = '#991b1b';
+                bannerIcon.className = 'fas fa-times-circle';
+                bannerText.textContent = 'Rechazado — La empresa no seleccionó a este candidato para la vacante.';
+            }
+
+            // Build timeline
+            const timeline = document.getElementById('seg-timeline');
+            timeline.innerHTML = '';
+
+            const events = [];
+            events.push({ icon: 'fa-paper-plane', color: green, label: 'Candidato se postuló a la vacante', date: d.fecha });
+            events.push({ icon: 'fa-eye', color: gold, label: 'Empresa recibió la postulación', date: d.fecha });
+
+            if (estado === 'aceptado') {
+                events.push({ icon: 'fa-search', color: green, label: 'Empresa revisó el perfil del candidato', date: '' });
+                events.push({ icon: 'fa-check-circle', color: green, label: 'Candidato aceptado por la empresa', date: '' });
+            } else if (estado === 'rechazado') {
+                events.push({ icon: 'fa-search', color: gold, label: 'Empresa revisó el perfil del candidato', date: '' });
+                events.push({ icon: 'fa-times-circle', color: red, label: 'Candidato rechazado por la empresa', date: '' });
+            } else {
+                events.push({ icon: 'fa-hourglass-half', color: gold, label: 'Esperando decisión de la empresa…', date: '' });
+            }
+
+            events.forEach(ev => {
+                const item = document.createElement('div');
+                item.style.cssText = 'position: relative; padding: 8px 0 8px 20px; margin-bottom: 6px;';
+                item.innerHTML = `
+                    <div style="position: absolute; left: -12px; top: 10px; width: 20px; height: 20px; border-radius: 50%; background: ${ev.color}; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas ${ev.icon}" style="font-size: 0.6rem; color: white;"></i>
+                    </div>
+                    <p style="margin: 0; font-size: 0.9rem; color: #1e293b; font-weight: 500;">${ev.label}</p>
+                    ${ev.date ? '<p style="margin: 2px 0 0; font-size: 0.75rem; color: #94a3b8;">' + ev.date + '</p>' : ''}
+                `;
+                timeline.appendChild(item);
+            });
+
+            document.getElementById('modalSeguimiento').style.display = 'flex';
+        }
+
+        function cerrarSeguimiento() {
+            document.getElementById('modalSeguimiento').style.display = 'none';
+        }
+
+        // Close on backdrop click
+        document.getElementById('modalSeguimiento').addEventListener('click', function(e) {
+            if (e.target === this) cerrarSeguimiento();
+        });
+
+        // ========== FILTERING ==========
+        function aplicarFiltros() {
+            const texto = document.getElementById('filtroTexto').value.toLowerCase();
+            const estado = document.getElementById('filtroEstado').value.toLowerCase();
+            const empresa = document.getElementById('filtroEmpresa').value;
+            const cards = document.querySelectorAll('.seg-card');
+
+            cards.forEach(card => {
+                const cardTitulo = (card.getAttribute('data-titulo') || '').toLowerCase();
+                const cardEmpresa = card.getAttribute('data-empresa') || '';
+                const cardCandidato = (card.getAttribute('data-candidato') || '').toLowerCase();
+                const cardEstado = (card.getAttribute('data-estado') || '').toLowerCase();
+
+                let show = true;
+
+                // Text filter (searches in titulo and candidato)
+                if (texto && !cardTitulo.includes(texto) && !cardCandidato.includes(texto)) {
+                    show = false;
+                }
+                // Estado filter
+                if (estado && cardEstado !== estado) {
+                    show = false;
+                }
+                // Empresa filter
+                if (empresa && cardEmpresa !== empresa) {
+                    show = false;
+                }
+
+                card.style.display = show ? '' : 'none';
+            });
+        }
+
+        let sortAsc = true;
+        function ordenarAlfabetico() {
+            const grid = document.getElementById('cardsGrid');
+            const cards = Array.from(grid.querySelectorAll('.seg-card'));
+            const btn = document.getElementById('btnOrdenar');
+
+            cards.sort((a, b) => {
+                const tA = (a.getAttribute('data-titulo') || '').toLowerCase();
+                const tB = (b.getAttribute('data-titulo') || '').toLowerCase();
+                return sortAsc ? tA.localeCompare(tB) : tB.localeCompare(tA);
+            });
+
+            cards.forEach(card => grid.appendChild(card));
+            sortAsc = !sortAsc;
+            btn.innerHTML = sortAsc
+                ? '<i class="fas fa-sort-alpha-down"></i> A-Z'
+                : '<i class="fas fa-sort-alpha-up"></i> Z-A';
+        }
+    </script>
 </body>
 </html>

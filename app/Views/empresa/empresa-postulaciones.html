@@ -29,8 +29,11 @@
             <a href="{{ url_for('empresa.publicar') }}" class="nav-item">
                 <i class="fas fa-plus-circle"></i> <span>Publicar Vacante</span>
             </a>
-            <a href="{{ url_for('empresa.consultar') }}" class="nav-item active">
+            <a href="{{ url_for('empresa.consultar') }}" class="nav-item">
                 <i class="fas fa-briefcase"></i> <span>Mis Vacantes</span>
+            </a>
+            <a href="{{ url_for('empresa.candidatos') }}" class="nav-item">
+                <i class="fas fa-users-cog"></i> <span>Candidatos</span>
             </a>
             <a href="{{ url_for('empresa.estadisticas') }}" class="nav-item">
                 <i class="fas fa-chart-bar"></i> <span>Estadísticas</span>
@@ -166,8 +169,10 @@
                                     <span class="badge badge-activa">Aceptado</span>
                                     {% elif p[6] == 'rechazado' %}
                                     <span class="badge badge-inactiva">Rechazado</span>
-                                    {% else %}
-                                    <span class="badge" style="background-color: var(--dorado-soft); color: #856404;">En revisión</span>
+                                    {% elif p[6] == 'visto' or p[6] == 'en revision' %}
+                                    <span class="badge" style="background-color: var(--dorado-soft); color: #856404;">
+                                        {% if p[6] == 'visto' %}Visto{% else %}En revisión{% endif %}
+                                    </span>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -185,18 +190,20 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if p[6] == 'en revision' %}
+                                    {% if p[6] == 'en revision' or p[6] == 'visto' %}
                                     <div class="d-flex gap-2">
-                                        <form action="/empresa/postulacion/{{ p[0] }}/aceptar" method="POST">
-                                            <button type="submit" class="btn btn-primary btn-small" style="background-color: #28a745; border-color: #28a745;" title="Aceptar Candidato">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                        </form>
-                                        <form action="/empresa/postulacion/{{ p[0] }}/rechazar" method="POST">
-                                            <button type="submit" class="btn btn-secondary btn-small" style="background-color: #dc3545; border-color: #dc3545;" title="Rechazar Candidato">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button" class="btn btn-primary btn-small" 
+                                                style="background-color: #28a745; border-color: #28a745;" 
+                                                onclick="openDecisionModal('{{ p[0] }}', 'aceptar', '{{ p[2] }}')"
+                                                title="Aceptar Candidato">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-secondary btn-small" 
+                                                style="background-color: #dc3545; border-color: #dc3545;" 
+                                                onclick="openDecisionModal('{{ p[0] }}', 'rechazar', '{{ p[2] }}')"
+                                                title="Rechazar Candidato">
+                                            <i class="fas fa-times"></i>
+                                        </button>
                                     </div>
                                     {% else %}
                                     <span style="color: var(--text-muted); font-size: 1.2rem;">—</span>
@@ -217,6 +224,80 @@
             </div>
         </main>
     </div>
+
+    <!-- MODAL DE DECISIÓN (ACEPTAR/RECHAZAR) -->
+    <div id="decisionModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+        <div class="modal-content card" style="width: 90%; max-width: 500px; padding: 0; border: none; overflow: hidden; animation: modalIn 0.3s ease-out;">
+            <div id="modalHeader" style="padding: 1.5rem; color: white;">
+                <h3 style="margin: 0;"><i class="fas fa-comment-alt"></i> <span id="modalTitle">Decisión</span></h3>
+            </div>
+            
+            <form id="decisionForm" method="POST" style="padding: 2rem;">
+                <p id="modalMsg" style="margin-bottom: 1.5rem; color: var(--text-main); font-weight: 500;"></p>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-muted); font-size: 0.9rem;">Mensaje para el candidato (Opcional):</label>
+                    <textarea name="comentario" id="comentarioInput" rows="4" 
+                              placeholder="Ej: ¡Felicidades! Te esperamos para una entrevista..." 
+                              style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-family: inherit; resize: none;"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" onclick="closeDecisionModal()" class="btn btn-outline">Cancelar</button>
+                    <button type="submit" id="submitBtn" class="btn">Confirmar Decisión</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+
+    <script>
+        function openDecisionModal(idPostulacion, accion, nombreCandidato) {
+            const modal = document.getElementById('decisionModal');
+            const form = document.getElementById('decisionForm');
+            const title = document.getElementById('modalTitle');
+            const header = document.getElementById('modalHeader');
+            const msg = document.getElementById('modalMsg');
+            const submitBtn = document.getElementById('submitBtn');
+            const input = document.getElementById('comentarioInput');
+
+            form.action = `/empresa/postulacion/${idPostulacion}/${accion}`;
+            input.value = ""; // Limpiar previo
+
+            if (accion === 'aceptar') {
+                title.innerText = "Aceptar Candidato";
+                header.style.backgroundColor = "#28a745";
+                msg.innerText = `¿Estás seguro de aceptar a ${nombreCandidato}?`;
+                submitBtn.style.backgroundColor = "#28a745";
+                submitBtn.style.borderColor = "#28a745";
+                input.placeholder = "Ej: ¡Felicidades! Te contactaremos pronto para los siguientes pasos.";
+            } else {
+                title.innerText = "Rechazar Candidato";
+                header.style.backgroundColor = "#dc3545";
+                msg.innerText = `¿Estás seguro de rechazar la postulación de ${nombreCandidato}?`;
+                submitBtn.style.backgroundColor = "#dc3545";
+                submitBtn.style.borderColor = "#dc3545";
+                input.placeholder = "Ej: Gracias por tu interés, en esta ocasión hemos decidido no avanzar con tu perfil.";
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function closeDecisionModal() {
+            document.getElementById('decisionModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('decisionModal');
+            if (event.target == modal) closeDecisionModal();
+        }
+    </script>
 </body>
 
 </html>

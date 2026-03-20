@@ -53,12 +53,20 @@
                 </div>
 
                 <div class="card-actions">
-                    <button class="btn btn-outline" style="width: 100%; justify-content: center;">
+                    <button class="btn btn-outline" style="width: 100%; justify-content: center;"
+                        data-nombre="{{ emp[1] }}"
+                        data-giro="{{ emp[2] }}"
+                        data-tipo="{{ emp[3] }}"
+                        data-telefono="{{ emp[4] or '' }}"
+                        data-correo="{{ emp[5] }}"
+                        data-estatus="{{ emp[6] }}"
+                        data-fecha="{{ emp[7].strftime('%d/%m/%Y') if emp[7] else '' }}"
+                        onclick="abrirPerfilEmpresa(this)">
                         <i class="fas fa-eye"></i> Ver Perfil
                     </button>
-                    <button class="btn btn-outline" style="color: var(--vino);">
+                    <a href="mailto:{{ emp[5] }}" class="btn btn-outline" style="color: var(--vino); text-decoration: none; display: flex; align-items: center; justify-content: center; width: 42px; height: 38px;" title="Enviar correo a {{ emp[5] }}">
                         <i class="fas fa-envelope"></i>
-                    </button>
+                    </a>
                 </div>
             </div>
             {% else %}
@@ -70,5 +78,107 @@
             {% endfor %}
         </div>
     </div>
+
+    <!-- Company Profile Modal -->
+    <div id="modalPerfilEmpresa" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center;">
+        <div class="modal-content" style="background: white; border-radius: 16px; width: 500px; max-width: 90%; padding: 30px; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease-out;">
+            <button onclick="cerrarPerfilEmpresa()" style="position: absolute; top: 15px; right: 20px; background: none; border: none; font-size: 1.5rem; color: #888; cursor: pointer;">&times;</button>
+            
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px;">
+                <div id="modal-emp-avatar" style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--dorado), #a8793c); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #111; font-size: 1.3rem; font-weight: 700; box-shadow: 0 4px 10px rgba(194,145,79,0.3); text-transform: uppercase;">
+                    E
+                </div>
+                <div>
+                    <h2 id="modal-emp-nombre" style="margin: 0; font-size: 1.4rem; color: var(--texto-oscuro);">Nombre</h2>
+                    <span id="modal-emp-estatus" class="status-badge" style="display: inline-block; margin-top: 5px;">Estatus</span>
+                </div>
+            </div>
+
+            <div style="display: grid; gap: 1rem;">
+                <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Giro de la Empresa</p>
+                    <p id="modal-emp-giro" style="margin: 5px 0 0 0; color: #1e293b; font-weight: 500;">Giro</p>
+                </div>
+                
+                <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Tipo de Empresa / RFC</p>
+                    <p id="modal-emp-tipo" style="margin: 5px 0 0 0; color: #1e293b; font-weight: 500;">Tipo</p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;"><i class="fas fa-phone"></i> Teléfono</p>
+                        <p id="modal-emp-telefono" style="margin: 5px 0 0 0; color: #1e293b; font-weight: 500;">Tel</p>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;"><i class="far fa-calendar-alt"></i> Registro</p>
+                        <p id="modal-emp-fecha" style="margin: 5px 0 0 0; color: #1e293b; font-weight: 500;">Fecha</p>
+                    </div>
+                </div>
+
+                <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;"><i class="fas fa-envelope"></i> Correo Electrónico</p>
+                    <p id="modal-emp-correo" style="margin: 5px 0 0 0; color: #1e293b; font-weight: 500;">Correo</p>
+                </div>
+            </div>
+            
+            <div style="margin-top: 25px; text-align: center;">
+                <button onclick="cerrarPerfilEmpresa()" class="btn btn-outline" style="padding: 10px 30px;">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+
+    <script>
+        function abrirPerfilEmpresa(btn) {
+            const empData = {
+                nombre: btn.getAttribute('data-nombre'),
+                giro: btn.getAttribute('data-giro'),
+                tipo: btn.getAttribute('data-tipo'),
+                telefono: btn.getAttribute('data-telefono'),
+                correo: btn.getAttribute('data-correo'),
+                estatus: btn.getAttribute('data-estatus'),
+                fecha: btn.getAttribute('data-fecha')
+            };
+
+            document.getElementById('modal-emp-nombre').textContent = empData.nombre || 'Sin nombre';
+            
+            // Generate initials
+            const nombre = empData.nombre ? empData.nombre.trim() : 'E';
+            const initials = nombre.split(' ').slice(0, 2).map(n => n.charAt(0)).join('').substring(0, 2);
+            document.getElementById('modal-emp-avatar').textContent = initials;
+            
+            document.getElementById('modal-emp-giro').textContent = empData.giro || 'Sin giro especificado';
+            document.getElementById('modal-emp-tipo').textContent = empData.tipo || 'Sin tipo/RFC especificado';
+            document.getElementById('modal-emp-telefono').textContent = empData.telefono || 'Sin teléfono';
+            document.getElementById('modal-emp-correo').textContent = empData.correo || 'Sin correo';
+            document.getElementById('modal-emp-fecha').textContent = empData.fecha || 'Sin fecha';
+            
+            const estatusSpan = document.getElementById('modal-emp-estatus');
+            estatusSpan.textContent = empData.estatus;
+            estatusSpan.className = 'status-badge'; // Reset class
+            if(empData.estatus === 'aprobada') estatusSpan.classList.add('status-approved');
+            else if(empData.estatus === 'pendiente') estatusSpan.classList.add('status-pending');
+            else estatusSpan.classList.add('status-rejected');
+
+            const modal = document.getElementById('modalPerfilEmpresa');
+            modal.style.display = 'flex';
+        }
+
+        function cerrarPerfilEmpresa() {
+            document.getElementById('modalPerfilEmpresa').style.display = 'none';
+        }
+
+        // Close when clicking outside of the modal content
+        document.getElementById('modalPerfilEmpresa').addEventListener('click', function(e) {
+            if(e.target === this) cerrarPerfilEmpresa();
+        });
+    </script>
 </body>
 </html>

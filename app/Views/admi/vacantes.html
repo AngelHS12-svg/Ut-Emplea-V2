@@ -53,12 +53,28 @@
                 </div>
 
                 <div class="card-actions">
-                    <button class="btn btn-outline" style="width: 100%; justify-content: center;">
+                    <button class="btn btn-outline" style="width: 100%; justify-content: center;"
+                        data-titulo="{{ v[1] }}"
+                        data-empresa="{{ v[2] }}"
+                        data-fecha="{{ v[3].strftime('%d/%m/%Y') if v[3] else 'N/A' }}"
+                        data-vencimiento="{{ v[4].strftime('%d/%m/%Y') if v[4] else 'Sin límite' }}"
+                        data-estatus="{{ v[5] }}"
+                        data-salario="{{ '{:,.2f}'.format(v[6]) if v[6] else 'No especificado' }}"
+                        data-postulados="{{ v[7] }}"
+                        data-descripcion="{{ v[8] or 'Sin descripción' }}"
+                        data-modalidad="{{ v[9] or 'No especificada' }}"
+                        data-horario="{{ v[10] or 'No especificado' }}"
+                        data-lugar="{{ v[11] or 'No especificado' }}"
+                        data-perfil="{{ v[12] or 'No especificado' }}"
+                        onclick="abrirDetalleVacante(this)">
                         <i class="fas fa-eye"></i> Ver Detalles
                     </button>
-                    <button class="btn btn-outline" style="color: var(--danger);">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <form action="/admin/eliminar-vacante/{{ v[0] }}" method="POST" style="margin: 0;"
+                        onsubmit="return confirm('¿Estás seguro de que deseas eliminar la vacante \'{{ v[1] }}\'? Esta acción no se puede deshacer.')">
+                        <button type="submit" class="btn btn-outline" style="color: var(--danger);">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
                 </div>
             </div>
             {% else %}
@@ -70,5 +86,132 @@
             {% endfor %}
         </div>
     </div>
+
+    <!-- Vacancy Details Modal -->
+    <div id="modalDetalleVacante" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background: white; border-radius: 16px; width: 560px; max-width: 92%; max-height: 85vh; overflow-y: auto; padding: 30px; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease-out;">
+            <button onclick="cerrarDetalleVacante()" style="position: absolute; top: 15px; right: 20px; background: none; border: none; font-size: 1.5rem; color: #888; cursor: pointer;">&times;</button>
+            
+            <!-- Header -->
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px;">
+                <div id="modal-vac-avatar" style="width: 50px; height: 50px; background: linear-gradient(135deg, #0f3d35, #0a2420); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.3rem; font-weight: 700; box-shadow: 0 4px 10px rgba(15,61,53,0.3); text-transform: uppercase;">
+                    V
+                </div>
+                <div>
+                    <h2 id="modal-vac-titulo" style="margin: 0; font-size: 1.3rem; color: #1e293b;">Título</h2>
+                    <p id="modal-vac-empresa" style="margin: 4px 0 0; font-size: 0.9rem; color: #64748b;"><i class="fas fa-building" style="margin-right: 5px;"></i>Empresa</p>
+                </div>
+            </div>
+
+            <!-- Grid de detalles -->
+            <div style="display: grid; gap: 1rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                        <p style="margin: 0; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;"><i class="fas fa-dollar-sign"></i> Salario</p>
+                        <p id="modal-vac-salario" style="margin: 5px 0 0 0; color: #1e293b; font-weight: 600;">$0</p>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                        <p style="margin: 0; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;"><i class="fas fa-users"></i> Postulados</p>
+                        <p id="modal-vac-postulados" style="margin: 5px 0 0 0; color: #1e293b; font-weight: 600;">0</p>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                        <p style="margin: 0; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;"><i class="far fa-calendar-alt"></i> Publicada</p>
+                        <p id="modal-vac-fecha" style="margin: 5px 0 0 0; color: #1e293b; font-weight: 500;">N/A</p>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                        <p style="margin: 0; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;"><i class="far fa-clock"></i> Expira</p>
+                        <p id="modal-vac-vencimiento" style="margin: 5px 0 0 0; color: #1e293b; font-weight: 500;">N/A</p>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                        <p style="margin: 0; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;"><i class="fas fa-briefcase"></i> Modalidad</p>
+                        <p id="modal-vac-modalidad" style="margin: 5px 0 0 0; color: #1e293b; font-weight: 500;">N/A</p>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                        <p style="margin: 0; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;"><i class="far fa-clock"></i> Horario</p>
+                        <p id="modal-vac-horario" style="margin: 5px 0 0 0; color: #1e293b; font-weight: 500;">N/A</p>
+                    </div>
+                </div>
+
+                <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                    <p style="margin: 0; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;"><i class="fas fa-map-marker-alt"></i> Lugar de Trabajo</p>
+                    <p id="modal-vac-lugar" style="margin: 5px 0 0 0; color: #1e293b; font-weight: 500;">N/A</p>
+                </div>
+
+                <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                    <p style="margin: 0; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;"><i class="fas fa-file-alt"></i> Descripción</p>
+                    <p id="modal-vac-descripcion" style="margin: 5px 0 0 0; color: #1e293b; font-weight: 400; line-height: 1.6;">Sin descripción</p>
+                </div>
+
+                <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
+                    <p style="margin: 0; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;"><i class="fas fa-user-check"></i> Perfil Requerido</p>
+                    <p id="modal-vac-perfil" style="margin: 5px 0 0 0; color: #1e293b; font-weight: 400; line-height: 1.6;">No especificado</p>
+                </div>
+            </div>
+            
+            <div style="margin-top: 25px; text-align: center;">
+                <button onclick="cerrarDetalleVacante()" class="btn btn-outline" style="padding: 10px 30px;">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+
+    <script>
+        function abrirDetalleVacante(btn) {
+            const d = {
+                titulo: btn.getAttribute('data-titulo'),
+                empresa: btn.getAttribute('data-empresa'),
+                fecha: btn.getAttribute('data-fecha'),
+                vencimiento: btn.getAttribute('data-vencimiento'),
+                estatus: btn.getAttribute('data-estatus'),
+                salario: btn.getAttribute('data-salario'),
+                postulados: btn.getAttribute('data-postulados'),
+                descripcion: btn.getAttribute('data-descripcion'),
+                modalidad: btn.getAttribute('data-modalidad'),
+                horario: btn.getAttribute('data-horario'),
+                lugar: btn.getAttribute('data-lugar'),
+                perfil: btn.getAttribute('data-perfil')
+            };
+
+            document.getElementById('modal-vac-titulo').textContent = d.titulo || 'Sin título';
+            document.getElementById('modal-vac-empresa').innerHTML = '<i class="fas fa-building" style="margin-right: 5px;"></i>' + (d.empresa || 'Sin empresa');
+            document.getElementById('modal-vac-salario').textContent = '$' + (d.salario || '0');
+            document.getElementById('modal-vac-postulados').textContent = (d.postulados || '0') + ' candidatos';
+            document.getElementById('modal-vac-fecha').textContent = d.fecha || 'N/A';
+            document.getElementById('modal-vac-vencimiento').textContent = d.vencimiento || 'Sin límite';
+            document.getElementById('modal-vac-modalidad').textContent = d.modalidad || 'No especificada';
+            document.getElementById('modal-vac-horario').textContent = d.horario || 'No especificado';
+            document.getElementById('modal-vac-lugar').textContent = d.lugar || 'No especificado';
+            document.getElementById('modal-vac-descripcion').textContent = d.descripcion || 'Sin descripción';
+            document.getElementById('modal-vac-perfil').textContent = d.perfil || 'No especificado';
+
+            // Generate initials from empresa name
+            const empresa = d.empresa ? d.empresa.trim() : 'V';
+            const initials = empresa.split(' ').slice(0, 2).map(n => n.charAt(0)).join('').substring(0, 2);
+            document.getElementById('modal-vac-avatar').textContent = initials;
+
+            document.getElementById('modalDetalleVacante').style.display = 'flex';
+        }
+
+        function cerrarDetalleVacante() {
+            document.getElementById('modalDetalleVacante').style.display = 'none';
+        }
+
+        // Close on backdrop click
+        document.getElementById('modalDetalleVacante').addEventListener('click', function(e) {
+            if(e.target === this) cerrarDetalleVacante();
+        });
+    </script>
 </body>
 </html>

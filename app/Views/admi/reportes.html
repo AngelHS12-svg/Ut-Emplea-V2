@@ -7,55 +7,322 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/public/css/admin-child.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="reportContent">
         <div class="section-header">
             <h2>Consolidado del Sistema</h2>
         </div>
 
+        <!-- Stats Cards -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-buildings"></i></div>
+                <div class="stat-icon"><i class="fas fa-building"></i></div>
                 <div class="stat-info">
                     <h3>{{ reportes.total_empresas }}</h3>
                     <p>Total de empresas</p>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
                 <div class="stat-info">
                     <h3>{{ reportes.total_candidatos }}</h3>
                     <p>Total de candidatos</p>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-briefcase"></i></div>
+                <div class="stat-icon"><i class="fas fa-briefcase"></i></div>
                 <div class="stat-info">
                     <h3>{{ reportes.total_vacantes }}</h3>
                     <p>Total de vacantes</p>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon"><i class="fa-solid fa-paper-plane"></i></div>
+                <div class="stat-icon"><i class="fas fa-paper-plane"></i></div>
                 <div class="stat-info">
                     <h3>{{ reportes.total_postulaciones }}</h3>
-                    <p>Total de aplicaciones</p>
+                    <p>Total de postulaciones</p>
                 </div>
             </div>
         </div>
 
-        <div class="widget-card" style="text-align: center; padding: 40px;">
-            <i class="fas fa-chart-bar" style="font-size: 3rem; margin-bottom: 20px; color: var(--accent);"></i>
-            <h3>Análisis Estratégico</h3>
-            <p style="color: var(--text-muted); max-width: 500px; margin: 10px auto;">
-                Este resumen refleja la actividad global de la plataforma, facilitando la toma de decisiones basada en datos reales de vinculación laboral.
+        <!-- Charts Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 25px;">
+
+            <!-- Chart 1: Empresas por Estatus (Doughnut) -->
+            <div class="widget-card" style="padding: 25px;">
+                <h4 style="margin: 0 0 15px; color: #1e293b; font-size: 1rem;"><i class="fas fa-building" style="color: #c2914f; margin-right: 8px;"></i>Empresas por Estatus</h4>
+                <div style="max-width: 280px; margin: 0 auto;">
+                    <canvas id="chartEmpresas"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 2: Vacantes por Estatus (Doughnut) -->
+            <div class="widget-card" style="padding: 25px;">
+                <h4 style="margin: 0 0 15px; color: #1e293b; font-size: 1rem;"><i class="fas fa-briefcase" style="color: #0f3d35; margin-right: 8px;"></i>Vacantes por Estatus</h4>
+                <div style="max-width: 280px; margin: 0 auto;">
+                    <canvas id="chartVacantes"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 3: Postulaciones por Estado (Bar) -->
+            <div class="widget-card" style="padding: 25px;">
+                <h4 style="margin: 0 0 15px; color: #1e293b; font-size: 1rem;"><i class="fas fa-chart-bar" style="color: #6366f1; margin-right: 8px;"></i>Postulaciones por Estado</h4>
+                <canvas id="chartPostulaciones"></canvas>
+            </div>
+
+            <!-- Chart 4: Top Empresas (Horizontal Bar) -->
+            <div class="widget-card" style="padding: 25px;">
+                <h4 style="margin: 0 0 15px; color: #1e293b; font-size: 1rem;"><i class="fas fa-trophy" style="color: #f59e0b; margin-right: 8px;"></i>Top 5 Empresas con más Vacantes</h4>
+                <canvas id="chartTopEmpresas"></canvas>
+            </div>
+
+            <!-- Chart 5: Resumen General (Radar) -->
+            <div class="widget-card" style="padding: 25px; grid-column: 1 / -1;">
+                <h4 style="margin: 0 0 15px; color: #1e293b; font-size: 1rem;"><i class="fas fa-chart-area" style="color: #10b981; margin-right: 8px;"></i>Resumen General de la Plataforma</h4>
+                <div style="max-width: 450px; margin: 0 auto;">
+                    <canvas id="chartResumen"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Section -->
+        <div class="widget-card" style="text-align: center; padding: 30px; margin-top: 25px;">
+            <i class="fas fa-download" style="font-size: 2rem; margin-bottom: 15px; color: var(--accent);"></i>
+            <h3 style="margin: 0 0 8px;">Exportar Reportes</h3>
+            <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto 20px;">
+                Descarga el consolidado completo con gráficas y datos en el formato que necesites.
             </p>
-            <div style="margin-top: 30px; display: flex; justify-content: center; gap: 15px;">
-                <button class="btn btn-primary"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
-                <button class="btn btn-outline"><i class="fas fa-file-excel"></i> Exportar Excel</button>
+            <div style="display: flex; justify-content: center; gap: 15px;">
+                <button class="btn btn-primary" onclick="exportarPDF()" style="padding: 10px 25px;">
+                    <i class="fas fa-file-pdf"></i> Exportar PDF
+                </button>
+                <button class="btn btn-outline" onclick="exportarExcel()" style="padding: 10px 25px;">
+                    <i class="fas fa-file-excel"></i> Exportar Excel
+                </button>
             </div>
         </div>
     </div>
+
+    <script>
+        // ============ CHART DATA FROM JINJA ============
+        const data = {
+            empresas: {
+                aprobadas: {{ reportes.empresas_aprobadas }},
+                pendientes: {{ reportes.empresas_pendientes }},
+                rechazadas: {{ reportes.empresas_rechazadas }}
+            },
+            vacantes: {
+                activas: {{ reportes.vacantes_activas }},
+                inactivas: {{ reportes.vacantes_inactivas }}
+            },
+            postulaciones: {
+                pendientes: {{ reportes.post_pendientes }},
+                aceptados: {{ reportes.post_aceptados }},
+                rechazados: {{ reportes.post_rechazados }}
+            },
+            topEmpresas: {
+                nombres: {{ reportes.top_empresas_nombres | tojson }},
+                vacantes: {{ reportes.top_empresas_vacantes | tojson }}
+            },
+            totales: {
+                empresas: {{ reportes.total_empresas }},
+                candidatos: {{ reportes.total_candidatos }},
+                vacantes: {{ reportes.total_vacantes }},
+                postulaciones: {{ reportes.total_postulaciones }}
+            }
+        };
+
+        // ============ CHART CONFIG ============
+        Chart.defaults.font.family = 'Inter';
+
+        // 1. Empresas Doughnut
+        new Chart(document.getElementById('chartEmpresas'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Aprobadas', 'Pendientes', 'Rechazadas'],
+                datasets: [{
+                    data: [data.empresas.aprobadas, data.empresas.pendientes, data.empresas.rechazadas],
+                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                    borderWidth: 0,
+                    hoverOffset: 8
+                }]
+            },
+            options: { plugins: { legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true } } } }
+        });
+
+        // 2. Vacantes Doughnut
+        new Chart(document.getElementById('chartVacantes'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Activas', 'Inactivas/Vencidas'],
+                datasets: [{
+                    data: [data.vacantes.activas, data.vacantes.inactivas],
+                    backgroundColor: ['#0f3d35', '#94a3b8'],
+                    borderWidth: 0,
+                    hoverOffset: 8
+                }]
+            },
+            options: { plugins: { legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true } } } }
+        });
+
+        // 3. Postulaciones Bar
+        new Chart(document.getElementById('chartPostulaciones'), {
+            type: 'bar',
+            data: {
+                labels: ['Pendientes', 'Aceptados', 'Rechazados'],
+                datasets: [{
+                    label: 'Postulaciones',
+                    data: [data.postulaciones.pendientes, data.postulaciones.aceptados, data.postulaciones.rechazados],
+                    backgroundColor: ['#f59e0b', '#10b981', '#ef4444'],
+                    borderRadius: 8,
+                    barThickness: 40
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+
+        // 4. Top Empresas Horizontal Bar
+        new Chart(document.getElementById('chartTopEmpresas'), {
+            type: 'bar',
+            data: {
+                labels: data.topEmpresas.nombres,
+                datasets: [{
+                    label: 'Vacantes publicadas',
+                    data: data.topEmpresas.vacantes,
+                    backgroundColor: '#c2914f',
+                    borderRadius: 6,
+                    barThickness: 28
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+
+        // 5. Resumen Radar
+        new Chart(document.getElementById('chartResumen'), {
+            type: 'radar',
+            data: {
+                labels: ['Empresas', 'Candidatos', 'Vacantes', 'Postulaciones'],
+                datasets: [{
+                    label: 'Totales',
+                    data: [data.totales.empresas, data.totales.candidatos, data.totales.vacantes, data.totales.postulaciones],
+                    backgroundColor: 'rgba(15, 61, 53, 0.15)',
+                    borderColor: '#0f3d35',
+                    pointBackgroundColor: '#c2914f',
+                    pointRadius: 5,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: { r: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+
+        // ============ EXPORT FUNCTIONS ============
+        async function exportarPDF() {
+            const btn = event.target.closest('button');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+            btn.disabled = true;
+
+            try {
+                const el = document.getElementById('reportContent');
+                const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#f1f5f9' });
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pageW = pdf.internal.pageSize.getWidth();
+                const pageH = pdf.internal.pageSize.getHeight();
+                const imgW = pageW - 20;
+                const imgH = (canvas.height * imgW) / canvas.width;
+
+                // Si la imagen es más alta que una página, dividir
+                let yPos = 10;
+                let remainingH = imgH;
+                const maxPerPage = pageH - 20;
+
+                if (imgH <= maxPerPage) {
+                    pdf.addImage(imgData, 'PNG', 10, 10, imgW, imgH);
+                } else {
+                    // Scale to fit one page width, multiple pages height
+                    let srcY = 0;
+                    const ratio = canvas.width / imgW;
+                    while (remainingH > 0) {
+                        const sliceH = Math.min(maxPerPage, remainingH);
+                        const sliceCanvas = document.createElement('canvas');
+                        sliceCanvas.width = canvas.width;
+                        sliceCanvas.height = sliceH * ratio;
+                        const ctx = sliceCanvas.getContext('2d');
+                        ctx.drawImage(canvas, 0, srcY, canvas.width, sliceH * ratio, 0, 0, canvas.width, sliceH * ratio);
+                        const sliceImg = sliceCanvas.toDataURL('image/png');
+                        if (srcY > 0) pdf.addPage();
+                        pdf.addImage(sliceImg, 'PNG', 10, 10, imgW, sliceH);
+                        srcY += sliceH * ratio;
+                        remainingH -= sliceH;
+                    }
+                }
+
+                pdf.save('Reporte_UT_Emplea.pdf');
+            } catch(e) {
+                console.error('Error generating PDF:', e);
+                alert('Error al generar el PDF.');
+            } finally {
+                btn.innerHTML = '<i class="fas fa-file-pdf"></i> Exportar PDF';
+                btn.disabled = false;
+            }
+        }
+
+        function exportarExcel() {
+            const wb = XLSX.utils.book_new();
+
+            // Sheet 1: Resumen General
+            const resumen = [
+                ['Concepto', 'Total'],
+                ['Total de Empresas', data.totales.empresas],
+                ['Total de Candidatos', data.totales.candidatos],
+                ['Total de Vacantes', data.totales.vacantes],
+                ['Total de Postulaciones', data.totales.postulaciones],
+                [],
+                ['Empresas por Estatus', ''],
+                ['Aprobadas', data.empresas.aprobadas],
+                ['Pendientes', data.empresas.pendientes],
+                ['Rechazadas', data.empresas.rechazadas],
+                [],
+                ['Vacantes por Estatus', ''],
+                ['Activas', data.vacantes.activas],
+                ['Inactivas/Vencidas', data.vacantes.inactivas],
+                [],
+                ['Postulaciones por Estado', ''],
+                ['Pendientes', data.postulaciones.pendientes],
+                ['Aceptados', data.postulaciones.aceptados],
+                ['Rechazados', data.postulaciones.rechazados],
+            ];
+            const ws1 = XLSX.utils.aoa_to_sheet(resumen);
+            ws1['!cols'] = [{ wch: 25 }, { wch: 15 }];
+            XLSX.utils.book_append_sheet(wb, ws1, 'Resumen General');
+
+            // Sheet 2: Top Empresas
+            const topData = [['Empresa', 'Vacantes Publicadas']];
+            data.topEmpresas.nombres.forEach((n, i) => {
+                topData.push([n, data.topEmpresas.vacantes[i]]);
+            });
+            const ws2 = XLSX.utils.aoa_to_sheet(topData);
+            ws2['!cols'] = [{ wch: 30 }, { wch: 20 }];
+            XLSX.utils.book_append_sheet(wb, ws2, 'Top Empresas');
+
+            XLSX.writeFile(wb, 'Reporte_UT_Emplea.xlsx');
+        }
+    </script>
 </body>
 </html>

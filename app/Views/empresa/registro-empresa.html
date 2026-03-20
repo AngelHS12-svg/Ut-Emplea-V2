@@ -1,173 +1,206 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Registro de Empresa</title>
-
-<link rel="stylesheet" href="/public/css/styles.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Empresa | UT Emplea</title>
+    <link rel="stylesheet" href="/public/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .registration-container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        .stepper { display: flex; justify-content: space-between; margin-bottom: 40px; position: relative; }
+        .stepper::before { content: ""; position: absolute; top: 20px; left: 0; width: 100%; height: 2px; background: #e2e8f0; z-index: 1; }
+        .step { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; flex: 1; }
+        .step-icon { width: 40px; height: 40px; border-radius: 50%; background: white; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #cbd5e1; transition: all 0.3s ease; margin-bottom: 8px; }
+        .step.active .step-icon { border-color: var(--dorado); color: var(--dorado); box-shadow: 0 0 0 4px rgba(194, 145, 79, 0.2); }
+        .step.completed .step-icon { background: var(--verde); border-color: var(--verde); color: white; }
+        .step-label { font-size: 0.75rem; font-weight: 600; color: var(--texto-gris); text-transform: uppercase; }
+        .form-step { display: none; }
+        .form-step.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .card { background: white; border-radius: 16px; padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .section-title { font-size: 1.5rem; margin-bottom: 25px; color: var(--verde); display: flex; align-items: center; gap: 12px; }
+        .form-actions { margin-top: 30px; display: flex; justify-content: space-between; gap: 15px; }
+        .required-mark { color: #dc2626; margin-left: 2px; }
+    </style>
 </head>
 <body>
 
-<div class="layout">
+<div class="registration-container">
+    <div class="page-header" style="text-align:center; display:block; padding: 30px;">
+        <h1 style="font-size: 2.2rem; color: var(--primario);">Registra tu Empresa</h1>
+        <p>Une tu organización a la red de talento de la UT Oriental</p>
+    </div>
 
-    <main class="main-content" style="margin-left:0; width:100%;">
+    <!-- Stepper -->
+    <div class="stepper" id="stepper">
+        <div class="step active" data-step="1"><div class="step-icon">1</div><div class="step-label">Empresa</div></div>
+        <div class="step" data-step="2"><div class="step-icon">2</div><div class="step-label">Acceso</div></div>
+        <div class="step" data-step="3"><div class="step-icon">3</div><div class="step-label">Contacto</div></div>
+    </div>
+
+    <form id="registroForm" action="/registro-empresa" method="POST" class="card">
         
-        <div class="page-header">
-            <h1>Registro de Empresa</h1>
-            <p>Complete la información para registrar su empresa en UT Oriental Emplea</p>
+        <!-- STEP 1: Datos de la Empresa -->
+        <div class="form-step active" id="step1">
+            <h2 class="section-title"><i class="fas fa-building"></i> Datos Corporativos</h2>
+            <div class="form-group">
+                <label class="form-label">Nombre de la Empresa <span class="required-mark">*</span></label>
+                <input type="text" name="empresa" class="form-control" data-required="true" required>
+            </div>
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label class="form-label">Giro / Sector <span class="required-mark">*</span></label>
+                    <input type="text" name="giro" class="form-control" data-required="true" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tipo <span class="required-mark">*</span></label>
+                    <select name="tipo_empresa" class="form-control" data-required="true" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="Privada">Privada</option>
+                        <option value="Pública">Pública</option>
+                        <option value="Mixta">Mixta</option>
+                        <option value="ONG">ONG</option>
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label class="form-label">Teléfono Corporativo <span class="required-mark">*</span></label>
+                    <input type="tel" name="telefono" class="form-control" data-required="true" required maxlength="10">
+                    <small style="color:var(--texto-gris); font-size:0.7rem;">10 dígitos numéricos.</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Código Postal <span class="required-mark">*</span></label>
+                    <input type="text" name="codigo_postal" class="form-control" data-required="true" required maxlength="5">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Dirección Completa <span class="required-mark">*</span></label>
+                <input type="text" name="direccion" class="form-control" data-required="true" required placeholder="Calle, Número, Colonia">
+            </div>
+            <div class="form-actions" style="justify-content: flex-end;">
+                <button type="button" class="btn btn-primary" onclick="nextStep(2)">Siguiente <i class="fas fa-arrow-right"></i></button>
+            </div>
         </div>
 
-        <div class="card">
-
-            <div class="card-header">
-                <h2 class="card-title">
-                    <i class="fas fa-building"></i>
-                    Datos de la empresa
-                </h2>
+        <!-- STEP 2: Datos de Acceso -->
+        <div class="form-step" id="step2">
+            <h2 class="section-title"><i class="fas fa-lock"></i> Credenciales de Acceso</h2>
+            <div class="form-group">
+                <label class="form-label">Correo Electrónico <span class="required-mark">*</span></label>
+                <input type="email" name="correo" class="form-control" data-required="true" required>
             </div>
-
-            <form action="/registro-empresa" method="POST">
-
-                <div class="grid grid-2">
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Nombre de la empresa <span class="required">*</span>
-                        </label>
-                        <input type="text" name="empresa" class="form-control" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Giro de la empresa <span class="required">*</span>
-                        </label>
-                        <input type="text" name="giro" class="form-control" required>
-                    </div>
-
-                </div>
-
-                <div class="grid grid-2">
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Tipo de empresa <span class="required">*</span>
-                        </label>
-                        <select name="tipo_empresa" class="form-control" required>
-                            <option value="">Seleccionar</option>
-                            <option value="Privada">Privada</option>
-                            <option value="Publica">Pública</option>
-                            <option value="Mixta">Mixta</option>
-                            <option value="ONG">ONG</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Teléfono <span class="required">*</span>
-                        </label>
-                        <input type="tel" name="telefono" class="form-control" required>
-                    </div>
-
-                </div>
-
+            <div class="grid grid-2">
                 <div class="form-group">
-                    <label class="form-label">
-                        Dirección <span class="required">*</span>
-                    </label>
-                    <input type="text" name="direccion" class="form-control" required>
+                    <label class="form-label">Contraseña <span class="required-mark">*</span></label>
+                    <input type="password" name="password" class="form-control" data-required="true" required minlength="12" placeholder="Mínimo 12 caracteres">
+                    <small style="color:var(--texto-gris); font-size:0.7rem;">Mín. 12 caracteres, incluye mayúscula, número y símbolo.</small>
                 </div>
-
-                <h3 style="margin-top:2rem; color:var(--verde);">
-                    Datos de acceso
-                </h3>
-
-                <div class="accent-strip mb-3"></div>
-
-                <div class="grid grid-2">
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Correo electrónico <span class="required">*</span>
-                        </label>
-                        <input type="email" name="correo" class="form-control" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Contraseña <span class="required">*</span>
-                        </label>
-
-                        <input 
-                        type="password"
-                        name="password"
-                        class="form-control"
-                        required
-                        minlength="8"
-                        pattern="(?=.*[A-Z])(?=.*[0-9])(?=.*[\W]).{8,}"
-                        title="Debe tener al menos 8 caracteres, una mayúscula, un número y un símbolo">
-
-                        <small style="color:var(--texto-gris)">
-                        La contraseña debe tener mínimo 16 caracteres, una mayúscula, un número y un símbolo.
-                        </small>
-
-                    </div>
-
-                </div>
-
-                <h3 style="margin-top:2rem; color:var(--verde);">
-                    Contacto de Recursos Humanos
-                </h3>
-
-                <div class="accent-strip mb-3"></div>
-
-                <div class="grid grid-2">
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Nombre del responsable <span class="required">*</span>
-                        </label>
-                        <input type="text" name="responsable_rrhh" class="form-control" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Teléfono de RR.HH.
-                        </label>
-                        <input type="tel" name="telefono_rrhh" class="form-control">
-                    </div>
-
-                </div>
-
                 <div class="form-group">
-                    <label class="form-label">
-                        Correo de RR.HH.
-                    </label>
+                    <label class="form-label">Confirmar Contraseña <span class="required-mark">*</span></label>
+                    <input type="password" name="confirmar_password" class="form-control" data-required="true" required minlength="12">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="prevStep(1)">Anterior</button>
+                <button type="button" class="btn btn-primary" onclick="nextStep(3)">Siguiente <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <!-- STEP 3: RRHH -->
+        <div class="form-step" id="step3">
+            <h2 class="section-title"><i class="fas fa-user-tie"></i> Contacto de Recursos Humanos</h2>
+            <div class="form-group">
+                <label class="form-label">Responsable de RR.HH. <span class="required-mark">*</span></label>
+                <input type="text" name="responsable_rrhh" class="form-control" data-required="true" required>
+            </div>
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label class="form-label">Teléfono Directo</label>
+                    <input type="tel" name="telefono_rrhh" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Correo Directo</label>
                     <input type="email" name="correo_rrhh" class="form-control">
                 </div>
-
-                <div class="d-flex gap-2 justify-between">
-
-                    <a href="login.html" class="btn btn-outline">
-                        Cancelar
-                    </a>
-
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-user-plus"></i>
-                        Registrar empresa
-                    </button>
-
+            </div>
+            <div class="form-group" style="margin-top:20px; background:#f0f7ff; padding:15px; border-radius:8px;">
+                <label style="display:flex; gap:10px; cursor:pointer;"><input type="checkbox" id="termsCheck" required> <span>Acepto que la información corporativa sea validada por el administrador.</span></label>
+            </div>
+            <div class="form-actions">
+                <a href="{{ url_for('home') }}" class="btn btn-outline">Cancelar</a>
+                <div style="display:flex; gap:10px;">
+                    <button type="button" class="btn btn-secondary" onclick="prevStep(2)">Anterior</button>
+                    <button type="submit" class="btn btn-accent">Finalizar Registro <i class="fas fa-check"></i></button>
                 </div>
-
-            </form>
-
+            </div>
         </div>
-
-    </main>
-
+    </form>
 </div>
 
+<script>
+    function nextStep(step) {
+        const cur = document.querySelector('.form-step.active');
+        const reqs = cur.querySelectorAll('[data-required="true"]');
+        let valid = true;
+        reqs.forEach(i => {
+            if(!i.value) { i.style.borderColor='#dc2626'; valid=false; }
+            else { i.style.borderColor='var(--borde)'; }
+        });
+
+        if(!valid) return;
+
+        // Validaciones Paso 1 (Empresa)
+        if(step === 2) {
+            const tel = document.querySelector('[name="telefono"]').value;
+            const cp = document.querySelector('[name="codigo_postal"]').value;
+            if(tel.length !== 10 || isNaN(tel)) { alert('El teléfono debe tener exactamente 10 dígitos numéricos'); valid=false; }
+            else if(cp.length !== 5 || isNaN(cp)) { alert('El código postal debe tener 5 dígitos'); valid=false; }
+        }
+
+        // Validaciones Paso 2 (Acceso)
+        if(step === 3) {
+            const p1 = document.querySelector('[name="password"]').value;
+            const p2 = document.querySelector('[name="confirmar_password"]').value;
+            const email = document.querySelector('[name="correo"]').value;
+            const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
+
+            if(p1 !== p2) { alert('Las contraseñas no coinciden'); valid=false; }
+            else if(!passRegex.test(p1)) { alert('La contraseña debe tener al menos 12 caracteres, una mayúscula, un número y un símbolo especial'); valid=false; }
+            else if(!email.includes('@')) { alert('Por favor, ingresa un correo electrónico válido'); valid=false; }
+        }
+
+        if(!valid) return;
+        document.querySelectorAll('.form-step').forEach(el=>el.classList.remove('active'));
+        document.getElementById('step'+step).classList.add('active');
+        updateStepper(step);
+        window.scrollTo(0,0);
+    }
+    function prevStep(step) {
+        document.querySelectorAll('.form-step').forEach(el=>el.classList.remove('active'));
+        document.getElementById('step'+step).classList.add('active');
+        updateStepper(step);
+        window.scrollTo(0,0);
+    }
+    function updateStepper(step) {
+        document.querySelectorAll('.step').forEach(el => {
+            const s = parseInt(el.dataset.step);
+            if(s < step) { el.classList.add('completed'); el.classList.remove('active'); }
+            else if(s === step) { el.classList.add('active'); el.classList.remove('completed'); }
+            else { el.classList.remove('active', 'completed'); }
+        });
+    }
+    document.getElementById('registroForm').onsubmit = function() {
+        if(!document.getElementById('termsCheck').checked) {
+            alert('Debes aceptar que la información sea validada.');
+            return false;
+        }
+        return true;
+    };
+</script>
 </body>
+</html>
+/body>
 </html>

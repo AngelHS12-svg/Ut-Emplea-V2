@@ -78,12 +78,18 @@
                             <th>Empresa</th>
                             <th>Fecha de postulación</th>
                             <th>Estado actual</th>
+                            <th>Feedback</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for p in postulaciones %}
                         <tr>
-                            <td><strong>{{ p[0] }}</strong></td>
+                            <td>
+                                <a href="#" class="btn-ver-vacante" data-id="{{ p[5] }}" title="Ver detalles de la vacante">
+                                    <i class="fas fa-external-link-alt" style="margin-right: 5px; font-size: 0.8rem; color: var(--dorado);"></i>
+                                    <strong>{{ p[0] }}</strong>
+                                </a>
+                            </td>
                             <td>{{ p[1] }}</td>
                             <td>{{ p[2].strftime('%d/%m/%Y') if p[2] else 'N/A' }}</td>
                             <td>
@@ -95,14 +101,47 @@
                                 <span class="badge badge-pendiente"><i class="fas fa-clock"></i> En revisión</span>
                                 {% endif %}
                             </td>
+                            <td style="text-align: center;">
+                                {% if p[6] %}
+                                <button type="button" class="btn-ver-comentario" 
+                                        data-empresa="{{ p[1] }}"
+                                        data-mensaje="{{ p[6] }}"
+                                        title="Ver mensaje de la empresa">
+                                    <i class="fas fa-comment-dots" style="font-size: 1.2rem; color: var(--dorado);"></i>
+                                </button>
+                                {% else %}
+                                <span style="color: #cbd5e0;"><i class="fas fa-minus"></i></span>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="4" style="text-align: center; color: var(--texto-gris); padding: 2rem;">No tienes postulaciones. ¡Busca vacantes y postúlate!</td>
+                            <td colspan="5" style="text-align: center; color: var(--texto-gris); padding: 2rem;">No tienes postulaciones. ¡Busca vacantes y postúlate!</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Modal de Comentarios de la Empresa -->
+            <div id="modalComentario" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+                <div class="modal-content card" style="width: 90%; max-width: 450px; padding: 0; border: none; overflow: hidden; animation: modalIn 0.3s ease-out;">
+                    <div style="background: var(--dorado); color: white; padding: 1.2rem; display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; font-size: 1.2rem;"><i class="fas fa-envelope-open-text"></i> Mensaje de <span id="c-empresa"></span></h3>
+                        <button type="button" onclick="cerrarModalComentario()" style="background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 30px; height: 30px; cursor: pointer;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div style="padding: 2rem;">
+                        <div style="background: #fffcf0; border: 1px solid #ffeeba; padding: 1.5rem; border-radius: 8px; position: relative;">
+                            <i class="fas fa-quote-left" style="position: absolute; top: -10px; left: 10px; color: var(--dorado); background: white; padding: 0 5px; font-size: 1.2rem;"></i>
+                            <p id="c-mensaje" style="margin: 0; line-height: 1.6; font-style: italic; color: #856404;"></p>
+                        </div>
+                        <div style="margin-top: 1.5rem; text-align: right;">
+                            <button type="button" onclick="cerrarModalComentario()" class="btn btn-primary btn-small">Entendido</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="grid grid-4" style="margin-top: 2rem;">
@@ -125,5 +164,142 @@
             </div>
         </main>
     </div>
+
+    <!-- Modal de Detalles de Vacante -->
+    <div id="modalVacante" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="modal-content card" style="width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto; position: relative; padding: 0; border: none; animation: modalIn 0.3s ease-out;">
+            <div style="background: var(--primario); color: white; padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1;">
+                <h3 id="m-titulo" style="margin: 0; font-family: 'Lora', serif; font-size: 1.4rem;">Cargando...</h3>
+                <button type="button" onclick="cerrarModal()" style="background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; transition: all 0.3s;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div style="padding: 2rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+                    <div class="info-tag"><i class="fas fa-building" style="color: var(--dorado);"></i> <span id="m-empresa"></span></div>
+                    <div class="info-tag"><i class="fas fa-map-marker-alt" style="color: var(--vino);"></i> <span id="m-lugar"></span></div>
+                    <div class="info-tag"><i class="fas fa-money-bill-wave" style="color: var(--verde);"></i> <span id="m-salario"></span></div>
+                    <div class="info-tag"><i class="fas fa-clock" style="color: var(--primario);"></i> <span id="m-horario"></span></div>
+                </div>
+
+                <div style="margin-bottom: 1.5rem; padding: 1rem; border-radius: 8px; background: #fffcf5; border: 1px solid #fff3e0;">
+                    <h4 style="margin-bottom: 10px; font-weight: 700; color: var(--primario);">Descripción del Puesto</h4>
+                    <p id="m-descripcion" style="line-height: 1.6; color: var(--texto-oscuro); text-align: justify; margin: 0;"></p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h4 style="margin-bottom: 15px; font-weight: 700; color: var(--primario); font-size: 0.95rem;">Perfil del Candidato</h4>
+                        <ul style="list-style: none; padding: 0; font-size: 0.9rem;">
+                            <li style="margin-bottom: 10px;"><i class="fas fa-graduation-cap" style="width: 25px; color: var(--dorado);"></i> <strong>Escolaridad:</strong> <br><span id="m-escolaridad" style="color: var(--texto-gris);"></span></li>
+                            <li style="margin-bottom: 10px;"><i class="fas fa-history" style="width: 25px; color: var(--dorado);"></i> <strong>Experiencia:</strong> <br><span id="m-experiencia" style="color: var(--texto-gris);"></span></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 style="margin-bottom: 15px; font-weight: 700; color: var(--primario); font-size: 0.95rem;">Competencias/Requisitos</h4>
+                        <div id="m-requisitos" style="font-size: 0.9rem; color: var(--texto-gris); line-height: 1.5;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .btn-ver-vacante {
+            text-decoration: none;
+            color: var(--primario);
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .btn-ver-vacante:hover {
+            background: rgba(15, 61, 53, 0.05);
+            color: var(--dorado);
+            transform: translateX(3px);
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .info-tag {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid #eee;
+        }
+    </style>
+
+    <script>
+        function cerrarModalComentario() {
+            document.getElementById('modalComentario').style.display = 'none';
+        }
+
+        // Manejador para botones de comentarios
+        document.querySelectorAll('.btn-ver-comentario').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const empresa = btn.getAttribute('data-empresa');
+                const mensaje = btn.getAttribute('data-mensaje');
+                document.getElementById('c-empresa').innerText = empresa;
+                document.getElementById('c-mensaje').innerText = mensaje;
+                document.getElementById('modalComentario').style.display = 'flex';
+            });
+        });
+
+        function abrirModal(id) {
+            const modal = document.getElementById('modalVacante');
+            document.getElementById('m-titulo').innerText = "Cargando...";
+            modal.style.display = 'flex';
+            
+            fetch(`/api/vacante/${id}`)
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.error) throw new Error(data.error);
+                    
+                    document.getElementById('m-titulo').innerText = data.titulo;
+                    document.getElementById('m-empresa').innerText = data.empresa;
+                    document.getElementById('m-lugar').innerText = data.lugar;
+                    document.getElementById('m-salario').innerText = data.salario;
+                    document.getElementById('m-horario').innerText = data.horario;
+                    document.getElementById('m-descripcion').innerText = data.descripcion || "Sin descripción disponible";
+                    document.getElementById('m-escolaridad').innerText = data.escolaridad;
+                    document.getElementById('m-experiencia').innerText = data.experiencia;
+                    document.getElementById('m-requisitos').innerText = data.requisitos;
+                })
+                .catch(err => {
+                    console.error("Error fetching vacancy:", err);
+                    alert("⚠️ Error al cargar detalles: " + err.message + "\n\nPor favor, asegúrate de haber REINICIADO el servidor Flask.");
+                    cerrarModal();
+                });
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalVacante').style.display = 'none';
+        }
+
+        document.querySelectorAll('.btn-ver-vacante').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                abrirModal(btn.dataset.id);
+            });
+        });
+
+        // Cerrar al click fuera
+        window.onclick = function(event) {
+            const modalVacante = document.getElementById('modalVacante');
+            const modalComentario = document.getElementById('modalComentario');
+            if (event.target == modalVacante) cerrarModal();
+            if (event.target == modalComentario) cerrarModalComentario();
+        }
+    </script>
 </body>
 </html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Candidato | UT Emplea</title>
+    <link rel="stylesheet" href="/public/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .registration-container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        .stepper { display: flex; justify-content: space-between; margin-bottom: 40px; position: relative; }
+        .stepper::before { content: ""; position: absolute; top: 20px; left: 0; width: 100%; height: 2px; background: #e2e8f0; z-index: 1; }
+        .step { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; flex: 1; }
+        .step-icon { width: 40px; height: 40px; border-radius: 50%; background: white; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #cbd5e1; transition: all 0.3s ease; margin-bottom: 8px; }
+        .step.active .step-icon { border-color: var(--dorado); color: var(--dorado); box-shadow: 0 0 0 4px rgba(194, 145, 79, 0.2); }
+        .step.completed .step-icon { background: var(--verde); border-color: var(--verde); color: white; }
+        .step-label { font-size: 0.75rem; font-weight: 600; color: var(--texto-gris); text-transform: uppercase; }
+        .form-step { display: none; }
+        .form-step.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .card { background: white; border-radius: 16px; padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .section-title { font-size: 1.5rem; margin-bottom: 25px; color: var(--verde); display: flex; align-items: center; gap: 12px; }
+        .form-actions { margin-top: 30px; display: flex; justify-content: space-between; gap: 15px; }
+        .required-mark { color: var(--vino); margin-left: 2px; }
+        .invalid-feedback { color: var(--vino); font-size: 0.8rem; margin-top: 5px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="registration-container">
+    <div class="page-header" style="text-align:center; display:block; padding: 30px;">
+        <h1 style="font-size: 2.2rem; color: var(--primario);">Crea tu Perfil Profesional</h1>
+        <p>Completa los 4 pasos para generar tu CV automáticamente</p>
+    </div>
+
+    <!-- Stepper -->
+    <div class="stepper" id="stepper">
+        <div class="step active" data-step="1"><div class="step-icon">1</div><div class="step-label">Personal</div></div>
+        <div class="step" data-step="2"><div class="step-icon">2</div><div class="step-label">Educación</div></div>
+        <div class="step" data-step="3"><div class="step-icon">3</div><div class="step-label">Experiencia</div></div>
+        <div class="step" data-step="4"><div class="step-icon">4</div><div class="step-label">Finalizar</div></div>
+    </div>
+
+    <form id="registroForm" action="/registro-candidato" method="POST" class="card" onsubmit="return validateFinal()">
+        
+        <!-- STEP 1 -->
+        <div class="form-step active" id="step1">
+            <h2 class="section-title"><i class="fas fa-user-circle"></i> Datos Personales</h2>
+            <div class="form-group">
+                <label class="form-label">Sexo <span class="required-mark">*</span></label>
+                <div style="display:flex; gap:20px;">
+                    <label><input type="radio" name="sexo" value="Masculino" checked> Masculino</label>
+                    <label><input type="radio" name="sexo" value="Femenino"> Femenino</label>
+                    <label><input type="radio" name="sexo" value="Otro"> Otro</label>
+                </div>
+            </div>
+            <div class="grid grid-3">
+                <div class="form-group"><label class="form-label">Nombre(s) <span class="required-mark">*</span></label><input type="text" name="nombre" class="form-control" data-required="true"></div>
+                <div class="form-group"><label class="form-label">A. Paterno <span class="required-mark">*</span></label><input type="text" name="apellido_paterno" class="form-control" data-required="true"></div>
+                <div class="form-group"><label class="form-label">A. Materno</label><input type="text" name="apellido_materno" class="form-control"></div>
+            </div>
+            <div class="grid grid-2">
+                <div class="form-group"><label class="form-label">Celular <span class="required-mark">*</span></label><input type="tel" name="telefono" class="form-control" data-required="true"></div>
+                <div class="form-group"><label class="form-label">C.P. <span class="required-mark">*</span></label><input type="text" name="codigo_postal" class="form-control" data-required="true"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Ubicación <span class="required-mark">*</span></label><input type="text" name="ubicacion" class="form-control" data-required="true" placeholder="Calle, Colonia, Ciudad"></div>
+            <div class="form-group"><label class="form-label">Email <span class="required-mark">*</span></label><input type="email" name="correo" class="form-control" data-required="true"></div>
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label class="form-label">Contraseña <span class="required-mark">*</span></label>
+                    <input type="password" name="password" class="form-control" data-required="true" minlength="12" placeholder="Mínimo 12 caracteres">
+                    <small style="color:var(--texto-gris); font-size:0.7rem;">Mín. 12 caracteres, incluye mayúscula, número y símbolo.</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Confirmar <span class="required-mark">*</span></label>
+                    <input type="password" name="confirmar_password" class="form-control" data-required="true" minlength="12">
+                </div>
+            </div>
+            <div class="form-actions" style="justify-content: flex-end;"><button type="button" class="btn btn-primary" onclick="nextStep(2)">Siguiente <i class="fas fa-arrow-right"></i></button></div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="form-step" id="step2">
+            <h2 class="section-title"><i class="fas fa-graduation-cap"></i> Educación</h2>
+            <div class="form-group">
+                <label class="form-label">Carrera (UT Oriental) <span class="required-mark">*</span></label>
+                <select name="id_carrera" class="form-control" data-required="true">
+                    <option value="">Seleccionar...</option>
+                    {% for id_c, nom in carreras %}<option value="{{ id_c }}">{{ nom }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label class="form-label">Grado <span class="required-mark">*</span></label>
+                    <select name="ultimo_grado_estudios" class="form-control" data-required="true">
+                        <option value="TSU">TSU</option><option value="Ingeniería/Licenciatura">Ingeniería/Licenciatura</option><option value="Maestría">Maestría</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">Año Egreso <span class="required-mark">*</span></label><input type="number" name="egreso" class="form-control" data-required="true"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Institución <span class="required-mark">*</span></label><input type="text" name="institucion_estudios" class="form-control" data-required="true"></div>
+            <div class="form-group"><label class="form-label">Carrera cursada <span class="required-mark">*</span></label><input type="text" name="carrera_estudios" class="form-control" data-required="true"></div>
+            <div class="form-actions"><button type="button" class="btn btn-secondary" onclick="prevStep(1)">Anterior</button><button type="button" class="btn btn-primary" onclick="nextStep(3)">Siguiente <i class="fas fa-arrow-right"></i></button></div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="form-step" id="step3">
+            <h2 class="section-title"><i class="fas fa-briefcase"></i> Experiencia</h2>
+            <p style="color:var(--texto-gris); margin-bottom:15px;">Opcional si eres recién egresado</p>
+            <div class="grid grid-2">
+                <div class="form-group"><label class="form-label">Último Puesto</label><input type="text" name="ultimo_puesto" class="form-control"></div>
+                <div class="form-group"><label class="form-label">Empresa</label><input type="text" name="ultima_empresa" class="form-control"></div>
+            </div>
+            <div class="grid grid-2">
+                <div class="form-group"><label class="form-label">Fecha Inicio</label><input type="month" name="fecha_inicio_laboral" class="form-control"></div>
+                <div class="form-group"><label class="form-label">Fecha Fin</label><input type="month" name="fecha_fin_laboral" class="form-control"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Logros</label><textarea name="actividades_logros" class="form-control"></textarea></div>
+            <div class="form-actions"><button type="button" class="btn btn-secondary" onclick="prevStep(2)">Anterior</button><button type="button" class="btn btn-primary" onclick="nextStep(4)">Siguiente <i class="fas fa-arrow-right"></i></button></div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="form-step" id="step4">
+            <h2 class="section-title"><i class="fas fa-star"></i> Intereses</h2>
+            <div class="grid grid-2">
+                <div class="form-group"><label class="form-label">Puesto Buscado <span class="required-mark">*</span></label><input type="text" name="puesto_deseado" class="form-control" data-required="true"></div>
+                <div class="form-group"><label class="form-label">Sueldo Deseado</label><input type="number" name="sueldo_deseado" class="form-control"></div>
+            </div>
+            <div class="grid grid-2">
+                <div class="form-group"><label class="form-label">Área <span class="required-mark">*</span></label><input type="text" name="area_trabajo" class="form-control" data-required="true"></div>
+                <div class="form-group"><label class="form-label">Especialidad <span class="required-mark">*</span></label><input type="text" name="especialidad" class="form-control" data-required="true"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Tags (Habilidades)</label><input type="text" name="tags_especialidad" class="form-control" placeholder="Ej: Excel, Python, Liderazgo"></div>
+            <div class="form-group" style="margin-top:20px; background:#fff9f0; padding:15px; border-radius:8px;">
+                <label style="display:flex; gap:10px; cursor:pointer;"><input type="checkbox" id="consentCheck"> <span>Consiento el tratamiento de mis datos personales.</span></label>
+            </div>
+            <div class="form-actions"><button type="button" class="btn btn-secondary" onclick="prevStep(3)">Anterior</button><button type="submit" class="btn btn-accent" style="padding: 0.8rem 2rem;">¡Finalizar y Generar CV! <i class="fas fa-magic"></i></button></div>
+        </div>
+    </form>
+</div>
+
+<script>
+    function nextStep(step) {
+        const cur = document.querySelector('.form-step.active');
+        const reqs = cur.querySelectorAll('[data-required="true"]');
+        let valid = true;
+        reqs.forEach(i => {
+            if(!i.value) { i.style.borderColor='var(--vino)'; valid=false; }
+            else { i.style.borderColor='var(--borde)'; }
+        });
+
+        if(!valid) return;
+
+        // Validaciones específicas en Paso 1 (Personal)
+        if(step === 2) {
+            const tel = document.querySelector('[name="telefono"]').value;
+            const cp = document.querySelector('[name="codigo_postal"]').value;
+            const p1 = document.querySelector('[name="password"]').value;
+            const p2 = document.querySelector('[name="confirmar_password"]').value;
+            const email = document.querySelector('[name="correo"]').value;
+            
+            // Reglas de Contraseña
+            const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
+            
+            if(tel.length !== 10 || isNaN(tel)) { alert('El celular debe tener exactamente 10 dígitos numéricos'); valid=false; }
+            else if(cp.length !== 5 || isNaN(cp)) { alert('El código postal debe tener 5 dígitos'); valid=false; }
+            else if(p1 !== p2) { alert('Las contraseñas no coinciden'); valid=false; }
+            else if(!passRegex.test(p1)) { alert('La contraseña debe tener al menos 12 caracteres, una mayúscula, un número y un símbolo especial'); valid=false; }
+            else if(!email.includes('@')) { alert('Por favor, ingresa un correo electrónico válido'); valid=false; }
+        }
+
+        if(!valid) return;
+        document.querySelectorAll('.form-step').forEach(el=>el.classList.remove('active'));
+        document.getElementById('step'+step).classList.add('active');
+        updateStepper(step);
+        window.scrollTo(0,0);
+    }
+    function prevStep(step) {
+        document.querySelectorAll('.form-step').forEach(el=>el.classList.remove('active'));
+        document.getElementById('step'+step).classList.add('active');
+        updateStepper(step);
+        window.scrollTo(0,0);
+    }
+    function updateStepper(step) {
+        document.querySelectorAll('.step').forEach(el => {
+            const s = parseInt(el.dataset.step);
+            if(s < step) { el.classList.add('completed'); el.classList.remove('active'); }
+            else if(s === step) { el.classList.add('active'); el.classList.remove('completed'); }
+            else { el.classList.remove('active', 'completed'); }
+        });
+    }
+    function validateFinal() {
+        if(!document.getElementById('consentCheck').checked) { alert('Debes aceptar el consentimiento de datos.'); return false; }
+        return true;
+    }
+</script>
+</body>
+</html>
