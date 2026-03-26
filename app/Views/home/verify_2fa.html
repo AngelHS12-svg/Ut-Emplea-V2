@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación 2FA - UT Oriental Emplea</title>
+    <link rel="stylesheet" href="/public/css/styles1.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700;900&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0f3d35 0%, #0a2420 100%);
+            font-family: 'Montserrat', sans-serif;
+        }
+        .verify-container {
+            background: linear-gradient(145deg, #ffffff, #f5f7f9);
+            border-radius: 20px;
+            padding: 3rem 2.5rem;
+            width: 440px;
+            max-width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            border-top: 5px solid #0f3d35;
+        }
+        .verify-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #c2914f, #b8843e);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 8px 20px rgba(194, 145, 79, 0.3);
+        }
+        .verify-icon i {
+            font-size: 2rem;
+            color: white;
+        }
+        .verify-container h2 {
+            color: #0f3d35;
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+        .verify-container .subtitle {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        .subtitle strong {
+            color: #c2914f;
+        }
+        .code-input-group {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+        .code-input-group input {
+            width: 50px;
+            height: 60px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            background: #f8fafc;
+            color: #333;
+            transition: all 0.3s;
+        }
+        .code-input-group input:focus {
+            outline: none;
+            border-color: #c2914f;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(194, 145, 79, 0.1);
+        }
+        .hidden-code-field {
+            display: none;
+        }
+        .verify-btn {
+            background: linear-gradient(135deg, #c2914f 0%, #b8843e 100%);
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            box-shadow: 0 6px 15px rgba(194, 145, 79, 0.3);
+            margin-bottom: 1rem;
+        }
+        .verify-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(194, 145, 79, 0.4);
+        }
+        .resend-section {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+        }
+        .resend-section p {
+            color: #666;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+        .resend-btn {
+            background: transparent;
+            border: 2px solid #0f3d35;
+            color: #0f3d35;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        .resend-btn:hover {
+            background: #0f3d35;
+            color: white;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: #666;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.3s;
+        }
+        .back-link:hover {
+            color: #0f3d35;
+        }
+        .toast-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #1e3a5f, #2c5282);
+            color: #fff;
+            font-size: 0.92rem;
+            font-weight: 500;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+            animation: slideInRight 0.4s ease-out, fadeOut 0.5s ease-in 4s forwards;
+            font-family: 'Montserrat', sans-serif;
+            border-left: 4px solid #D4AF37;
+            max-width: 420px;
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; pointer-events: none; }
+        }
+    </style>
+</head>
+<body>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    {% for message in messages %}
+    <div class="toast-notification">
+        <i class="fas fa-info-circle" style="font-size: 1.2rem; color: #D4AF37;"></i>
+        <span>{{ message }}</span>
+        <button onclick="this.parentElement.remove()" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:1.1rem;">&times;</button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="verify-container">
+        <div class="verify-icon">
+            <i class="fas fa-shield-halved"></i>
+        </div>
+        <h2>Verificación de Seguridad</h2>
+        <p class="subtitle">
+            Hemos enviado un código de 6 dígitos a<br>
+            <strong>{{ correo_parcial }}</strong>
+        </p>
+
+        <form method="POST" action="/auth/verify-2fa" id="verifyForm">
+            <div class="code-input-group">
+                <input type="text" maxlength="1" class="code-digit" data-index="0" autocomplete="off" inputmode="numeric">
+                <input type="text" maxlength="1" class="code-digit" data-index="1" autocomplete="off" inputmode="numeric">
+                <input type="text" maxlength="1" class="code-digit" data-index="2" autocomplete="off" inputmode="numeric">
+                <input type="text" maxlength="1" class="code-digit" data-index="3" autocomplete="off" inputmode="numeric">
+                <input type="text" maxlength="1" class="code-digit" data-index="4" autocomplete="off" inputmode="numeric">
+                <input type="text" maxlength="1" class="code-digit" data-index="5" autocomplete="off" inputmode="numeric">
+            </div>
+            <input type="hidden" name="codigo" id="codigoCompleto">
+            <button type="submit" class="verify-btn">
+                <i class="fas fa-check-circle"></i> Verificar Código
+            </button>
+        </form>
+
+        <div class="resend-section">
+            <p>¿No recibiste el código?</p>
+            <form method="POST" action="/auth/resend-2fa" style="display: inline;">
+                <button type="submit" class="resend-btn">
+                    <i class="fas fa-redo"></i> Reenviar código
+                </button>
+            </form>
+        </div>
+
+        <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> Volver al inicio</a>
+    </div>
+
+    <script>
+        // Auto-focus and navigation between code inputs
+        const digits = document.querySelectorAll('.code-digit');
+        const form = document.getElementById('verifyForm');
+        const codigoField = document.getElementById('codigoCompleto');
+
+        digits[0].focus();
+
+        digits.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                const val = e.target.value;
+                if (val && index < digits.length - 1) {
+                    digits[index + 1].focus();
+                }
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !input.value && index > 0) {
+                    digits[index - 1].focus();
+                }
+            });
+            // Allow pasting full code
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pasteData = e.clipboardData.getData('text').trim();
+                if (/^\d{6}$/.test(pasteData)) {
+                    pasteData.split('').forEach((char, i) => {
+                        if (digits[i]) digits[i].value = char;
+                    });
+                    digits[5].focus();
+                }
+            });
+        });
+
+        form.addEventListener('submit', (e) => {
+            let code = '';
+            digits.forEach(d => code += d.value);
+            codigoField.value = code;
+            if (code.length !== 6) {
+                e.preventDefault();
+                alert('Por favor ingresa los 6 dígitos del código.');
+            }
+        });
+    </script>
+</body>
+</html>

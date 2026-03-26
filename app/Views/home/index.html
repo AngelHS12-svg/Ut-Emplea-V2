@@ -228,7 +228,7 @@
 
             </form>
 
-            <a href="#" class="forgot">¿Olvidaste tu contraseña?</a>
+            <a href="#" class="forgot" id="openForgotPassword">¿Olvidaste tu contraseña?</a>
 
             <hr>
 
@@ -236,13 +236,40 @@
                 style="display: block; margin: 15px auto 0;">Registrar usuario</button>
         </div>
     </div>
+    <!-- ================= MODAL FORGOT PASSWORD ================= -->
+    <div id="modalForgot" class="modal">
+        <div class="modal-content login-box" style="width: 420px;">
+            <span class="close-modal" id="closeForgot">&times;</span>
+            <div class="logo-box">
+                <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #c2914f, #b8843e); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                    <i class="fas fa-envelope-open-text" style="font-size: 1.8rem; color: white;"></i>
+                </div>
+            </div>
+            <h2 style="margin-top: 15px;">RECUPERAR CONTRASEÑA</h2>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.6;">
+                Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
+            </p>
+            <form method="POST" action="/auth/forgot-password">
+                <div class="input-container">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" name="correo" placeholder="Tu correo electrónico" required>
+                </div>
+                <button type="submit" class="login-btn" style="margin-top: 15px;">
+                    <i class="fas fa-paper-plane"></i> Enviar enlace de recuperación
+                </button>
+            </form>
+            <a href="#" class="forgot" onclick="document.getElementById('modalForgot').style.display='none'; document.getElementById('modalLogin').style.display='flex'; return false;">
+                <i class="fas fa-arrow-left"></i> Volver al login
+            </a>
+        </div>
+    </div>
+
     <script>
         // Toggle Password Visibility
         document.getElementById('togglePassword').addEventListener('click', function() {
             const passwordInput = document.getElementById('password');
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);
-            // Toggle eye icon
             this.classList.toggle('fa-eye-slash');
         });
     </script>

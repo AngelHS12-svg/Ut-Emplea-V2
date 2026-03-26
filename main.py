@@ -1,7 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory, session, make_response
 import psycopg2
 from psycopg2 import pool
 import os
+import uuid
+import random
+from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
@@ -13,6 +16,9 @@ from email.header import Header
 from app.routes.empresa_routes import empresa_bp
 from app.utils.security import strip_tags, detectar_script
 import re
+
+# Almacenamiento temporal de tokens de reset de contraseña
+password_reset_tokens = {}
 
 app = Flask(__name__, template_folder="app/Views", static_folder="public")
 
@@ -709,6 +715,349 @@ def admin_reportes():
     }
     return render_template("admi/reportes.html", reportes=reportes)
 
+@app.route("/admin/reportes/exportar-excel")
+@login_required
+def admin_exportar_excel():
+    if current_user.rol != "Administrador": return redirect(url_for("home"))
+    
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+    from io import BytesIO
+    
+    wb = Workbook()
+    
+    # Colores institucionales
+    verde_fill = PatternFill(start_color="0E312D", end_color="0E312D", fill_type="solid")
+    dorado_fill = PatternFill(start_color="C2914F", end_color="C2914F", fill_type="solid")
+    gris_claro_fill = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
+    blanco_fill = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
+    
+    font_header = Font(name="Calibri", bold=True, color="FFFFFF", size=11)
+    font_title = Font(name="Calibri", bold=True, color="0E312D", size=18)
+    font_subtitle = Font(name="Calibri", bold=True, color="C2914F", size=13)
+    font_normal = Font(name="Calibri", size=11, color="333333")
+    font_bold = Font(name="Calibri", bold=True, size=11, color="1A202C")
+    font_number = Font(name="Calibri", bold=True, size=14, color="0E312D")
+    
+    thin_border = Border(
+        left=Side(style="thin", color="E2E8F0"),
+        right=Side(style="thin", color="E2E8F0"),
+        top=Side(style="thin", color="E2E8F0"),
+        bottom=Side(style="thin", color="E2E8F0")
+    )
+    center_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    left_align = Alignment(horizontal="left", vertical="center", wrap_text=True)
+    
+    def auto_width(ws):
+        for col in ws.columns:
+            max_length = 0
+            col_letter = get_column_letter(col[0].column)
+            for cell in col:
+                try:
+                    if cell.value:
+                        max_length = max(max_length, len(str(cell.value)))
+                except:
+                    pass
+            ws.column_dimensions[col_letter].width = min(max_length + 4, 45)
+    
+    def style_header_row(ws, row_num, num_cols):
+        for col in range(1, num_cols + 1):
+            cell = ws.cell(row=row_num, column=col)
+            cell.fill = verde_fill
+            cell.font = font_header
+            cell.alignment = center_align
+            cell.border = thin_border
+    
+    def style_data_rows(ws, start_row, end_row, num_cols):
+        for row in range(start_row, end_row + 1):
+            for col in range(1, num_cols + 1):
+                cell = ws.cell(row=row, column=col)
+                cell.font = font_normal
+                cell.alignment = left_align
+                cell.border = thin_border
+                if row % 2 == 0:
+                    cell.fill = gris_claro_fill
+    
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    # ===== HOJA 1: RESUMEN EJECUTIVO =====
+    ws1 = wb.active
+    ws1.title = "Resumen Ejecutivo"
+    ws1.sheet_properties.tabColor = "0E312D"
+    
+    ws1.merge_cells("A1:D1")
+    ws1["A1"].value = "BOLSA DE TRABAJO - UT ORIENTAL"
+    ws1["A1"].font = font_title
+    ws1["A1"].alignment = center_align
+    
+    ws1.merge_cells("A2:D2")
+    ws1["A2"].value = "Reporte Consolidado del Sistema"
+    ws1["A2"].font = font_subtitle
+    ws1["A2"].alignment = center_align
+    
+    ws1.merge_cells("A3:D3")
+    from datetime import datetime as dt_now
+    ws1["A3"].value = f"Fecha de generación: {dt_now.now().strftime('%d/%m/%Y %H:%M')}"
+    ws1["A3"].font = Font(name="Calibri", italic=True, color="666666", size=10)
+    ws1["A3"].alignment = center_align
+    
+    # Totales
+    cur.execute("SELECT COUNT(*) FROM empresas")
+    total_empresas = cur.fetchone()[0]
+    cur.execute("SELECT COUNT(*) FROM candidatos")
+    total_candidatos = cur.fetchone()[0]
+    cur.execute("SELECT COUNT(*) FROM vacantes")
+    total_vacantes = cur.fetchone()[0]
+    cur.execute("SELECT COUNT(*) FROM postulaciones")
+    total_postulaciones = cur.fetchone()[0]
+    
+    row = 5
+    metrics = [
+        ("Total de Empresas", total_empresas),
+        ("Total de Candidatos", total_candidatos),
+        ("Total de Vacantes", total_vacantes),
+        ("Total de Postulaciones", total_postulaciones),
+    ]
+    
+    ws1.cell(row=row, column=1, value="INDICADOR").fill = dorado_fill
+    ws1.cell(row=row, column=1).font = Font(name="Calibri", bold=True, color="FFFFFF", size=11)
+    ws1.cell(row=row, column=1).alignment = center_align
+    ws1.cell(row=row, column=1).border = thin_border
+    ws1.cell(row=row, column=2, value="TOTAL").fill = dorado_fill
+    ws1.cell(row=row, column=2).font = Font(name="Calibri", bold=True, color="FFFFFF", size=11)
+    ws1.cell(row=row, column=2).alignment = center_align
+    ws1.cell(row=row, column=2).border = thin_border
+    
+    for i, (label, value) in enumerate(metrics):
+        r = row + 1 + i
+        ws1.cell(row=r, column=1, value=label).font = font_bold
+        ws1.cell(row=r, column=1).alignment = left_align
+        ws1.cell(row=r, column=1).border = thin_border
+        ws1.cell(row=r, column=2, value=value).font = font_number
+        ws1.cell(row=r, column=2).alignment = center_align
+        ws1.cell(row=r, column=2).border = thin_border
+        if i % 2 == 1:
+            ws1.cell(row=r, column=1).fill = gris_claro_fill
+            ws1.cell(row=r, column=2).fill = gris_claro_fill
+    
+    # Empresas por estatus
+    row = 11
+    ws1.cell(row=row, column=1, value="EMPRESAS POR ESTATUS").font = font_subtitle
+    ws1.merge_cells(f"A{row}:B{row}")
+    row += 1
+    cur.execute("SELECT estatus, COUNT(*) FROM empresas GROUP BY estatus")
+    for estatus, count in cur.fetchall():
+        ws1.cell(row=row, column=1, value=estatus.capitalize()).font = font_normal
+        ws1.cell(row=row, column=1).border = thin_border
+        ws1.cell(row=row, column=2, value=count).font = font_bold
+        ws1.cell(row=row, column=2).alignment = center_align
+        ws1.cell(row=row, column=2).border = thin_border
+        row += 1
+    
+    # Vacantes por estatus
+    row += 1
+    ws1.cell(row=row, column=1, value="VACANTES POR ESTATUS").font = font_subtitle
+    ws1.merge_cells(f"A{row}:B{row}")
+    row += 1
+    cur.execute("SELECT estatus, COUNT(*) FROM vacantes GROUP BY estatus")
+    for estatus, count in cur.fetchall():
+        ws1.cell(row=row, column=1, value=estatus.capitalize()).font = font_normal
+        ws1.cell(row=row, column=1).border = thin_border
+        ws1.cell(row=row, column=2, value=count).font = font_bold
+        ws1.cell(row=row, column=2).alignment = center_align
+        ws1.cell(row=row, column=2).border = thin_border
+        row += 1
+    
+    # Postulaciones por estado
+    row += 1
+    ws1.cell(row=row, column=1, value="POSTULACIONES POR ESTADO").font = font_subtitle
+    ws1.merge_cells(f"A{row}:B{row}")
+    row += 1
+    cur.execute("SELECT estado, COUNT(*) FROM postulaciones GROUP BY estado")
+    for estado, count in cur.fetchall():
+        ws1.cell(row=row, column=1, value=estado.capitalize()).font = font_normal
+        ws1.cell(row=row, column=1).border = thin_border
+        ws1.cell(row=row, column=2, value=count).font = font_bold
+        ws1.cell(row=row, column=2).alignment = center_align
+        ws1.cell(row=row, column=2).border = thin_border
+        row += 1
+    
+    auto_width(ws1)
+    ws1.column_dimensions['A'].width = 30
+    ws1.column_dimensions['B'].width = 18
+    
+    # ===== HOJA 2: EMPRESAS =====
+    ws2 = wb.create_sheet("Empresas")
+    ws2.sheet_properties.tabColor = "C2914F"
+    headers_emp = ["ID", "Nombre", "Giro", "Tipo", "Teléfono", "Correo", "Estatus", "Fecha Registro"]
+    for i, h in enumerate(headers_emp, 1):
+        ws2.cell(row=1, column=i, value=h)
+    style_header_row(ws2, 1, len(headers_emp))
+    
+    cur.execute("""
+        SELECT e.id_empresa, e.nombre, e.giro, e.tipo_empresa, e.telefono,
+               u.correo, e.estatus, e.fecha_registro
+        FROM empresas e
+        JOIN usuarios u ON e.id_usuario = u.id_usuario
+        ORDER BY e.fecha_registro DESC
+    """)
+    empresas = cur.fetchall()
+    for r, emp in enumerate(empresas, 2):
+        for c, val in enumerate(emp, 1):
+            cell = ws2.cell(row=r, column=c, value=str(val) if val else "")
+    style_data_rows(ws2, 2, len(empresas) + 1, len(headers_emp))
+    auto_width(ws2)
+    
+    # ===== HOJA 3: CANDIDATOS =====
+    ws3 = wb.create_sheet("Candidatos")
+    ws3.sheet_properties.tabColor = "0E312D"
+    headers_cand = ["ID", "Nombre", "Apellido Pat.", "Apellido Mat.", "Sexo", "Teléfono", "Correo", "Carrera", "Año Egreso", "Estatus", "Fecha Registro"]
+    for i, h in enumerate(headers_cand, 1):
+        ws3.cell(row=1, column=i, value=h)
+    style_header_row(ws3, 1, len(headers_cand))
+    
+    cur.execute("""
+        SELECT c.id_candidato, c.nombre, c.apellido_paterno, c.apellido_materno,
+               c.sexo, c.telefono, u.correo,
+               COALESCE(ca.nombre, 'Sin carrera') as carrera,
+               c.anio_egreso, c.estatus, c.fecha_registro
+        FROM candidatos c
+        JOIN usuarios u ON c.id_usuario = u.id_usuario
+        LEFT JOIN carreras ca ON c.id_carrera = ca.id_carrera
+        ORDER BY c.fecha_registro DESC
+    """)
+    candidatos = cur.fetchall()
+    for r, cand in enumerate(candidatos, 2):
+        for c, val in enumerate(cand, 1):
+            ws3.cell(row=r, column=c, value=str(val) if val else "")
+    style_data_rows(ws3, 2, len(candidatos) + 1, len(headers_cand))
+    auto_width(ws3)
+    
+    # ===== HOJA 4: VACANTES =====
+    ws4 = wb.create_sheet("Vacantes")
+    ws4.sheet_properties.tabColor = "C2914F"
+    headers_vac = ["ID", "Título", "Empresa", "Salario", "Modalidad", "Horario", "Lugar", "Fecha Publicación", "Estatus", "Postulaciones"]
+    for i, h in enumerate(headers_vac, 1):
+        ws4.cell(row=1, column=i, value=h)
+    style_header_row(ws4, 1, len(headers_vac))
+    
+    cur.execute("""
+        SELECT v.id_vacante, v.titulo, e.nombre, v.salario, v.modalidad,
+               v.horario, v.lugar_trabajo, v.fecha_publicacion, v.estatus,
+               (SELECT COUNT(*) FROM postulaciones p WHERE p.id_vacante = v.id_vacante)
+        FROM vacantes v
+        JOIN empresas e ON v.id_empresa = e.id_empresa
+        ORDER BY v.fecha_publicacion DESC
+    """)
+    vacantes = cur.fetchall()
+    for r, vac in enumerate(vacantes, 2):
+        for c, val in enumerate(vac, 1):
+            if c == 4 and val:  # Salario
+                ws4.cell(row=r, column=c, value=float(val))
+                ws4.cell(row=r, column=c).number_format = '$#,##0.00'
+            else:
+                ws4.cell(row=r, column=c, value=str(val) if val else "")
+    style_data_rows(ws4, 2, len(vacantes) + 1, len(headers_vac))
+    auto_width(ws4)
+    
+    # ===== HOJA 5: POSTULACIONES =====
+    ws5 = wb.create_sheet("Postulaciones")
+    ws5.sheet_properties.tabColor = "0E312D"
+    headers_post = ["ID", "Vacante", "Empresa", "Candidato", "Estado", "Fecha Postulación", "Comentarios"]
+    for i, h in enumerate(headers_post, 1):
+        ws5.cell(row=1, column=i, value=h)
+    style_header_row(ws5, 1, len(headers_post))
+    
+    cur.execute("""
+        SELECT p.id_postulacion, v.titulo, e.nombre, c.nombre,
+               p.estado, p.fecha_postulacion, COALESCE(p.comentarios, '')
+        FROM postulaciones p
+        JOIN vacantes v ON p.id_vacante = v.id_vacante
+        JOIN empresas e ON v.id_empresa = e.id_empresa
+        JOIN candidatos c ON p.id_candidato = c.id_candidato
+        ORDER BY p.fecha_postulacion DESC
+    """)
+    postulaciones = cur.fetchall()
+    for r, post in enumerate(postulaciones, 2):
+        for c, val in enumerate(post, 1):
+            ws5.cell(row=r, column=c, value=str(val) if val else "")
+    style_data_rows(ws5, 2, len(postulaciones) + 1, len(headers_post))
+    auto_width(ws5)
+    
+    # ===== HOJA 6: ESTADÍSTICAS =====
+    ws6 = wb.create_sheet("Estadísticas")
+    ws6.sheet_properties.tabColor = "C2914F"
+    
+    ws6.merge_cells("A1:C1")
+    ws6["A1"].value = "TOP 5 EMPRESAS CON MÁS VACANTES"
+    ws6["A1"].font = font_subtitle
+    
+    ws6.cell(row=2, column=1, value="Empresa").fill = verde_fill
+    ws6.cell(row=2, column=1).font = font_header
+    ws6.cell(row=2, column=1).border = thin_border
+    ws6.cell(row=2, column=2, value="Vacantes").fill = verde_fill
+    ws6.cell(row=2, column=2).font = font_header
+    ws6.cell(row=2, column=2).border = thin_border
+    
+    cur.execute("""
+        SELECT e.nombre, COUNT(v.id_vacante) as total
+        FROM empresas e
+        LEFT JOIN vacantes v ON e.id_empresa = v.id_empresa
+        GROUP BY e.nombre ORDER BY total DESC LIMIT 5
+    """)
+    top_emp = cur.fetchall()
+    for i, (nombre, total) in enumerate(top_emp, 3):
+        ws6.cell(row=i, column=1, value=nombre).font = font_normal
+        ws6.cell(row=i, column=1).border = thin_border
+        ws6.cell(row=i, column=2, value=total).font = font_bold
+        ws6.cell(row=i, column=2).alignment = center_align
+        ws6.cell(row=i, column=2).border = thin_border
+    
+    row = len(top_emp) + 5
+    ws6.merge_cells(f"A{row}:C{row}")
+    ws6[f"A{row}"].value = "CANDIDATOS POR CARRERA"
+    ws6[f"A{row}"].font = font_subtitle
+    
+    row += 1
+    ws6.cell(row=row, column=1, value="Carrera").fill = verde_fill
+    ws6.cell(row=row, column=1).font = font_header
+    ws6.cell(row=row, column=1).border = thin_border
+    ws6.cell(row=row, column=2, value="Candidatos").fill = verde_fill
+    ws6.cell(row=row, column=2).font = font_header
+    ws6.cell(row=row, column=2).border = thin_border
+    
+    cur.execute("""
+        SELECT COALESCE(ca.nombre, 'Sin carrera'), COUNT(c.id_candidato)
+        FROM candidatos c
+        LEFT JOIN carreras ca ON c.id_carrera = ca.id_carrera
+        GROUP BY ca.nombre ORDER BY COUNT(c.id_candidato) DESC
+    """)
+    carreras_data = cur.fetchall()
+    for i, (carrera, count) in enumerate(carreras_data, row + 1):
+        ws6.cell(row=i, column=1, value=carrera).font = font_normal
+        ws6.cell(row=i, column=1).border = thin_border
+        ws6.cell(row=i, column=2, value=count).font = font_bold
+        ws6.cell(row=i, column=2).alignment = center_align
+        ws6.cell(row=i, column=2).border = thin_border
+    
+    auto_width(ws6)
+    ws6.column_dimensions['A'].width = 35
+    
+    cur.close()
+    conn.close()
+    
+    # Generar respuesta
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    response = make_response(output.getvalue())
+    response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    response.headers['Content-Disposition'] = 'attachment; filename=Reporte_UT_Emplea.xlsx'
+    return response
+
 # ================= EMPRESA REGISTRO =================
 @app.route("/registro-empresa", methods=["GET", "POST"])
 def registro_empresa():
@@ -1365,14 +1714,25 @@ def auth_login():
             if (rol_seleccionado == "admin" and rol_real == "Administrador") or \
                (rol_seleccionado == "empresa" and rol_real == "Empresa") or \
                (rol_seleccionado == "candidato" and rol_real == "Candidato"):
-                user_obj = User(id_usuario, user_correo, id_rol, rol_real)
-                login_user(user_obj)
-                if rol_real == "Administrador":
-                    return redirect(url_for("admin"))
-                elif rol_real == "Empresa":
-                    return redirect(url_for("empresa.inicio"))
-                else:
-                    return redirect(url_for("candidato_dashboard"))
+                # === 2FA: Generar y enviar código ===
+                code_2fa = str(random.randint(100000, 999999))
+                session['2fa_code'] = code_2fa
+                session['2fa_user_id'] = id_usuario
+                session['2fa_correo'] = user_correo
+                session['2fa_rol'] = rol_real
+                session['2fa_id_rol'] = id_rol
+                session['2fa_timestamp'] = datetime.now().isoformat()
+                
+                # Enviar código por email
+                asunto = "Código de Verificación - UT Oriental Emplea"
+                mensaje = (f"Hola,\n\nTu código de verificación es: {code_2fa}\n\n"
+                          f"Este código expira en 5 minutos.\n\n"
+                          f"Si no solicitaste este código, ignora este mensaje.\n\n"
+                          f"Saludos,\nUT Oriental Emplea")
+                enviar_email(user_correo, asunto, mensaje)
+                
+                flash("Se ha enviado un código de verificación a tu correo electrónico.")
+                return redirect(url_for("auth_verify_2fa"))
             else:
                 flash("El rol seleccionado no coincide con su cuenta.")
                 return redirect(url_for("home"))
@@ -1382,6 +1742,181 @@ def auth_login():
     else:
         flash("El correo no está registrado.")
         return redirect(url_for("home"))
+
+# ================= 2FA VERIFICATION =================
+@app.route("/auth/verify-2fa", methods=["GET"])
+def auth_verify_2fa():
+    if '2fa_code' not in session:
+        flash("Sesión de verificación expirada. Inicia sesión de nuevo.")
+        return redirect(url_for("home"))
+    correo_parcial = session.get('2fa_correo', '')
+    if '@' in correo_parcial:
+        parts = correo_parcial.split('@')
+        correo_parcial = parts[0][:3] + '***@' + parts[1]
+    return render_template("home/verify_2fa.html", correo_parcial=correo_parcial)
+
+@app.route("/auth/verify-2fa", methods=["POST"])
+def auth_verify_2fa_post():
+    codigo_ingresado = request.form.get("codigo", "").strip()
+    
+    if '2fa_code' not in session:
+        flash("Sesión de verificación expirada. Inicia sesión de nuevo.")
+        return redirect(url_for("home"))
+    
+    # Verificar expiración (5 minutos)
+    timestamp = datetime.fromisoformat(session['2fa_timestamp'])
+    if datetime.now() - timestamp > timedelta(minutes=5):
+        session.pop('2fa_code', None)
+        session.pop('2fa_user_id', None)
+        flash("El código ha expirado. Inicia sesión de nuevo.")
+        return redirect(url_for("home"))
+    
+    if codigo_ingresado == session['2fa_code']:
+        # Código correcto → completar login
+        id_usuario = session['2fa_user_id']
+        correo = session['2fa_correo']
+        id_rol = session['2fa_id_rol']
+        rol_real = session['2fa_rol']
+        
+        # Limpiar datos 2FA de la sesión
+        session.pop('2fa_code', None)
+        session.pop('2fa_user_id', None)
+        session.pop('2fa_correo', None)
+        session.pop('2fa_rol', None)
+        session.pop('2fa_id_rol', None)
+        session.pop('2fa_timestamp', None)
+        
+        user_obj = User(id_usuario, correo, id_rol, rol_real)
+        login_user(user_obj)
+        
+        if rol_real == "Administrador":
+            return redirect(url_for("admin"))
+        elif rol_real == "Empresa":
+            return redirect(url_for("empresa.inicio"))
+        else:
+            return redirect(url_for("candidato_dashboard"))
+    else:
+        flash("Código incorrecto. Inténtalo de nuevo.")
+        return redirect(url_for("auth_verify_2fa"))
+
+@app.route("/auth/resend-2fa", methods=["POST"])
+def auth_resend_2fa():
+    if '2fa_correo' not in session:
+        flash("Sesión expirada. Inicia sesión de nuevo.")
+        return redirect(url_for("home"))
+    
+    code_2fa = str(random.randint(100000, 999999))
+    session['2fa_code'] = code_2fa
+    session['2fa_timestamp'] = datetime.now().isoformat()
+    
+    correo = session['2fa_correo']
+    asunto = "Nuevo Código de Verificación - UT Oriental Emplea"
+    mensaje = (f"Hola,\n\nTu nuevo código de verificación es: {code_2fa}\n\n"
+              f"Este código expira en 5 minutos.\n\n"
+              f"Saludos,\nUT Oriental Emplea")
+    enviar_email(correo, asunto, mensaje)
+    
+    flash("Se ha enviado un nuevo código a tu correo.")
+    return redirect(url_for("auth_verify_2fa"))
+
+# ================= FORGOT PASSWORD =================
+@app.route("/auth/forgot-password", methods=["POST"])
+def auth_forgot_password():
+    correo = request.form.get("correo", "").strip()
+    if not correo:
+        flash("Por favor ingresa tu correo electrónico.")
+        return redirect(url_for("home"))
+    
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT id_usuario FROM usuarios WHERE correo = %s", (correo,))
+    user = cur.fetchone()
+    cur.close()
+    conn.close()
+    
+    if user:
+        # Generar token y almacenar
+        token = str(uuid.uuid4())
+        password_reset_tokens[token] = {
+            'user_id': user[0],
+            'correo': correo,
+            'expires': datetime.now() + timedelta(hours=1)
+        }
+        
+        # Enviar email con link de reset
+        reset_url = url_for('auth_reset_password', token=token, _external=True)
+        asunto = "Restablecer Contraseña - UT Oriental Emplea"
+        mensaje = (f"Hola,\n\nRecibimos una solicitud para restablecer tu contraseña.\n\n"
+                  f"Haz clic en el siguiente enlace para crear una nueva contraseña:\n\n"
+                  f"{reset_url}\n\n"
+                  f"Este enlace expira en 1 hora.\n\n"
+                  f"Si no solicitaste este cambio, ignora este mensaje.\n\n"
+                  f"Saludos,\nUT Oriental Emplea")
+        enviar_email(correo, asunto, mensaje)
+    
+    # Siempre mostrar mismo mensaje por seguridad
+    flash("Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.")
+    return redirect(url_for("home"))
+
+@app.route("/auth/reset-password/<token>", methods=["GET"])
+def auth_reset_password(token):
+    if token not in password_reset_tokens:
+        flash("El enlace de recuperación no es válido o ha expirado.")
+        return redirect(url_for("home"))
+    
+    token_data = password_reset_tokens[token]
+    if datetime.now() > token_data['expires']:
+        del password_reset_tokens[token]
+        flash("El enlace de recuperación ha expirado. Solicita uno nuevo.")
+        return redirect(url_for("home"))
+    
+    return render_template("home/reset_password.html", token=token)
+
+@app.route("/auth/reset-password/<token>", methods=["POST"])
+def auth_reset_password_post(token):
+    if token not in password_reset_tokens:
+        flash("El enlace de recuperación no es válido o ha expirado.")
+        return redirect(url_for("home"))
+    
+    token_data = password_reset_tokens[token]
+    if datetime.now() > token_data['expires']:
+        del password_reset_tokens[token]
+        flash("El enlace de recuperación ha expirado.")
+        return redirect(url_for("home"))
+    
+    new_password = request.form.get("password", "")
+    confirm_password = request.form.get("confirm_password", "")
+    
+    if new_password != confirm_password:
+        flash("Las contraseñas no coinciden.")
+        return redirect(url_for("auth_reset_password", token=token))
+    
+    # Validar contraseña
+    if len(new_password) < 12:
+        flash("La contraseña debe tener al menos 12 caracteres.")
+        return redirect(url_for("auth_reset_password", token=token))
+    if not re.search(r"[A-Z]", new_password) or not re.search(r"[a-z]", new_password) or \
+       not re.search(r"\d", new_password) or not re.search(r"[@$!%*?&]", new_password):
+        flash("La contraseña debe incluir mayúscula, minúscula, número y símbolo especial.")
+        return redirect(url_for("auth_reset_password", token=token))
+    
+    hashed = generate_password_hash(new_password)
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("UPDATE usuarios SET password = %s WHERE id_usuario = %s",
+                    (hashed, token_data['user_id']))
+        conn.commit()
+        del password_reset_tokens[token]
+        flash("Contraseña actualizada exitosamente. Ya puedes iniciar sesión.")
+    except Exception as e:
+        conn.rollback()
+        flash(f"Error al actualizar la contraseña: {e}")
+    finally:
+        cur.close()
+        conn.close()
+    
+    return redirect(url_for("home"))
 
 # ================= API ENDPOINTS =================
 @app.route("/api/vacante/<int:id_vacante>")

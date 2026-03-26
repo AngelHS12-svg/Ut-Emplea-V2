@@ -120,27 +120,59 @@ document.addEventListener("DOMContentLoaded", function () {
             modalLogin.style.display = "none";
         }
 
+        // Close forgot password modal on outside click
+        const modalForgot = document.getElementById("modalForgot");
+        if (modalForgot && e.target === modalForgot) {
+            modalForgot.style.display = "none";
+        }
     });
 
-    // ===== SCROLL 3D ANIMATION FOR HERO =====
+    // ===== FORGOT PASSWORD MODAL =====
+    const openForgotBtn = document.getElementById("openForgotPassword");
+    const modalForgot = document.getElementById("modalForgot");
+    const closeForgot = document.getElementById("closeForgot");
+
+    if (openForgotBtn && modalForgot) {
+        openForgotBtn.addEventListener("click", function(e) {
+            e.preventDefault();
+            modalLogin.style.display = "none";
+            modalForgot.style.display = "flex";
+        });
+    }
+    if (closeForgot && modalForgot) {
+        closeForgot.addEventListener("click", function() {
+            modalForgot.style.display = "none";
+        });
+    }
+
+    // ===== SCROLL 3D ANIMATION FOR HERO (suavizado) =====
     const hero3DWrapper = document.getElementById("hero3DWrapper");
     if (hero3DWrapper) {
-        window.addEventListener("scroll", () => {
-            requestAnimationFrame(() => {
-                const scrollY = window.scrollY;
-                const maxScroll = 700; // Define where the effect stops growing
-                
-                let progress = scrollY / maxScroll;
-                if (progress > 1) progress = 1;
+        let lastScrollY = 0;
+        let ticking = false;
 
-                // Parallax 3D Math
-                const scale = 1 + (progress * 0.45); // Crece hasta 1.45x
-                const transY = scrollY * 0.75; // Baja el elemento para que flote sobre el resto de la página
-                const rotX = progress * 15; // Inclinación 3D hacia el usuario
-                
-                hero3DWrapper.style.transform = `translate3d(0, ${transY}px, 0) scale(${scale}) rotateX(${-rotX}deg)`;
-            });
-        });
+        function updateHeroParallax() {
+            const scrollY = lastScrollY;
+            const maxScroll = 700;
+            
+            let progress = Math.min(scrollY / maxScroll, 1);
+
+            // Valores reducidos para evitar temblor
+            const scale = 1 + (progress * 0.12);
+            const transY = scrollY * 0.25;
+            const rotX = progress * 4;
+            
+            hero3DWrapper.style.transform = `translate3d(0, ${transY}px, 0) scale(${scale}) rotateX(${-rotX}deg)`;
+            ticking = false;
+        }
+
+        window.addEventListener("scroll", () => {
+            lastScrollY = window.scrollY;
+            if (!ticking) {
+                requestAnimationFrame(updateHeroParallax);
+                ticking = true;
+            }
+        }, { passive: true });
     }
 
     // ===== TYPEWRITER EFFECT FOR HERO TITLE =====

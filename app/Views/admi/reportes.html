@@ -138,9 +138,9 @@
                 <button class="btn btn-primary" onclick="exportarPDF()" style="padding: 10px 25px;">
                     <i class="fas fa-file-pdf"></i> Exportar PDF
                 </button>
-                <button class="btn btn-outline" onclick="exportarExcel()" style="padding: 10px 25px;">
+                <a href="/admin/reportes/exportar-excel" class="btn btn-outline" style="padding: 10px 25px; text-decoration: none;">
                     <i class="fas fa-file-excel"></i> Exportar Excel
-                </button>
+                </a>
             </div>
         </div>
     </div>
@@ -417,44 +417,8 @@
         }
 
         function exportarExcel() {
-            const wb = XLSX.utils.book_new();
-
-            // Sheet 1: Resumen General
-            const resumen = [
-                ['Concepto', 'Total'],
-                ['Total de Empresas', data.totales.empresas],
-                ['Total de Candidatos', data.totales.candidatos],
-                ['Total de Vacantes', data.totales.vacantes],
-                ['Total de Postulaciones', data.totales.postulaciones],
-                [],
-                ['Empresas por Estatus', ''],
-                ['Aprobadas', data.empresas.aprobadas],
-                ['Pendientes', data.empresas.pendientes],
-                ['Rechazadas', data.empresas.rechazadas],
-                [],
-                ['Vacantes por Estatus', ''],
-                ['Activas', data.vacantes.activas],
-                ['Inactivas/Vencidas', data.vacantes.inactivas],
-                [],
-                ['Postulaciones por Estado', ''],
-                ['Pendientes', data.postulaciones.pendientes],
-                ['Aceptados', data.postulaciones.aceptados],
-                ['Rechazados', data.postulaciones.rechazados],
-            ];
-            const ws1 = XLSX.utils.aoa_to_sheet(resumen);
-            ws1['!cols'] = [{ wch: 25 }, { wch: 15 }];
-            XLSX.utils.book_append_sheet(wb, ws1, 'Resumen General');
-
-            // Sheet 2: Top Empresas
-            const topData = [['Empresa', 'Vacantes Publicadas']];
-            data.topEmpresas.nombres.forEach((n, i) => {
-                topData.push([n, data.topEmpresas.vacantes[i]]);
-            });
-            const ws2 = XLSX.utils.aoa_to_sheet(topData);
-            ws2['!cols'] = [{ wch: 30 }, { wch: 20 }];
-            XLSX.utils.book_append_sheet(wb, ws2, 'Top Empresas');
-
-            XLSX.writeFile(wb, 'Reporte_UT_Emplea.xlsx');
+            // Redirigir al endpoint del servidor
+            window.location.href = '/admin/reportes/exportar-excel';
         }
     </script>
 </body>
