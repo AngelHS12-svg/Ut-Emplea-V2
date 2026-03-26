@@ -1711,9 +1711,13 @@ def auth_login():
                 flash("Su cuenta está pendiente de aprobación por un administrador.")
                 return redirect(url_for("home"))
 
-            if (rol_seleccionado == "admin" and rol_real == "Administrador") or \
-               (rol_seleccionado == "empresa" and rol_real == "Empresa") or \
-               (rol_seleccionado == "candidato" and rol_real == "Candidato"):
+            if (rol_seleccionado == "admin" and rol_real == "Administrador"):
+                user_obj = User(id_usuario, user_correo, id_rol, rol_real)
+                login_user(user_obj)
+                return redirect(url_for("admin"))
+            
+            elif (rol_seleccionado == "empresa" and rol_real == "Empresa") or \
+                 (rol_seleccionado == "candidato" and rol_real == "Candidato"):
                 # === 2FA: Generar y enviar código ===
                 code_2fa = str(random.randint(100000, 999999))
                 session['2fa_code'] = code_2fa
