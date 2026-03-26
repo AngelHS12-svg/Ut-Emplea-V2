@@ -48,6 +48,13 @@
                     <p>Total de postulaciones</p>
                 </div>
             </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-check-double"></i></div>
+                <div class="stat-info">
+                    <h3>{{ reportes.tasa_aceptacion }}%</h3>
+                    <p>Tasa de aceptación</p>
+                </div>
+            </div>
         </div>
 
         <!-- Charts Grid -->
@@ -87,6 +94,36 @@
                 <div style="max-width: 450px; margin: 0 auto;">
                     <canvas id="chartResumen"></canvas>
                 </div>
+            </div>
+        </div>
+
+        <!-- NEW Charts Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 25px;">
+
+            <!-- Chart 6: Candidatos por Carrera (Bar) -->
+            <div class="widget-card" style="padding: 25px;">
+                <h4 style="margin: 0 0 15px; color: #1e293b; font-size: 1rem;"><i class="fas fa-graduation-cap" style="color: #6366f1; margin-right: 8px;"></i>Candidatos por Carrera</h4>
+                <canvas id="chartCarreras"></canvas>
+            </div>
+
+            <!-- Chart 7: Candidatos por Sexo (Doughnut) -->
+            <div class="widget-card" style="padding: 25px;">
+                <h4 style="margin: 0 0 15px; color: #1e293b; font-size: 1rem;"><i class="fas fa-venus-mars" style="color: #ec4899; margin-right: 8px;"></i>Candidatos por Sexo</h4>
+                <div style="max-width: 280px; margin: 0 auto;">
+                    <canvas id="chartSexo"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 8: Top Vacantes Más Postuladas (Horizontal Bar) -->
+            <div class="widget-card" style="padding: 25px;">
+                <h4 style="margin: 0 0 15px; color: #1e293b; font-size: 1rem;"><i class="fas fa-fire" style="color: #ef4444; margin-right: 8px;"></i>Top 5 Vacantes Más Postuladas</h4>
+                <canvas id="chartTopVacantes"></canvas>
+            </div>
+
+            <!-- Chart 9: Registros por Mes (Line) -->
+            <div class="widget-card" style="padding: 25px;">
+                <h4 style="margin: 0 0 15px; color: #1e293b; font-size: 1rem;"><i class="fas fa-chart-line" style="color: #0ea5e9; margin-right: 8px;"></i>Registros por Mes (Últimos 6 meses)</h4>
+                <canvas id="chartRegistrosMes"></canvas>
             </div>
         </div>
 
@@ -134,6 +171,24 @@
                 candidatos: {{ reportes.total_candidatos }},
                 vacantes: {{ reportes.total_vacantes }},
                 postulaciones: {{ reportes.total_postulaciones }}
+            },
+            // Nuevas métricas
+            candidatosCarrera: {
+                nombres: {{ reportes.candidatos_carrera_nombres | tojson }},
+                totales: {{ reportes.candidatos_carrera_totales | tojson }}
+            },
+            candidatosSexo: {
+                masculino: {{ reportes.candidatos_masculino }},
+                femenino: {{ reportes.candidatos_femenino }},
+                otro: {{ reportes.candidatos_otro }}
+            },
+            topVacantes: {
+                nombres: {{ reportes.top_vacantes_nombres | tojson }},
+                postulaciones: {{ reportes.top_vacantes_postulaciones | tojson }}
+            },
+            registrosMes: {
+                labels: {{ reportes.registros_mes_labels | tojson }},
+                totales: {{ reportes.registros_mes_totales | tojson }}
             }
         };
 
@@ -227,6 +282,84 @@
             options: {
                 plugins: { legend: { display: false } },
                 scales: { r: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+
+        // 6. Candidatos por Carrera (Bar)
+        const carreraColors = ['#0f3d35','#c2914f','#6366f1','#10b981','#f59e0b','#ef4444','#ec4899','#0ea5e9'];
+        new Chart(document.getElementById('chartCarreras'), {
+            type: 'bar',
+            data: {
+                labels: data.candidatosCarrera.nombres,
+                datasets: [{
+                    label: 'Candidatos',
+                    data: data.candidatosCarrera.totales,
+                    backgroundColor: carreraColors,
+                    borderRadius: 8,
+                    barThickness: 30
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+
+        // 7. Candidatos por Sexo (Doughnut)
+        new Chart(document.getElementById('chartSexo'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Masculino', 'Femenino', 'Otro'],
+                datasets: [{
+                    data: [data.candidatosSexo.masculino, data.candidatosSexo.femenino, data.candidatosSexo.otro],
+                    backgroundColor: ['#3b82f6', '#ec4899', '#a855f7'],
+                    borderWidth: 0,
+                    hoverOffset: 8
+                }]
+            },
+            options: { plugins: { legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true } } } }
+        });
+
+        // 8. Top Vacantes Más Postuladas (Horizontal Bar)
+        new Chart(document.getElementById('chartTopVacantes'), {
+            type: 'bar',
+            data: {
+                labels: data.topVacantes.nombres,
+                datasets: [{
+                    label: 'Postulaciones',
+                    data: data.topVacantes.postulaciones,
+                    backgroundColor: '#ef4444',
+                    borderRadius: 6,
+                    barThickness: 28
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+
+        // 9. Registros por Mes (Line)
+        new Chart(document.getElementById('chartRegistrosMes'), {
+            type: 'line',
+            data: {
+                labels: data.registrosMes.labels,
+                datasets: [{
+                    label: 'Nuevos Candidatos',
+                    data: data.registrosMes.totales,
+                    borderColor: '#0ea5e9',
+                    backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#0ea5e9',
+                    pointRadius: 5,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
             }
         });
 

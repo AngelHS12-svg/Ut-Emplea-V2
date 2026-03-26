@@ -301,9 +301,28 @@
 
             <div class="sidebar-section">
                 <h3 class="sidebar-title">Idiomas</h3>
-                <div class="contact-item"><span>Español (Nativo)</span></div>
-                <div class="contact-item"><span>Inglés (Básico-Intermedio)</span></div>
+                {% if c[25] %}
+                    {% for idioma in c[25].split(',') %}
+                    <div class="contact-item"><span>{{ idioma.strip() }}</span></div>
+                    {% endfor %}
+                {% else %}
+                    <div class="contact-item"><span>Español (Nativo)</span></div>
+                {% endif %}
             </div>
+
+            {% if c[26] %}
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Cursos y Certificaciones</h3>
+                {% for curso in c[26].split('\n') %}
+                    {% if curso.strip() %}
+                    <div class="contact-item">
+                        <i class="fas fa-award" style="color: var(--accent); font-size: 0.8rem;"></i>
+                        <span>{{ curso.strip() }}</span>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
         </aside>
 
         <!-- MAIN CONTENT -->
@@ -312,6 +331,15 @@
                 <h1>{{ c[0] }}<br>{{ c[1] }} {{ c[2] or '' }}</h1>
                 <div class="subtitle">{{ c[18] or 'Egresado de UT Oriental' }}</div>
             </header>
+
+            <div class="section">
+                <h3 class="section-title"><i class="fas fa-bullseye"></i> Perfil y Objetivos</h3>
+                <p style="font-size: 0.95rem; color: #4a5568;">
+                    Egresado de la <strong>Universidad Tecnológica de Oriental</strong> con enfoque en <strong>{{ c[20] or c[6] }}</strong>. 
+                    Busco una oportunidad en el área de <strong>{{ c[18] or c[20] }}</strong> para aplicar mis conocimientos en <strong>{{ c[21] or 'tecnología y administración' }}</strong> 
+                    y contribuir al crecimiento de la empresa aportando proactividad y excelencia técnica.
+                </p>
+            </div>
 
             <div class="section">
                 <h3 class="section-title"><i class="fas fa-graduation-cap"></i> Educación</h3>
@@ -349,15 +377,6 @@
                     </div>
                 </div>
                 {% endif %}
-            </div>
-
-            <div class="section">
-                <h3 class="section-title"><i class="fas fa-bullseye"></i> Perfil y Objetivos</h3>
-                <p style="font-size: 0.95rem; color: #4a5568;">
-                    Egresado de la **Universidad Tecnológica de Oriental** con enfoque en **{{ c[20] or c[6] }}**. 
-                    Busco una oportunidad en el área de **{{ c[18] or c[20] }}** para aplicar mis conocimientos en **{{ c[21] or 'tecnología y administración' }}** 
-                    y contribuir al crecimiento de la empresa aportando proactividad y excelencia técnica.
-                </p>
             </div>
         </main>
     </div>

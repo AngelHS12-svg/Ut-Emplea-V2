@@ -101,6 +101,11 @@
             </div>
             <div class="form-group"><label class="form-label">Institución <span class="required-mark">*</span></label><input type="text" name="institucion_estudios" class="form-control" data-required="true"></div>
             <div class="form-group"><label class="form-label">Carrera cursada <span class="required-mark">*</span></label><input type="text" name="carrera_estudios" class="form-control" data-required="true"></div>
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-language"></i> Idiomas</label>
+                <textarea name="idiomas" class="form-control" rows="2" placeholder="Ej: Español (Nativo), Inglés (Intermedio), Francés (Básico)"></textarea>
+                <small style="color:var(--texto-gris); font-size:0.7rem;">Separa cada idioma con una coma.</small>
+            </div>
             <div class="form-actions"><button type="button" class="btn btn-secondary" onclick="prevStep(1)">Anterior</button><button type="button" class="btn btn-primary" onclick="nextStep(3)">Siguiente <i class="fas fa-arrow-right"></i></button></div>
         </div>
 
@@ -117,6 +122,16 @@
                 <div class="form-group"><label class="form-label">Fecha Fin</label><input type="month" name="fecha_fin_laboral" class="form-control"></div>
             </div>
             <div class="form-group"><label class="form-label">Logros</label><textarea name="actividades_logros" class="form-control"></textarea></div>
+            <hr style="margin: 20px 0; border-color: #e2e8f0;">
+            <h3 style="font-size: 1.2rem; color: var(--verde); margin-bottom: 15px;"><i class="fas fa-award"></i> Cursos y Certificaciones</h3>
+            <div class="form-group">
+                <label class="form-label">Nombre de cursos o certificaciones</label>
+                <textarea name="cursos_certificaciones" class="form-control" rows="3" placeholder="Escribe uno por línea, ej:
+Certificación Google Analytics
+Curso de Python Avanzado
+Diplomado en Marketing Digital"></textarea>
+                <small style="color:var(--texto-gris); font-size:0.7rem;">Escribe un curso o certificación por línea.</small>
+            </div>
             <div class="form-actions"><button type="button" class="btn btn-secondary" onclick="prevStep(2)">Anterior</button><button type="button" class="btn btn-primary" onclick="nextStep(4)">Siguiente <i class="fas fa-arrow-right"></i></button></div>
         </div>
 
@@ -192,6 +207,22 @@
     }
     function validateFinal() {
         if(!document.getElementById('consentCheck').checked) { alert('Debes aceptar el consentimiento de datos.'); return false; }
+        
+        // Detección de scripts maliciosos en el frontend
+        const allInputs = document.querySelectorAll('input[type="text"], textarea');
+        const scriptPatterns = /<\s*script/i;
+        const jsPatterns = /javascript\s*:/i;
+        const eventPatterns = /on(error|load|click|mouseover|focus|blur)\s*=/i;
+        
+        for (const input of allInputs) {
+            if (scriptPatterns.test(input.value) || jsPatterns.test(input.value) || eventPatterns.test(input.value)) {
+                alert('⚠️ Seguridad: Se detectó código potencialmente malicioso en el campo "' + (input.name || 'desconocido') + '". Por tu seguridad, esta acción fue bloqueada.');
+                input.style.borderColor = 'red';
+                input.focus();
+                return false;
+            }
+        }
+        
         return true;
     }
 </script>

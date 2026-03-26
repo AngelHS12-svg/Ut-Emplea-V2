@@ -11,7 +11,7 @@ from email.mime.multipart import MIMEMultipart
 from email.header import Header
 
 from app.routes.empresa_routes import empresa_bp
-from app.utils.security import strip_tags
+from app.utils.security import strip_tags, detectar_script
 import re
 
 app = Flask(__name__, template_folder="app/Views", static_folder="public")
@@ -641,6 +641,42 @@ def admin_reportes():
     """)
     top_empresas = cur.fetchall()
 
+    # Candidatos por carrera
+    cur.execute("""
+        SELECT COALESCE(ca.nombre, 'Sin carrera'), COUNT(c.id_candidato)
+        FROM candidatos c
+        LEFT JOIN carreras ca ON c.id_carrera = ca.id_carrera
+        GROUP BY ca.nombre ORDER BY COUNT(c.id_candidato) DESC LIMIT 8
+    """)
+    candidatos_carrera = cur.fetchall()
+
+    # Candidatos por sexo
+    cur.execute("SELECT COALESCE(sexo, 'No especificado'), COUNT(*) FROM candidatos GROUP BY sexo")
+    candidatos_sexo = {row[0]: row[1] for row in cur.fetchall()}
+
+    # Top 5 vacantes con más postulaciones
+    cur.execute("""
+        SELECT v.titulo, COUNT(p.id_postulacion) as total
+        FROM vacantes v
+        LEFT JOIN postulaciones p ON v.id_vacante = p.id_vacante
+        GROUP BY v.titulo ORDER BY total DESC LIMIT 5
+    """)
+    top_vacantes_postuladas = cur.fetchall()
+
+    # Registros por mes (últimos 6 meses) - candidatos
+    cur.execute("""
+        SELECT TO_CHAR(fecha_registro, 'YYYY-MM') as mes, COUNT(*)
+        FROM candidatos
+        WHERE fecha_registro >= NOW() - INTERVAL '6 months'
+        GROUP BY mes ORDER BY mes
+    """)
+    registros_mes = cur.fetchall()
+
+    # Tasa de aceptación
+    cur.execute("SELECT COUNT(*) FROM postulaciones WHERE estado = 'aceptado'")
+    total_aceptados = cur.fetchone()[0]
+    tasa_aceptacion = round((total_aceptados / total_postulaciones * 100), 1) if total_postulaciones > 0 else 0
+
     cur.close()
     conn.close()
 
@@ -659,6 +695,17 @@ def admin_reportes():
         'post_rechazados': postulaciones_estado.get('rechazado', 0),
         'top_empresas_nombres': [r[0] for r in top_empresas],
         'top_empresas_vacantes': [r[1] for r in top_empresas],
+        # Nuevas métricas
+        'candidatos_carrera_nombres': [r[0] for r in candidatos_carrera],
+        'candidatos_carrera_totales': [r[1] for r in candidatos_carrera],
+        'candidatos_masculino': candidatos_sexo.get('Masculino', 0),
+        'candidatos_femenino': candidatos_sexo.get('Femenino', 0),
+        'candidatos_otro': candidatos_sexo.get('Otro', 0) + candidatos_sexo.get('No especificado', 0),
+        'top_vacantes_nombres': [r[0] for r in top_vacantes_postuladas],
+        'top_vacantes_postulaciones': [r[1] for r in top_vacantes_postuladas],
+        'registros_mes_labels': [r[0] for r in registros_mes],
+        'registros_mes_totales': [r[1] for r in registros_mes],
+        'tasa_aceptacion': tasa_aceptacion,
     }
     return render_template("admi/reportes.html", reportes=reportes)
 
@@ -768,6 +815,20 @@ def registro_candidato():
         especialidad = strip_tags(request.form.get("especialidad"))
         tags_especialidad = strip_tags(request.form.get("tags_especialidad"))
 
+        # Nuevos campos: Idiomas y Cursos/Certificaciones
+        idiomas = strip_tags(request.form.get("idiomas"))
+        cursos_certificaciones = strip_tags(request.form.get("cursos_certificaciones"))
+
+        # Detección de scripts maliciosos en TODOS los campos
+        todos_campos = [nombre, apellido_paterno, apellido_materno, ubicacion, 
+                        ultimo_puesto, ultima_empresa, actividades_logros,
+                        puesto_deseado, area_trabajo, especialidad, tags_especialidad,
+                        idiomas, cursos_certificaciones]
+        for campo in todos_campos:
+            if detectar_script(campo):
+                flash("⚠️ Seguridad: Se detectó código malicioso en uno de los campos. Tu solicitud fue bloqueada.")
+                return redirect(url_for("registro_candidato"))
+
         hashed_password = generate_password_hash(password)
         conn = get_connection()
         cur = conn.cursor()
@@ -787,6 +848,7 @@ def registro_candidato():
                     id_carrera, ultimo_grado_estudios, institucion_estudios, carrera_estudios, anio_egreso,
                     ultimo_puesto, ultima_empresa, fecha_inicio_laboral, fecha_fin_laboral, actividades_logros,
                     puesto_deseado, sueldo_deseado, area_trabajo, especialidad, tags_especialidad,
+                    idiomas, cursos_certificaciones,
                     estatus
                 ) VALUES (
                     %s, %s, %s, %s,
@@ -794,6 +856,7 @@ def registro_candidato():
                     %s, %s, %s, %s, %s,
                     %s, %s, %s, %s, %s,
                     %s, %s, %s, %s, %s,
+                    %s, %s,
                     'pendiente'
                 )
             """, (
@@ -801,7 +864,8 @@ def registro_candidato():
                 sexo, telefono, codigo_postal, ubicacion,
                 id_carrera, ultimo_grado_estudios, institucion_estudios, carrera_estudios, anio_egreso,
                 ultimo_puesto, ultima_empresa, fecha_inicio_laboral, fecha_fin_laboral, actividades_logros,
-                puesto_deseado, sueldo_deseado, area_trabajo, especialidad, tags_especialidad
+                puesto_deseado, sueldo_deseado, area_trabajo, especialidad, tags_especialidad,
+                idiomas, cursos_certificaciones
             ))
             
             conn.commit()
@@ -1061,7 +1125,7 @@ def candidato_generar_cv():
                c.ultimo_puesto, c.ultima_empresa, c.fecha_inicio_laboral, c.fecha_fin_laboral,
                c.actividades_logros, c.puesto_deseado, c.sueldo_deseado,
                c.area_trabajo, c.especialidad, c.tags_especialidad, c.foto_perfil_url,
-               c.id_candidato
+               c.id_candidato, c.idiomas, c.cursos_certificaciones
         FROM candidatos c
         JOIN usuarios u ON c.id_usuario = u.id_usuario
         LEFT JOIN carreras ca ON c.id_carrera = ca.id_carrera
@@ -1103,6 +1167,18 @@ def candidato_actualizar_perfil():
     area_trabajo = strip_tags(request.form.get("area_trabajo"))
     especialidad = strip_tags(request.form.get("especialidad"))
     tags_especialidad = strip_tags(request.form.get("tags_especialidad"))
+    idiomas = strip_tags(request.form.get("idiomas"))
+    cursos_certificaciones = strip_tags(request.form.get("cursos_certificaciones"))
+
+    # Detección de scripts maliciosos
+    todos_campos = [nombre, apellido_paterno, apellido_materno, ubicacion,
+                    ultimo_puesto, ultima_empresa, actividades_logros,
+                    puesto_deseado, area_trabajo, especialidad, tags_especialidad,
+                    idiomas, cursos_certificaciones]
+    for campo in todos_campos:
+        if detectar_script(campo):
+            flash("⚠️ Seguridad: Se detectó código malicioso. Tu solicitud fue bloqueada.")
+            return redirect(url_for("candidato_perfil"))
 
     conn = get_connection()
     cur = conn.cursor()
@@ -1116,7 +1192,8 @@ def candidato_actualizar_perfil():
                 ultimo_puesto = %s, ultima_empresa = %s, 
                 fecha_inicio_laboral = %s, fecha_fin_laboral = %s, actividades_logros = %s,
                 puesto_deseado = %s, sueldo_deseado = %s, area_trabajo = %s,
-                especialidad = %s, tags_especialidad = %s
+                especialidad = %s, tags_especialidad = %s,
+                idiomas = %s, cursos_certificaciones = %s
             WHERE id_usuario = %s
         """, (
             nombre, apellido_paterno, apellido_materno,
@@ -1127,6 +1204,7 @@ def candidato_actualizar_perfil():
             fecha_inicio_laboral, fecha_fin_laboral, actividades_logros,
             puesto_deseado, sueldo_deseado, area_trabajo,
             especialidad, tags_especialidad,
+            idiomas, cursos_certificaciones,
             current_user.id
         ))
         conn.commit()
