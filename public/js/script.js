@@ -2,6 +2,18 @@ let rolSeleccionado = "";
 
 document.addEventListener("DOMContentLoaded", function () {
 
+    // ===== STICKY NAVBAR LOGIC =====
+    const mainNavbar = document.getElementById("mainNavbar");
+    if (mainNavbar) {
+        window.addEventListener("scroll", () => {
+            if (window.scrollY > 50) {
+                mainNavbar.classList.add("scrolled");
+            } else {
+                mainNavbar.classList.remove("scrolled");
+            }
+        });
+    }
+
     // ===== ELEMENTOS =====
     const openLoginBtns = document.querySelectorAll(".open-login");
     const modalUserType = document.getElementById("modalUserType");
@@ -109,5 +121,51 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
     });
+
+    // ===== SCROLL 3D ANIMATION FOR HERO =====
+    const hero3DWrapper = document.getElementById("hero3DWrapper");
+    if (hero3DWrapper) {
+        window.addEventListener("scroll", () => {
+            requestAnimationFrame(() => {
+                const scrollY = window.scrollY;
+                const maxScroll = 700; // Define where the effect stops growing
+                
+                let progress = scrollY / maxScroll;
+                if (progress > 1) progress = 1;
+
+                // Parallax 3D Math
+                const scale = 1 + (progress * 0.45); // Crece hasta 1.45x
+                const transY = scrollY * 0.75; // Baja el elemento para que flote sobre el resto de la página
+                const rotX = progress * 15; // Inclinación 3D hacia el usuario
+                
+                hero3DWrapper.style.transform = `translate3d(0, ${transY}px, 0) scale(${scale}) rotateX(${-rotX}deg)`;
+            });
+        });
+    }
+
+    // ===== TYPEWRITER EFFECT FOR HERO TITLE =====
+    const heroTitle = document.querySelector(".hero-title");
+    if (heroTitle) {
+        const text = "UT Oriental Emplea";
+        heroTitle.innerHTML = "";
+        heroTitle.classList.add("typewriter-caret");
+        
+        let i = 0;
+        function typeWriter() {
+            if (i < text.length) {
+                heroTitle.innerHTML += text.charAt(i);
+                i++;
+                setTimeout(typeWriter, 120); // Velocidad natural del tipeo
+            } else {
+                // Remove caret after a few seconds
+                setTimeout(() => {
+                    heroTitle.classList.remove("typewriter-caret");
+                }, 4000);
+            }
+        }
+        
+        // Empezar tras un pequeño delay para impacto visual
+        setTimeout(typeWriter, 600);
+    }
 
 });

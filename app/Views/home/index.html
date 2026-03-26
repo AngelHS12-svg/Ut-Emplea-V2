@@ -8,7 +8,7 @@
 
     <link rel="stylesheet" href="/public/css/styles1.css">
     <link
-        href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700;900&family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -65,25 +65,25 @@
     {% endwith %}
 
     <div class="hero">
-        <!-- Navbar -->
-        <nav class="navbar" style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 4rem; background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.1);">
-
+        <!-- Navbar (Sticky) -->
+        <nav class="navbar" id="mainNavbar">
             <div class="logo">
-                <img src="/public/img/Logotipo UT de Oriental-Color.png" class="logo-img" alt="Logo UT Oriental" style="height: 90px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2));">
+                <img src="/public/img/Logotipo UT de Oriental-Color.png" class="logo-img" alt="Logo UT Oriental">
             </div>
 
-            <ul class="nav-links" style="display: flex; gap: 2.5rem; list-style: none; margin: 0; padding: 0; align-items: center;">
-                <li><a href="#" style="color: white; text-decoration: none; font-weight: 600; font-size: 1.05rem; letter-spacing: 0.5px; transition: color 0.3s;" onmouseover="this.style.color='var(--dorado)'" onmouseout="this.style.color='white'">Inicio</a></li>
-                <li><a href="#como-funciona" style="color: white; text-decoration: none; font-weight: 600; font-size: 1.05rem; letter-spacing: 0.5px; transition: color 0.3s;" onmouseover="this.style.color='var(--dorado)'" onmouseout="this.style.color='white'">¿Cómo funciona?</a></li>
-                <li><button class="open-login" style="background: var(--dorado); color: white; padding: 0.6rem 1.5rem; border: none; border-radius: 30px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 15px rgba(194, 145, 79, 0.4);" onmouseover="this.style.transform='translateY(-4px) scale(1.05)'; this.style.boxShadow='0 8px 25px rgba(194, 145, 79, 0.6)';" onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 4px 15px rgba(194, 145, 79, 0.4)';">Ingresar <i class="fas fa-sign-in-alt" style="margin-left: 5px;"></i></button></li>
+            <ul class="nav-links">
+                <li><a href="#" class="nav-item">Inicio</a></li>
+                <li><a href="#como-funciona" class="nav-item">¿Cómo funciona?</a></li>
+                <li><button class="open-login btn-login-nav">Ingresar <i class="fas fa-sign-in-alt"></i></button></li>
             </ul>
-
         </nav>
 
         <!-- Hero Content -->
         <div class="hero-content">
-            <div class="hero-icon-circle">
-                <img src="/public/img/1_Mesa de trabajo 1.png" class="hero-logo" alt="Bolsa de trabajo">
+            <div class="hero-3d-wrapper" id="hero3DWrapper">
+                <div class="hero-icon-circle">
+                    <img src="/public/img/1_Mesa de trabajo 1.png" class="hero-logo" alt="Bolsa de trabajo">
+                </div>
             </div>
 
             <h1 class="hero-title">UT Oriental Emplea</h1>
