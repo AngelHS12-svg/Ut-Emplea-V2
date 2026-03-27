@@ -73,7 +73,8 @@ try:
         database=os.getenv("DB_NAME", "bolsa_trabajo_uto"),
         user=os.getenv("DB_USER", "postgres"),
         password=os.getenv("DB_PASS", "angel123"),
-        port=os.getenv("DB_PORT", "5432")
+        port=os.getenv("DB_PORT", "5432"),
+        client_encoding='utf8'
     )
     print("Pool de conexiones creado con éxito.")
 except Exception as e:
@@ -81,14 +82,26 @@ except Exception as e:
 
 def get_connection():
     if db_pool:
-        return ConnectionWrapper(db_pool.getconn(), db_pool)
-    return ConnectionWrapper(psycopg2.connect(
-        host=os.getenv("DB_HOST", "localhost"),
-        database=os.getenv("DB_NAME", "bolsa_trabajo_uto"),
-        user=os.getenv("DB_USER", "postgres"),
-        password=os.getenv("DB_PASS", "angel123"),
-        port=os.getenv("DB_PORT", "5432")
-    ))
+        # En caso de que el pool esté vacío o fallando, podríamos intentar un reconnect, 
+        # pero es más fácil obtener una conexión limpia.
+        try:
+            conn = db_pool.getconn()
+            if conn:
+                return ConnectionWrapper(conn, db_pool)
+        except Exception:
+            pass # Si falla el pool, hacemos fallback a una conexión directa
+
+    try:
+        return ConnectionWrapper(psycopg2.connect(
+            host=os.getenv("DB_HOST", "localhost"),
+            database=os.getenv("DB_NAME", "bolsa_trabajo_uto"),
+            user=os.getenv("DB_USER", "postgres"),
+            password=os.getenv("DB_PASS", "angel123"),
+            port=os.getenv("DB_PORT", "5432"),
+            client_encoding='utf8'
+        ))
+    except UnicodeDecodeError:
+        raise Exception("❌ NO SE PUDO CONECTAR A POSTGRESQL: Posiblemente la contraseña de la BD (angel123) es incorrecta para esta computadora, o el servicio PostgreSQL no se está ejecutando.")
 
 # Configuración de uploads
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads', 'cv')
@@ -613,63 +626,87 @@ def admin_seguimiento():
 @login_required
 def admin_reportes():
     if current_user.rol != "Administrador": return redirect(url_for("home"))
+    
+    fecha_inicio = request.args.get("fecha_inicio")
+    fecha_fin = request.args.get("fecha_fin")
+    
     conn = get_connection()
     cur = conn.cursor()
+    
+    # Construir cláusulas WHERE dinámicas
+    we = wc = wv = wp = ""
+    we_a = wc_a = wv_a = wp_a = "" # para queries con alias e, c, v, p
+    params = ()
+    
+    if fecha_inicio and fecha_fin:
+        dt_cond = " >= %s AND {} <= %s::date + INTERVAL '1 day' - INTERVAL '1 second'"
+        we = "WHERE fecha_registro" + dt_cond.format("fecha_registro")
+        wc = "WHERE fecha_registro" + dt_cond.format("fecha_registro")
+        wv = "WHERE fecha_publicacion" + dt_cond.format("fecha_publicacion")
+        wp = "WHERE fecha_postulacion" + dt_cond.format("fecha_postulacion")
+        
+        we_a = "WHERE e.fecha_registro" + dt_cond.format("e.fecha_registro")
+        wc_a = "WHERE c.fecha_registro" + dt_cond.format("c.fecha_registro")
+        wv_a = "WHERE v.fecha_publicacion" + dt_cond.format("v.fecha_publicacion")
+        wp_a = "WHERE p.fecha_postulacion" + dt_cond.format("p.fecha_postulacion")
+        params = (fecha_inicio, fecha_fin)
+
+    # Helper para queries
+    def get_count(query, p=()):
+        cur.execute(query, p)
+        res = cur.fetchone()
+        return res[0] if res else 0
+
+    def get_group(query, p=()):
+        cur.execute(query, p)
+        return {row[0]: row[1] for row in cur.fetchall()}
 
     # Totales
-    cur.execute("SELECT COUNT(*) FROM empresas")
-    total_empresas = cur.fetchone()[0]
-    cur.execute("SELECT COUNT(*) FROM candidatos")
-    total_candidatos = cur.fetchone()[0]
-    cur.execute("SELECT COUNT(*) FROM vacantes")
-    total_vacantes = cur.fetchone()[0]
-    cur.execute("SELECT COUNT(*) FROM postulaciones")
-    total_postulaciones = cur.fetchone()[0]
+    total_empresas = get_count(f"SELECT COUNT(*) FROM empresas {we}", params)
+    total_candidatos = get_count(f"SELECT COUNT(*) FROM candidatos {wc}", params)
+    total_vacantes = get_count(f"SELECT COUNT(*) FROM vacantes {wv}", params)
+    total_postulaciones = get_count(f"SELECT COUNT(*) FROM postulaciones {wp}", params)
 
-    # Empresas por estatus
-    cur.execute("SELECT estatus, COUNT(*) FROM empresas GROUP BY estatus")
-    empresas_estatus = {row[0]: row[1] for row in cur.fetchall()}
-
-    # Vacantes por estatus
-    cur.execute("SELECT estatus, COUNT(*) FROM vacantes GROUP BY estatus")
-    vacantes_estatus = {row[0]: row[1] for row in cur.fetchall()}
-
-    # Postulaciones por estado
-    cur.execute("SELECT estado, COUNT(*) FROM postulaciones GROUP BY estado")
-    postulaciones_estado = {row[0]: row[1] for row in cur.fetchall()}
+    # Estatus
+    empresas_estatus = get_group(f"SELECT estatus, COUNT(*) FROM empresas {we} GROUP BY estatus", params)
+    vacantes_estatus = get_group(f"SELECT estatus, COUNT(*) FROM vacantes {wv} GROUP BY estatus", params)
+    postulaciones_estado = get_group(f"SELECT estado, COUNT(*) FROM postulaciones {wp} GROUP BY estado", params)
 
     # Top 5 empresas con más vacantes
-    cur.execute("""
+    cur.execute(f"""
         SELECT e.nombre, COUNT(v.id_vacante) as total
         FROM empresas e
         LEFT JOIN vacantes v ON e.id_empresa = v.id_empresa
+        {we_a}
         GROUP BY e.nombre ORDER BY total DESC LIMIT 5
-    """)
+    """, params)
     top_empresas = cur.fetchall()
 
     # Candidatos por carrera
-    cur.execute("""
+    cur.execute(f"""
         SELECT COALESCE(ca.nombre, 'Sin carrera'), COUNT(c.id_candidato)
         FROM candidatos c
         LEFT JOIN carreras ca ON c.id_carrera = ca.id_carrera
+        {wc_a}
         GROUP BY ca.nombre ORDER BY COUNT(c.id_candidato) DESC LIMIT 8
-    """)
+    """, params)
     candidatos_carrera = cur.fetchall()
 
     # Candidatos por sexo
-    cur.execute("SELECT COALESCE(sexo, 'No especificado'), COUNT(*) FROM candidatos GROUP BY sexo")
-    candidatos_sexo = {row[0]: row[1] for row in cur.fetchall()}
+    candidatos_sexo = get_group(f"SELECT COALESCE(sexo, 'No especificado'), COUNT(*) FROM candidatos c {wc_a} GROUP BY sexo", params)
 
     # Top 5 vacantes con más postulaciones
-    cur.execute("""
+    cur.execute(f"""
         SELECT v.titulo, COUNT(p.id_postulacion) as total
         FROM vacantes v
         LEFT JOIN postulaciones p ON v.id_vacante = p.id_vacante
+        {wv_a}
         GROUP BY v.titulo ORDER BY total DESC LIMIT 5
-    """)
+    """, params)
     top_vacantes_postuladas = cur.fetchall()
 
-    # Registros por mes (últimos 6 meses) - candidatos
+    # Registros por mes (últimos 6 meses). Este no se filtra por la fecha seleccionada
+    # ya que es una vista histórica de 6 meses fija.
     cur.execute("""
         SELECT TO_CHAR(fecha_registro, 'YYYY-MM') as mes, COUNT(*)
         FROM candidatos
@@ -679,9 +716,38 @@ def admin_reportes():
     registros_mes = cur.fetchall()
 
     # Tasa de aceptación
-    cur.execute("SELECT COUNT(*) FROM postulaciones WHERE estado = 'aceptado'")
-    total_aceptados = cur.fetchone()[0]
+    total_aceptados = get_count(f"SELECT COUNT(*) FROM postulaciones p {wp_a} {'AND' if wp_a else 'WHERE'} p.estado = 'aceptado'", params)
     tasa_aceptacion = round((total_aceptados / total_postulaciones * 100), 1) if total_postulaciones > 0 else 0
+
+    # Reporte de Colocación (Nuevo)
+    query_colocacion = """
+        SELECT 
+            TO_CHAR(MAX(v.fecha_publicacion), 'DD/MM/YYYY') as fecha_publicacion,
+            e.nombre as empresa,
+            'Conv-' || EXTRACT(YEAR FROM MIN(e.fecha_registro)) || '-' || LPAD(e.id_empresa::text, 3, '0') as convenio,
+            COUNT(DISTINCT v.id_vacante) as espacios_gestionados,
+            COUNT(DISTINCT CASE WHEN c.sexo = 'Masculino' THEN p.id_postulacion END) as postulados_h,
+            COUNT(DISTINCT CASE WHEN c.sexo = 'Femenino' THEN p.id_postulacion END) as postulados_m,
+            COUNT(DISTINCT p.id_postulacion) as total_postulados,
+            COUNT(DISTINCT CASE WHEN c.sexo = 'Masculino' AND p.estado = 'aceptado' THEN p.id_postulacion END) as colocados_h,
+            COUNT(DISTINCT CASE WHEN c.sexo = 'Femenino' AND p.estado = 'aceptado' THEN p.id_postulacion END) as colocados_m,
+            COUNT(DISTINCT CASE WHEN p.estado = 'aceptado' THEN p.id_postulacion END) as total_colocados
+        FROM empresas e
+        LEFT JOIN vacantes v ON e.id_empresa = v.id_empresa
+        LEFT JOIN postulaciones p ON v.id_vacante = p.id_vacante
+        LEFT JOIN candidatos c ON p.id_candidato = c.id_candidato
+        WHERE e.estatus = 'aprobada'
+    """
+    if fecha_inicio and fecha_fin:
+        query_colocacion += " AND v.fecha_publicacion >= %s AND v.fecha_publicacion <= %s::date + INTERVAL '1 day' - INTERVAL '1 second' "
+        
+    query_colocacion += """
+        GROUP BY e.id_empresa, e.nombre
+        HAVING COUNT(DISTINCT v.id_vacante) > 0
+        ORDER BY MAX(v.fecha_publicacion) DESC NULLS LAST
+    """
+    cur.execute(query_colocacion, params if fecha_inicio and fecha_fin else ())
+    reporte_colocacion = cur.fetchall()
 
     cur.close()
     conn.close()
@@ -701,7 +767,6 @@ def admin_reportes():
         'post_rechazados': postulaciones_estado.get('rechazado', 0),
         'top_empresas_nombres': [r[0] for r in top_empresas],
         'top_empresas_vacantes': [r[1] for r in top_empresas],
-        # Nuevas métricas
         'candidatos_carrera_nombres': [r[0] for r in candidatos_carrera],
         'candidatos_carrera_totales': [r[1] for r in candidatos_carrera],
         'candidatos_masculino': candidatos_sexo.get('Masculino', 0),
@@ -712,6 +777,9 @@ def admin_reportes():
         'registros_mes_labels': [r[0] for r in registros_mes],
         'registros_mes_totales': [r[1] for r in registros_mes],
         'tasa_aceptacion': tasa_aceptacion,
+        'fecha_inicio': fecha_inicio or '',
+        'fecha_fin': fecha_fin or '',
+        'colocacion': reporte_colocacion
     }
     return render_template("admi/reportes.html", reportes=reportes)
 
@@ -720,6 +788,27 @@ def admin_reportes():
 def admin_exportar_excel():
     if current_user.rol != "Administrador": return redirect(url_for("home"))
     
+    fecha_inicio = request.args.get("fecha_inicio")
+    fecha_fin = request.args.get("fecha_fin")
+    
+    # Construir cláusulas WHERE dinámicas
+    we = wc = wv = wp = ""
+    we_a = wc_a = wv_a = wp_a = "" # con alias e, c, v, p
+    params = ()
+    
+    if fecha_inicio and fecha_fin:
+        dt_cond = " >= %s AND {} <= %s::date + INTERVAL '1 day' - INTERVAL '1 second'"
+        we = "WHERE fecha_registro" + dt_cond.format("fecha_registro")
+        wc = "WHERE fecha_registro" + dt_cond.format("fecha_registro")
+        wv = "WHERE fecha_publicacion" + dt_cond.format("fecha_publicacion")
+        wp = "WHERE fecha_postulacion" + dt_cond.format("fecha_postulacion")
+        
+        we_a = "WHERE e.fecha_registro" + dt_cond.format("e.fecha_registro")
+        wc_a = "WHERE c.fecha_registro" + dt_cond.format("c.fecha_registro")
+        wv_a = "WHERE v.fecha_publicacion" + dt_cond.format("v.fecha_publicacion")
+        wp_a = "WHERE p.fecha_postulacion" + dt_cond.format("p.fecha_postulacion")
+        params = (fecha_inicio, fecha_fin)
+
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.utils import get_column_letter
@@ -800,18 +889,22 @@ def admin_exportar_excel():
     ws1.merge_cells("A3:D3")
     from datetime import datetime as dt_now
     ws1["A3"].value = f"Fecha de generación: {dt_now.now().strftime('%d/%m/%Y %H:%M')}"
+    if fecha_inicio and fecha_fin:
+        ws1["A3"].value += f" | Filtro: {fecha_inicio} al {fecha_fin}"
     ws1["A3"].font = Font(name="Calibri", italic=True, color="666666", size=10)
     ws1["A3"].alignment = center_align
     
+    # Helper functions for getting counts
+    def get_count_xls(query, p=()):
+        cur.execute(query, p)
+        res = cur.fetchone()
+        return res[0] if res else 0
+
     # Totales
-    cur.execute("SELECT COUNT(*) FROM empresas")
-    total_empresas = cur.fetchone()[0]
-    cur.execute("SELECT COUNT(*) FROM candidatos")
-    total_candidatos = cur.fetchone()[0]
-    cur.execute("SELECT COUNT(*) FROM vacantes")
-    total_vacantes = cur.fetchone()[0]
-    cur.execute("SELECT COUNT(*) FROM postulaciones")
-    total_postulaciones = cur.fetchone()[0]
+    total_empresas = get_count_xls(f"SELECT COUNT(*) FROM empresas {we}", params)
+    total_candidatos = get_count_xls(f"SELECT COUNT(*) FROM candidatos {wc}", params)
+    total_vacantes = get_count_xls(f"SELECT COUNT(*) FROM vacantes {wv}", params)
+    total_postulaciones = get_count_xls(f"SELECT COUNT(*) FROM postulaciones {wp}", params)
     
     row = 5
     metrics = [
@@ -847,7 +940,7 @@ def admin_exportar_excel():
     ws1.cell(row=row, column=1, value="EMPRESAS POR ESTATUS").font = font_subtitle
     ws1.merge_cells(f"A{row}:B{row}")
     row += 1
-    cur.execute("SELECT estatus, COUNT(*) FROM empresas GROUP BY estatus")
+    cur.execute(f"SELECT estatus, COUNT(*) FROM empresas {we} GROUP BY estatus", params)
     for estatus, count in cur.fetchall():
         ws1.cell(row=row, column=1, value=estatus.capitalize()).font = font_normal
         ws1.cell(row=row, column=1).border = thin_border
@@ -861,7 +954,7 @@ def admin_exportar_excel():
     ws1.cell(row=row, column=1, value="VACANTES POR ESTATUS").font = font_subtitle
     ws1.merge_cells(f"A{row}:B{row}")
     row += 1
-    cur.execute("SELECT estatus, COUNT(*) FROM vacantes GROUP BY estatus")
+    cur.execute(f"SELECT estatus, COUNT(*) FROM vacantes {wv} GROUP BY estatus", params)
     for estatus, count in cur.fetchall():
         ws1.cell(row=row, column=1, value=estatus.capitalize()).font = font_normal
         ws1.cell(row=row, column=1).border = thin_border
@@ -875,7 +968,7 @@ def admin_exportar_excel():
     ws1.cell(row=row, column=1, value="POSTULACIONES POR ESTADO").font = font_subtitle
     ws1.merge_cells(f"A{row}:B{row}")
     row += 1
-    cur.execute("SELECT estado, COUNT(*) FROM postulaciones GROUP BY estado")
+    cur.execute(f"SELECT estado, COUNT(*) FROM postulaciones {wp} GROUP BY estado", params)
     for estado, count in cur.fetchall():
         ws1.cell(row=row, column=1, value=estado.capitalize()).font = font_normal
         ws1.cell(row=row, column=1).border = thin_border
@@ -896,13 +989,14 @@ def admin_exportar_excel():
         ws2.cell(row=1, column=i, value=h)
     style_header_row(ws2, 1, len(headers_emp))
     
-    cur.execute("""
+    cur.execute(f"""
         SELECT e.id_empresa, e.nombre, e.giro, e.tipo_empresa, e.telefono,
                u.correo, e.estatus, e.fecha_registro
         FROM empresas e
         JOIN usuarios u ON e.id_usuario = u.id_usuario
+        {we_a}
         ORDER BY e.fecha_registro DESC
-    """)
+    """, params)
     empresas = cur.fetchall()
     for r, emp in enumerate(empresas, 2):
         for c, val in enumerate(emp, 1):
@@ -918,7 +1012,7 @@ def admin_exportar_excel():
         ws3.cell(row=1, column=i, value=h)
     style_header_row(ws3, 1, len(headers_cand))
     
-    cur.execute("""
+    cur.execute(f"""
         SELECT c.id_candidato, c.nombre, c.apellido_paterno, c.apellido_materno,
                c.sexo, c.telefono, u.correo,
                COALESCE(ca.nombre, 'Sin carrera') as carrera,
@@ -926,8 +1020,9 @@ def admin_exportar_excel():
         FROM candidatos c
         JOIN usuarios u ON c.id_usuario = u.id_usuario
         LEFT JOIN carreras ca ON c.id_carrera = ca.id_carrera
+        {wc_a}
         ORDER BY c.fecha_registro DESC
-    """)
+    """, params)
     candidatos = cur.fetchall()
     for r, cand in enumerate(candidatos, 2):
         for c, val in enumerate(cand, 1):
@@ -943,14 +1038,15 @@ def admin_exportar_excel():
         ws4.cell(row=1, column=i, value=h)
     style_header_row(ws4, 1, len(headers_vac))
     
-    cur.execute("""
+    cur.execute(f"""
         SELECT v.id_vacante, v.titulo, e.nombre, v.salario, v.modalidad,
                v.horario, v.lugar_trabajo, v.fecha_publicacion, v.estatus,
                (SELECT COUNT(*) FROM postulaciones p WHERE p.id_vacante = v.id_vacante)
         FROM vacantes v
         JOIN empresas e ON v.id_empresa = e.id_empresa
+        {wv_a}
         ORDER BY v.fecha_publicacion DESC
-    """)
+    """, params)
     vacantes = cur.fetchall()
     for r, vac in enumerate(vacantes, 2):
         for c, val in enumerate(vac, 1):
@@ -970,15 +1066,16 @@ def admin_exportar_excel():
         ws5.cell(row=1, column=i, value=h)
     style_header_row(ws5, 1, len(headers_post))
     
-    cur.execute("""
+    cur.execute(f"""
         SELECT p.id_postulacion, v.titulo, e.nombre, c.nombre,
                p.estado, p.fecha_postulacion, COALESCE(p.comentarios, '')
         FROM postulaciones p
         JOIN vacantes v ON p.id_vacante = v.id_vacante
         JOIN empresas e ON v.id_empresa = e.id_empresa
         JOIN candidatos c ON p.id_candidato = c.id_candidato
+        {wp_a}
         ORDER BY p.fecha_postulacion DESC
-    """)
+    """, params)
     postulaciones = cur.fetchall()
     for r, post in enumerate(postulaciones, 2):
         for c, val in enumerate(post, 1):
@@ -1001,12 +1098,13 @@ def admin_exportar_excel():
     ws6.cell(row=2, column=2).font = font_header
     ws6.cell(row=2, column=2).border = thin_border
     
-    cur.execute("""
+    cur.execute(f"""
         SELECT e.nombre, COUNT(v.id_vacante) as total
         FROM empresas e
         LEFT JOIN vacantes v ON e.id_empresa = v.id_empresa
+        {we_a}
         GROUP BY e.nombre ORDER BY total DESC LIMIT 5
-    """)
+    """, params)
     top_emp = cur.fetchall()
     for i, (nombre, total) in enumerate(top_emp, 3):
         ws6.cell(row=i, column=1, value=nombre).font = font_normal
@@ -1028,12 +1126,13 @@ def admin_exportar_excel():
     ws6.cell(row=row, column=2).font = font_header
     ws6.cell(row=row, column=2).border = thin_border
     
-    cur.execute("""
+    cur.execute(f"""
         SELECT COALESCE(ca.nombre, 'Sin carrera'), COUNT(c.id_candidato)
         FROM candidatos c
         LEFT JOIN carreras ca ON c.id_carrera = ca.id_carrera
+        {wc_a}
         GROUP BY ca.nombre ORDER BY COUNT(c.id_candidato) DESC
-    """)
+    """, params)
     carreras_data = cur.fetchall()
     for i, (carrera, count) in enumerate(carreras_data, row + 1):
         ws6.cell(row=i, column=1, value=carrera).font = font_normal
@@ -1056,6 +1155,179 @@ def admin_exportar_excel():
     response = make_response(output.getvalue())
     response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     response.headers['Content-Disposition'] = 'attachment; filename=Reporte_UT_Emplea.xlsx'
+    return response
+
+@app.route("/admin/reportes/exportar-colocacion-excel")
+@login_required
+def admin_exportar_colocacion_excel():
+    if current_user.rol != "Administrador": return redirect(url_for("home"))
+    
+    fecha_inicio = request.args.get("fecha_inicio")
+    fecha_fin = request.args.get("fecha_fin")
+    
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+    from io import BytesIO
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Reporte Colocación"
+    ws.sheet_properties.tabColor = "0E312D"
+    
+    # Estilos
+    verde_fill = PatternFill(start_color="0E312D", end_color="0E312D", fill_type="solid")
+    blanco_fill = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
+    gris_claro_fill = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
+    dorado_fondo = PatternFill(start_color="FCEFDC", end_color="FCEFDC", fill_type="solid")
+    
+    font_header = Font(name="Calibri", bold=True, color="FFFFFF", size=11)
+    font_title = Font(name="Calibri", bold=True, color="0E312D", size=18)
+    font_subtitle = Font(name="Calibri", bold=True, color="C2914F", size=13)
+    font_normal = Font(name="Calibri", size=11, color="475569")
+    font_bold = Font(name="Calibri", bold=True, size=11, color="1E293B")
+    font_red = Font(name="Calibri", bold=True, size=11, color="DC2626")
+    font_green = Font(name="Calibri", bold=True, size=11, color="16A34A")
+    
+    thin_border = Border(
+        left=Side(style="thin", color="E2E8F0"),
+        right=Side(style="thin", color="E2E8F0"),
+        top=Side(style="thin", color="E2E8F0"),
+        bottom=Side(style="thin", color="E2E8F0")
+    )
+    center_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    left_align = Alignment(horizontal="left", vertical="center", wrap_text=True)
+    
+    # Encabezado principal del archivo
+    ws.merge_cells("A1:J1")
+    ws["A1"].value = "BOLSA DE TRABAJO - UT ORIENTAL"
+    ws["A1"].font = font_title
+    ws["A1"].alignment = center_align
+    
+    ws.merge_cells("A2:J2")
+    ws["A2"].value = "Reporte de Colocación y Espacios Gestionados por Convenio"
+    ws["A2"].font = font_subtitle
+    ws["A2"].alignment = center_align
+    
+    ws.merge_cells("A3:J3")
+    from datetime import datetime as dt_now
+    ws["A3"].value = f"Fecha de generación: {dt_now.now().strftime('%d/%m/%Y %H:%M')}"
+    if fecha_inicio and fecha_fin:
+        ws["A3"].value += f" | Filtro temporal aplicado: {fecha_inicio} al {fecha_fin}"
+    ws["A3"].font = Font(name="Calibri", italic=True, color="64748B", size=10)
+    ws["A3"].alignment = center_align
+    
+    # Encabezados de tabla
+    headers = [
+        "Fecha de Publicación", "Empresa", "Convenio", "Espacios Gestionados", 
+        "Postulados (H)", "Postulados (M)", "Total Postulados", 
+        "Colocados (H)", "Colocados (M)", "Total Colocados"
+    ]
+    
+    for i, h in enumerate(headers, 1):
+        cell = ws.cell(row=5, column=i, value=h)
+        cell.fill = verde_fill
+        cell.font = font_header
+        cell.alignment = center_align
+        cell.border = thin_border
+        
+    # Consulta a BD
+    conn = get_connection()
+    cur = conn.cursor()
+    params = ()
+    query_colocacion = """
+        SELECT 
+            TO_CHAR(MAX(v.fecha_publicacion), 'DD/MM/YYYY') as fecha_publicacion,
+            e.nombre as empresa,
+            'Conv-' || EXTRACT(YEAR FROM MIN(e.fecha_registro)) || '-' || LPAD(e.id_empresa::text, 3, '0') as convenio,
+            COUNT(DISTINCT v.id_vacante) as espacios_gestionados,
+            COUNT(DISTINCT CASE WHEN c.sexo = 'Masculino' THEN p.id_postulacion END) as postulados_h,
+            COUNT(DISTINCT CASE WHEN c.sexo = 'Femenino' THEN p.id_postulacion END) as postulados_m,
+            COUNT(DISTINCT p.id_postulacion) as total_postulados,
+            COUNT(DISTINCT CASE WHEN c.sexo = 'Masculino' AND p.estado = 'aceptado' THEN p.id_postulacion END) as colocados_h,
+            COUNT(DISTINCT CASE WHEN c.sexo = 'Femenino' AND p.estado = 'aceptado' THEN p.id_postulacion END) as colocados_m,
+            COUNT(DISTINCT CASE WHEN p.estado = 'aceptado' THEN p.id_postulacion END) as total_colocados
+        FROM empresas e
+        LEFT JOIN vacantes v ON e.id_empresa = v.id_empresa
+        LEFT JOIN postulaciones p ON v.id_vacante = p.id_vacante
+        LEFT JOIN candidatos c ON p.id_candidato = c.id_candidato
+        WHERE e.estatus = 'aprobada'
+    """
+    if fecha_inicio and fecha_fin:
+        query_colocacion += " AND v.fecha_publicacion >= %s AND v.fecha_publicacion <= %s::date + INTERVAL '1 day' - INTERVAL '1 second' "
+        params = (fecha_inicio, fecha_fin)
+        
+    query_colocacion += """
+        GROUP BY e.id_empresa, e.nombre
+        HAVING COUNT(DISTINCT v.id_vacante) > 0
+        ORDER BY MAX(v.fecha_publicacion) DESC NULLS LAST
+    """
+    
+    cur.execute(query_colocacion, params)
+    filas = cur.fetchall()
+    
+    # Llenado de filas
+    for r, fila in enumerate(filas, 6):
+        for c, val in enumerate(fila, 1):
+            cell = ws.cell(row=r, column=c, value=str(val) if val else "0")
+            cell.border = thin_border
+            
+            # Formateo visual específico por columna igual a la vista HTML
+            if c == 1: # Fecha
+                cell.alignment = left_align
+                cell.font = font_normal
+            elif c == 2: # Empresa
+                cell.alignment = left_align
+                cell.font = font_bold
+            elif c == 3: # Convenio
+                cell.alignment = center_align
+                cell.font = Font(name="Calibri", size=10, color="64748B")
+                cell.fill = gris_claro_fill
+            elif c == 4 or c == 7: # Espacios o Total Postulados
+                cell.alignment = center_align
+                cell.font = font_red
+            elif c == 10: # Total Colocados
+                cell.alignment = center_align
+                cell.font = font_green
+            else:
+                cell.alignment = center_align
+                cell.font = font_normal
+                
+        if r % 2 == 0: # Cebra en las filas restando columnas con diseño especial
+            for c in [1, 2, 4, 5, 6, 7, 8, 9, 10]:
+                ws.cell(row=r, column=c).fill = gris_claro_fill
+    
+    if len(filas) == 0:
+        ws.merge_cells("A6:J6")
+        cell = ws["A6"]
+        cell.value = "No hay datos de empresas con vacantes en este rango temporal."
+        cell.alignment = center_align
+        cell.font = font_normal
+        for i in range(1, 11):
+            ws.cell(row=6, column=i).border = thin_border
+                
+    cur.close()
+    conn.close()
+    
+    # Autoajuste de columnas
+    for col in ws.columns:
+        max_length = 0
+        col_letter = get_column_letter(col[0].column)
+        for cell in col:
+            try:
+                if cell.row > 4 and cell.value: # Saltar encabezados gigantes
+                    max_length = max(max_length, len(str(cell.value)))
+            except:
+                pass
+        ws.column_dimensions[col_letter].width = min(max_length + 6, 45)
+        
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    response = make_response(output.getvalue())
+    response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    response.headers['Content-Disposition'] = 'attachment; filename=Reporte_Colocacion_UT_Emplea.xlsx'
     return response
 
 # ================= EMPRESA REGISTRO =================

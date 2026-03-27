@@ -18,6 +18,30 @@
             <h2>Consolidado del Sistema</h2>
         </div>
 
+        <!-- Filter Section -->
+        <div class="filter-section widget-card" style="padding: 20px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-filter" style="color: var(--accent); font-size: 1.2rem;"></i>
+                <h3 style="margin: 0; font-size: 1.1rem; color: #1e293b;">Filtrar por Fecha</h3>
+            </div>
+            <form method="GET" action="/admin/reportes" style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; margin: 0;">
+                <div>
+                    <label style="display: block; font-size: 0.85rem; color: #64748b; margin-bottom: 5px; font-weight: 500;">Desde</label>
+                    <input type="date" name="fecha_inicio" value="{{ reportes.fecha_inicio }}" class="form-control" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit;" required>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.85rem; color: #64748b; margin-bottom: 5px; font-weight: 500;">Hasta</label>
+                    <input type="date" name="fecha_fin" value="{{ reportes.fecha_fin }}" class="form-control" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit;" required>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary" style="padding: 9px 20px;">Aplicar</button>
+                    {% if reportes.fecha_inicio %}
+                    <a href="/admin/reportes" class="btn btn-outline" style="padding: 9px 20px; text-decoration: none;">Limpiar</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
         <!-- Stats Cards -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -127,6 +151,68 @@
             </div>
         </div>
 
+        <!-- Preview Table Section -->
+        <div class="widget-card" style="padding: 25px; margin-top: 25px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 40px; height: 40px; background-color: #fcefdc; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-table" style="color: #c2914f; font-size: 1.2rem;"></i>
+                    </div>
+                    <h3 style="margin: 0; font-size: 1.25rem; color: #1e293b;">Vista previa del reporte</h3>
+                </div>
+                {% if reportes.fecha_inicio and reportes.fecha_fin %}
+                <div style="background-color: #f1f5f9; padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; color: #475569; font-weight: 500;">
+                    <span style="display: inline-block; width: 12px; height: 12px; background-color: #e2e8f0; border-radius: 50%; margin-right: 6px; vertical-align: middle;"></span>
+                    {{ reportes.fecha_inicio }} — {{ reportes.fecha_fin }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div style="overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                <table style="width: 100%; border-collapse: collapse; min-width: 900px;">
+                    <thead>
+                        <tr style="background-color: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                            <th style="padding: 12px 15px; text-align: left; font-size: 0.85rem; color: #475569; font-weight: 600;">Fecha de<br>Publicación</th>
+                            <th style="padding: 12px 15px; text-align: left; font-size: 0.85rem; color: #475569; font-weight: 600;">Empresa</th>
+                            <th style="padding: 12px 15px; text-align: left; font-size: 0.85rem; color: #475569; font-weight: 600;">Convenio</th>
+                            <th style="padding: 12px 15px; text-align: center; font-size: 0.85rem; color: #475569; font-weight: 600;">Espacios<br>Gestionados</th>
+                            <th style="padding: 12px 15px; text-align: center; font-size: 0.85rem; color: #475569; font-weight: 600;">Postulados<br>(H)</th>
+                            <th style="padding: 12px 15px; text-align: center; font-size: 0.85rem; color: #475569; font-weight: 600;">Postulados<br>(M)</th>
+                            <th style="padding: 12px 15px; text-align: center; font-size: 0.85rem; color: #475569; font-weight: 600;">Total<br>Postulados</th>
+                            <th style="padding: 12px 15px; text-align: center; font-size: 0.85rem; color: #475569; font-weight: 600;">Colocados<br>(H)</th>
+                            <th style="padding: 12px 15px; text-align: center; font-size: 0.85rem; color: #475569; font-weight: 600;">Colocados<br>(M)</th>
+                            <th style="padding: 12px 15px; text-align: center; font-size: 0.85rem; color: #475569; font-weight: 600;">Total<br>Colocados</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fila in reportes.colocacion %}
+                        <tr style="border-bottom: 1px solid #e2e8f0; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='transparent'">
+                            <td style="padding: 12px 15px; font-size: 0.9rem; color: #64748b;">{{ fila[0] }}</td>
+                            <td style="padding: 12px 15px; font-size: 0.9rem; color: #334155; font-weight: 500;">{{ fila[1] }}</td>
+                            <td style="padding: 12px 15px; font-size: 0.9rem; color: #64748b;">
+                                <span style="background-color: #f1f5f9; border-radius: 12px; padding: 4px 10px; display: inline-block;">{{ fila[2] }}</span>
+                            </td>
+                            <td style="padding: 12px 15px; font-size: 0.9rem; color: #dc2626; font-weight: 600; text-align: center;">{{ fila[3] }}</td>
+                            <td style="padding: 12px 15px; font-size: 0.9rem; color: #64748b; text-align: center;">{{ fila[4] }}</td>
+                            <td style="padding: 12px 15px; font-size: 0.9rem; color: #64748b; text-align: center;">{{ fila[5] }}</td>
+                            <td style="padding: 12px 15px; font-size: 0.9rem; color: #dc2626; font-weight: 600; text-align: center;">{{ fila[6] }}</td>
+                            <td style="padding: 12px 15px; font-size: 0.9rem; color: #64748b; text-align: center;">{{ fila[7] }}</td>
+                            <td style="padding: 12px 15px; font-size: 0.9rem; color: #64748b; text-align: center;">{{ fila[8] }}</td>
+                            <td style="padding: 12px 15px; font-size: 0.9rem; color: #16a34a; font-weight: 600; text-align: center;">{{ fila[9] }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="10" style="padding: 30px; text-align: center; color: #94a3b8; font-size: 0.95rem;">
+                                <i class="fas fa-folder-open" style="font-size: 1.5rem; margin-bottom: 10px; display: block; color: #cbd5e1;"></i>
+                                No hay datos de empresas con vacantes en este rango temporal.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Export Section -->
         <div class="widget-card" style="text-align: center; padding: 30px; margin-top: 25px;">
             <i class="fas fa-download" style="font-size: 2rem; margin-bottom: 15px; color: var(--accent);"></i>
@@ -134,12 +220,15 @@
             <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto 20px;">
                 Descarga el consolidado completo con gráficas y datos en el formato que necesites.
             </p>
-            <div style="display: flex; justify-content: center; gap: 15px;">
+            <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
                 <button class="btn btn-primary" onclick="exportarPDF()" style="padding: 10px 25px;">
-                    <i class="fas fa-file-pdf"></i> Exportar PDF
+                    <i class="fas fa-file-pdf"></i> PDF Resumen
                 </button>
-                <a href="/admin/reportes/exportar-excel" class="btn btn-outline" style="padding: 10px 25px; text-decoration: none;">
-                    <i class="fas fa-file-excel"></i> Exportar Excel
+                <a href="/admin/reportes/exportar-excel{% if reportes.fecha_inicio %}?fecha_inicio={{ reportes.fecha_inicio }}&fecha_fin={{ reportes.fecha_fin }}{% endif %}" class="btn btn-outline" style="padding: 10px 25px; text-decoration: none;">
+                    <i class="fas fa-file-excel"></i> Excel Consolidado
+                </a>
+                <a href="/admin/reportes/exportar-colocacion-excel{% if reportes.fecha_inicio %}?fecha_inicio={{ reportes.fecha_inicio }}&fecha_fin={{ reportes.fecha_fin }}{% endif %}" class="btn btn-primary" style="padding: 10px 25px; text-decoration: none; background-color: #0f3d35; border-color: #0f3d35;">
+                    <i class="fas fa-table"></i> Excel Colocación
                 </a>
             </div>
         </div>

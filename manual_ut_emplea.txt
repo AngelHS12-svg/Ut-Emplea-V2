@@ -1,0 +1,104 @@
+====================================================================
+           MANUAL TÉCNICO Y DE USUARIO - UT ORIENTAL EMPLEA
+====================================================================
+
+1. DESCRIPCIÓN GENERAL DEL SISTEMA
+--------------------------------------------------------------------
+El sistema "UT Oriental Emplea" es una plataforma web (Bolsa de Trabajo) 
+diseñada para conectar a los egresados de la Universidad Tecnológica 
+de Oriental con empresas del sector público y privado. El sistema 
+centraliza el registro de usuarios, la publicación de vacantes y el 
+seguimiento de postulaciones.
+
+
+2. ROLES Y FUNCIONAMIENTO (MANUAL DE USUARIO)
+--------------------------------------------------------------------
+El sistema se divide en tres tipos principales de usuarios:
+
+A. CANDIDATOS (Estudiantes / Egresados)
+   - Registro: Se registran proporcionando datos personales, académicos
+     y de contacto. Su cuenta debe ser aprobada por el Administrador.
+   - Seguridad: Utilizan Autenticación de Dos Factores (2FA) por correo 
+     para iniciar sesión.
+   - Perfil: Pueden subir su fotografía, cargar la URL de su CV y 
+     actualizar su experiencia y habilidades.
+   - Acciones: 
+     * Buscar vacantes activas publicadas por empresas aprobadas.
+     * Postularse a las vacantes de su interés.
+     * Ver en su panel de control el estado de sus postulaciones 
+       (Pendiente, En revisión, Aceptado, Rechazado).
+
+B. EMPRESAS (Empleadores externos)
+   - Registro: Registran la información comercial de la empresa. 
+     Deben esperar validación del Administrador para usar el sistema.
+   - Seguridad: Utilizan 2FA por correo para iniciar sesión.
+   - Gestión de Vacantes: Tienen un formulario para crear vacantes, 
+     definiendo sueldo, modalidad, horario y requisitos. Pueden 
+     activarlas, inactivarlas o eliminarlas.
+   - Gestión de Postulados: Pueden ver la lista de candidatos que 
+     aplicaron a sus vacantes, revisar sus perfiles / CVs y cambiar 
+     el estatus de esa postulación (Aceptar o Rechazar) dejando 
+     comentarios si lo desean.
+
+C. ADMINISTRADORES (Personal de UT Oriental)
+   - Seguridad: Acceden directamente con sus credenciales (sin 2FA local).
+   - Validaciones: Son el filtro de seguridad. Ven las listas de 
+     "Empresas Pendientes" y "Candidatos Pendientes" y deciden si las 
+     aprueban o las rechazan.
+   - Gestión General: Tienen control total sobre todos los catálogos 
+     (tablas) del sistema: Roles, Carreras, Usuarios, Empresas, 
+     Candidatos y Vacantes.
+   - Reportes: Cuentan con un dashboard gráfico interactivo ("Consolidado 
+     del Sistema"). Este módulo permite:
+     * Ver gráficas de empresas, vacantes, candidatos por carrera/sexo.
+     * Filtrar información mediante un selector de Rango de Fechas.
+     * Exportar las gráficas a PDF.
+     * Exportar la tabla consolidada a un Excel profesional con múltiples 
+       hojas (generado desde el servidor).
+
+
+3. ARQUITECTURA TÉCNICA Y HERRAMIENTAS
+--------------------------------------------------------------------
+La plataforma está construida utilizando una arquitectura monolítica web, 
+separando limpiamente la lógica de backend de las vistas de frontend.
+
+A. LENGUAJE BASE Y FRAMEWORK (BACKEND)
+   - Python 3.x: Lenguaje de programación principal del servidor.
+   - Flask: Microframework web utilizado para gestionar las rutas 
+     (endpoints HTTP), renderizar vistas y manejar las sesiones web.
+   - Flask-Login: Extensión para manejar la persistencia de la sesión 
+     del usuario conectado.
+
+B. BASE DE DATOS
+   - PostgreSQL: Motor de base de datos relacional para guardar entidades.
+   - psycopg2: Librería (driver) de Python que permite ejecutar consultas 
+     SQL crudas contra la base de datos PostgreSQL usando un DB Pooler.
+
+C. FRONTEND Y DISEÑO INTERFAZ
+   - HTML5 / CSS3 (Vanilla): Sistema de maquetado y estilos 
+     propios enfocados en diseño limpio, responsivo e institucional.
+   - JavaScript (Vanilla): Controladores de interfaz (modales, alerts, 
+     animaciones).
+   - Jinja2: Motor de plantillas integrado con Flask para inyectar 
+     datos de Python () directamente en el HTML.
+
+D. LIBRERÍAS DE PYTHON Y HERRAMIENTAS CLAVE
+   - werkzeug.security: Usado para "hashear" (encriptar) contraseñas 
+     en la BD y verificarlas mediante `check_password_hash`.
+   - smtplib / email.mime: Librerías nativas de Python integradas con 
+     el protocolo SMTP de Gmail para enviar notificaciones masivas, 
+     códigos OTP (2FA) y links de reseteo de contraseñas.
+   - uuid / datetime / random: Uso de tipos primitivos para crear tokens 
+     únicos de "Olvidé mi contraseña" y códigos de verificación de 6 dígitos.
+   - openpyxl: Librería de lado del servidor para fabricar, estilizar y 
+     colorear los reportes detallados en archivos nativos de Excel (.xlsx).
+
+E. LIBRERÍAS EXTERNAS ALOJADAS O CON CDN (FRONTEND)
+   - FontAwesome: Para uso de íconos en la aplicación.
+   - Chart.js: Para dibujar las gráficas (barras, pastel, radar, líneas) 
+     en el módulo de Administrador.
+   - html2canvas / jspdf: Para tomar una "foto" del tablero de reportes 
+     y pasarlo a formato PDF descargable en el navegador.
+
+--------------------------------------------------------------------
+Fin del Manual.
