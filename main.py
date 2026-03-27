@@ -45,20 +45,28 @@ def validar_registro_datos(correo, password, telefono, cp=None):
     return None
 app.register_blueprint(empresa_bp, url_prefix='/empresa')
 app.secret_key = "secret_key_prueba"
+import os
+import psycopg2
+from psycopg2 import pool
 
 # ================= DATABASE CONNECTION POOL =================
 class ConnectionWrapper:
     def __init__(self, conn, pool_instance=None):
         self._conn = conn
         self._pool = pool_instance
+
     def __getattr__(self, name):
         return getattr(self._conn, name)
+
     def cursor(self, *args, **kwargs):
         return self._conn.cursor(*args, **kwargs)
+
     def commit(self):
         return self._conn.commit()
+
     def rollback(self):
         return self._conn.rollback()
+
     def close(self):
         if self._pool:
             self._pool.putconn(self._conn)
@@ -66,7 +74,9 @@ class ConnectionWrapper:
             self._conn.close()
 
 db_pool = None
+
 try:
+<<<<<<< HEAD
     db_pool = pool.ThreadedConnectionPool(
         1, 120,  # Aumentamos a 120 conexiones para soportar 100+ usuarios concurrentes
         host=os.getenv("DB_HOST", "localhost"),
@@ -77,11 +87,35 @@ try:
         client_encoding='utf8'
     )
     print("Pool de conexiones creado con éxito.")
+=======
+    DATABASE_URL = os.getenv("DATABASE_URL")
+
+    if DATABASE_URL:
+        # 🔥 PRODUCCIÓN (Render)
+        db_pool = pool.ThreadedConnectionPool(
+            1, 20,
+            dsn=DATABASE_URL
+        )
+        print("Conectado a PostgreSQL (Render)")
+    else:
+        # 💻 LOCAL
+        db_pool = pool.ThreadedConnectionPool(
+            1, 20,
+            host=os.getenv("DB_HOST", "localhost"),
+            database=os.getenv("DB_NAME", "bolsa_trabajo_uto"),
+            user=os.getenv("DB_USER", "postgres"),
+            password=os.getenv("DB_PASS", "123456"),
+            port=os.getenv("DB_PORT", "5432")
+        )
+        print("Conectado a PostgreSQL (Local)")
+
+>>>>>>> 356b75e14f54608edce26741f6995ecba903f911
 except Exception as e:
     print(f"Error al crear el pool de conexiones: {e}")
 
 def get_connection():
     if db_pool:
+<<<<<<< HEAD
         # En caso de que el pool esté vacío o fallando, podríamos intentar un reconnect, 
         # pero es más fácil obtener una conexión limpia.
         try:
@@ -103,6 +137,12 @@ def get_connection():
     except UnicodeDecodeError:
         raise Exception("❌ NO SE PUDO CONECTAR A POSTGRESQL: Posiblemente la contraseña de la BD (angel123) es incorrecta para esta computadora, o el servicio PostgreSQL no se está ejecutando.")
 
+=======
+        return ConnectionWrapper(db_pool.getconn(), db_pool)
+    else:
+        raise Exception("No hay conexión a la base de datos")
+    
+>>>>>>> 356b75e14f54608edce26741f6995ecba903f911
 # Configuración de uploads
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads', 'cv')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -2531,4 +2571,4 @@ def empresa_rechazar_postulacion(id_postulacion):
 
 # ================= MAIN =================
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    app.run(debug=True)
