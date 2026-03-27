@@ -59,7 +59,7 @@
         
         .recent-activity {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 24px;
         }
         .activity-item {
@@ -116,6 +116,14 @@
                 <p>Analice el desempeño del sistema.</p>
                 <div class="action-meta">
                     <i class="fa-solid fa-download"></i> Descargar
+                </div>
+            </a>
+            <a href="#" onclick="parent.cargarPagina('/admin/manual'); return false;" class="action-card">
+                <div class="action-icon"><i class="fa-solid fa-book"></i></div>
+                <h3>Manual de Uso</h3>
+                <p>Guía completa de la plataforma.</p>
+                <div class="action-meta">
+                    <i class="fa-solid fa-circle-info"></i> Consultar
                 </div>
             </a>
         </div>

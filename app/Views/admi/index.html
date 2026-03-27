@@ -55,6 +55,9 @@
     <div class="main-wrapper">
         <header class="navbar-top">
             <div class="nav-left">
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
                 <h1 class="page-title" id="headerTitle">Bienvenido, administrador</h1>
                 <p class="page-subtitle" id="headerDescription">
                     <i class="fa-regular fa-calendar"></i> Gestiona empresas, candidatos y vacantes
@@ -254,6 +257,26 @@
             // Cargar inicial y setear polling cada minuto
             fetchNotificaciones();
             setInterval(fetchNotificaciones, 60000);
+
+            // Toggle Sidebar
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.querySelector('.sidebar');
+            const mainWrapper = document.querySelector('.main-wrapper');
+            
+            if (sidebarToggle && sidebar) {
+                sidebarToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('active');
+                });
+            }
+
+            // Close sidebar on click outside on mobile
+            window.addEventListener('click', (e) => {
+                if (window.innerWidth <= 1024) {
+                    if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target) && sidebar.classList.contains('active')) {
+                        sidebar.classList.remove('active');
+                    }
+                }
+            });
         });
     </script>
 </body>

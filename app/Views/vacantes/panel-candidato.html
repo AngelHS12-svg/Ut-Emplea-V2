@@ -48,6 +48,9 @@
     <div class="main-wrapper">
         <header class="navbar-top">
             <div class="nav-left">
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
                 <h1 class="page-title">Bienvenido, {{ stats.nombre or 'Candidato' }}</h1>
                 <p class="page-subtitle"><i class="fas fa-user-graduate"></i> Gestiona tu carrera profesional</p>
             </div>
@@ -286,6 +289,25 @@
 
             fetchNotificaciones();
             setInterval(fetchNotificaciones, 60000);
+
+            // Toggle Sidebar
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.querySelector('.sidebar');
+            
+            if (sidebarToggle && sidebar) {
+                sidebarToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('active');
+                });
+            }
+
+            // Close sidebar on click outside on mobile
+            window.addEventListener('click', (e) => {
+                if (window.innerWidth <= 1024) {
+                    if (sidebar && !sidebar.contains(e.target) && !sidebarToggle.contains(e.target) && sidebar.classList.contains('active')) {
+                        sidebar.classList.remove('active');
+                    }
+                }
+            });
         });
     </script>
 </body>

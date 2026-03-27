@@ -1,0 +1,105 @@
+================================================================================
+          DOCUMENTACIÓN TÉCNICA E INTEGRAL - UT ORIENTAL EMPLEA v2.0
+================================================================================
+
+Este documento ha sido creado para el estudio detallado de la arquitectura, 
+funcionalidad y capas de seguridad de la plataforma UT Oriental Emplea.
+
+--------------------------------------------------------------------------------
+1. ARQUITECTURA DEL SISTEMA
+--------------------------------------------------------------------------------
+La aplicación sigue un patrón basado en el micro-framework Flask (Python), 
+estructurado de la siguiente manera:
+
+- main.py: Núcleo de la aplicación, contiene las rutas principales, 
+  configuración del servidor, lógica de autenticación y manejo de sesiones.
+- app/utils: Utilidades transversales (seguridad.py, notificaciones).
+- app/Views: Plantillas Jinja2 para la renderización dinámica de HTML.
+- public/: Directorio estático (CSS, JS, Imágenes públicas).
+- uploads/cv: Directorio PROTEGIDO para el almacenamiento de currículums.
+
+--------------------------------------------------------------------------------
+2. CAPAS DE SEGURIDAD (EL BLINDAJE)
+--------------------------------------------------------------------------------
+
+A. PROTECCIÓN SQL INJECTION (SQLi):
+- Mandatorio: Todas las consultas a PostgreSQL usan marcadores de posición (%s) 
+  del driver psycopg2. Nunca se concatenan strings en las queries.
+- Middleware: Función `detectar_sqli` en `security.py` que escanea patrones 
+  maliciosos (UNION SELECT, OR 1=1, DROP TABLE) en campos de registro y login.
+
+B. PROTECCIÓN CROSS-SITE SCRIPTING (XSS):
+- Frontend: Validación de campos para evitar caracteres especiales < >.
+- Backend: Uso de `strip_tags` para limpiar cualquier HTML inyectado.
+- Middleware: Función `detectar_script` que bloquea peticiones que contengan 
+  etiquetas <script>, eval(), o eventos onmouseover/onerror.
+- CSP (Content Security Policy): Cabeceras HTTP que restringen la ejecución de 
+  scripts solo a fuentes confiables (Self, CDNs conocidos).
+
+C. AUTENTICACIÓN DE DOS FACTORES (2FA):
+- Flujo: Email -> Login -> Generación de Código 6 dígitos -> Email -> Verificación.
+- Persistencia: Los códigos se guardan en la tabla `usuarios` con un 
+  `two_fa_expires` de 5 minutos.
+- Seguridad: La sesión de login no se completa hasta que el código es válido.
+
+D. SEGURIDAD DE ARCHIVOS (UPLOAD/DOWNLOAD):
+- Magic Numbers: Verificación de la firma binaria del archivo. El sistema lee 
+  los primeros bytes para confirmar que un .pdf empieza con %PDF y no sea un 
+  ejecutable camuflado.
+- Límites: CVs (5MB), Fotos (3MB).
+- Autorización de Descarga: Implementada en `/ver-cv` y `/descargar-cv`. 
+  Solo permite el acceso si el usuario es el Dueño, Admin, o una Empresa 
+  con una postulación activa del candidato.
+
+--------------------------------------------------------------------------------
+3. MÓDULOS FUNCIONALES
+--------------------------------------------------------------------------------
+
+A. ADMINISTRADOR:
+- Gestión de Usuarios: Cola de aprobación para nuevas entidades.
+- Reportes Excel: Generación dinámica usando `openpyxl`. Incluye estilos 
+  institucionales, bordes, colores y fórmulas de conteo.
+- Manual Integral: Página interactiva con exportación a PDF mediante html2pdf.
+
+B. EMPRESA:
+- Vacantes: CRUD completo. Las vacantes tienen estados (activa, vencida).
+- Selección: Sistema de estados para postulantes (pendiente, visto, aceptado, rechazado).
+- Notificaciones: Alerta automática al candidato cuando su postulación cambia de estado.
+
+C. CANDIDATO:
+- Perfil Pro: Incluye secciones de idiomas y certificaciones con validación.
+- CV Builder: Plantilla profesional que genera un CV web compartible y 
+  descargable (versión responsiva).
+- Búsqueda: Sistema de filtrado de vacantes por fecha, sueldo y modalidad.
+
+--------------------------------------------------------------------------------
+4. DISEÑO RESPONSIVO Y UX
+--------------------------------------------------------------------------------
+La interfaz utiliza CSS Vanilla con Media Queries estratégicos:
+- Pantallas < 992px: Se activa el menú hamburguesa y el sidebar off-canvas.
+- Tablas: Contenedores con `overflow-x: auto` para navegación móvil.
+- Grillas: Uso de `grid-template-columns: repeat(auto-fit, minmax(...))` para 
+  que las tarjetas se apilen naturalmente.
+- UI/UX: Paleta institucional (Verde UT, Dorado, Gris Oscuro) con gradientes 
+  modernos y micro-animaciones en botones.
+
+--------------------------------------------------------------------------------
+5. BASE DE DATOS (ESQUEMA CLAVE)
+--------------------------------------------------------------------------------
+- usuarios: Credenciales, Roles, 2FA, Reset Tokens.
+- candidatos/empresas: Datos de perfil vinculados a usuarios.
+- vacantes: Detalles de la oferta + FK a empresa.
+- postulaciones: Puerta de enlace entre candidato y vacante + histórico de estados.
+- notificaciones: Registro de alertas internas y log de correos enviados.
+
+--------------------------------------------------------------------------------
+6. MANTENIMIENTO Y ESCALABILIDAD
+--------------------------------------------------------------------------------
+- Connection Pooling: Uso de `psycopg2.pool.ThreadedConnectionPool` para 
+  gestionar hasta 120 conexiones simultáneas de forma eficiente.
+- Modularidad: Blueprints de Flask integrados para separar las rutas de la 
+  empresa y facilitar el crecimiento del código.
+
+================================================================================
+FIN DEL DOCUMENTO - BOLSA DE TRABAJO UT ORIENTAL v2.0
+================================================================================

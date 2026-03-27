@@ -770,3 +770,164 @@ body {
     color: var(--blanco);
     box-shadow: 0 6px 15px rgba(10, 36, 32, 0.2);
 }
+
+/* ============================================================
+   RESPONSIVE DESIGN (Overhaul Phase 25)
+   ============================================================ */
+
+/* ---------- MOBILE MENU BUTTON ---------- */
+.mobile-menu-btn {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+    cursor: pointer;
+    z-index: 1001;
+    padding: 10px;
+}
+
+.mobile-menu-btn .bar {
+    width: 28px;
+    height: 3px;
+    background-color: white;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+/* Animación de Hamburguesa a X */
+.mobile-menu-btn.active .bar:nth-child(1) {
+    transform: translateY(9px) rotate(45deg);
+}
+.mobile-menu-btn.active .bar:nth-child(2) {
+    opacity: 0;
+}
+.mobile-menu-btn.active .bar:nth-child(3) {
+    transform: translateY(-9px) rotate(-45deg);
+}
+
+/* ---------- BREAKPOINTS ---------- */
+
+/* Tableta y Móvil (< 992px) */
+@media screen and (max-width: 992px) {
+    .top-bar {
+        display: none; /* Ocultamos la top-bar en móvil para ahorrar espacio */
+    }
+
+    .navbar {
+        padding: 1rem 1.5rem;
+    }
+
+    .navbar.scrolled {
+        padding: 0.8rem 1.5rem;
+    }
+
+    .logo-img {
+        height: 60px;
+    }
+
+    .mobile-menu-btn {
+        display: flex;
+    }
+
+    .nav-links {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 80%;
+        max-width: 300px;
+        height: 100vh;
+        background: rgba(15, 61, 53, 0.98);
+        backdrop-filter: blur(15px);
+        flex-direction: column;
+        justify-content: center;
+        gap: 2rem;
+        transition: right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+        z-index: 1000;
+        padding: 2rem;
+    }
+
+    .nav-links.active {
+        right: 0;
+    }
+
+    .nav-item {
+        font-size: 1.2rem;
+    }
+
+    .hero-title {
+        font-size: 3rem;
+    }
+
+    .hero-description {
+        font-size: 1rem;
+        padding: 0 1rem;
+    }
+
+    .hero-icon-circle {
+        width: 180px;
+        height: 180px;
+    }
+
+    .hero-logo {
+        width: 200px;
+    }
+}
+
+/* Móvil Pequeño (< 600px) */
+@media screen and (max-width: 600px) {
+    .hero-title {
+        font-size: 2.5rem;
+    }
+
+    .hero-3d-wrapper {
+        margin-bottom: 20px;
+    }
+
+    .hero-content {
+        padding: 2rem 1rem;
+    }
+
+    /* Ajuste de botones en Hero si los hubiera */
+    .hero-descriptions-row {
+        text-align: center;
+    }
+
+    /* Modal Responsiveness */
+    .modal-content {
+        width: 95% !important;
+        padding: 2rem 1.5rem;
+    }
+
+    .login-box h2 {
+        font-size: 1.5rem;
+    }
+
+    .features {
+        padding: 3rem 1.5rem;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .features-title {
+        font-size: 2rem;
+    }
+
+    .cta-section h2 {
+        font-size: 2rem;
+    }
+
+    .cta-button {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+    }
+}
+
+/* Soporte para pantallas táctiles */
+@media (hover: none) {
+    .hero-3d-wrapper {
+        transition: transform 0.3s ease; /* Transiciones más suaves en móvil */
+    }
+}

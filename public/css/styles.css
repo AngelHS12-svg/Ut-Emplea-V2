@@ -296,27 +296,6 @@ h3 {
     flex: 1;
 }
 
-/* Responsive Overrides */
-@media (max-width: 1024px) {
-    :root {
-        --sidebar-width: 80px;
-    }
-    
-    .brand-text, .nav-item span, .user-meta {
-        display: none;
-    }
-    
-    .sidebar-brand, .nav-item {
-        justify-content: center;
-        padding: 15px;
-    }
-    
-    .nav-item i {
-        margin: 0;
-        font-size: 1.4rem;
-    }
-}
-
 /* Header de página */
 .page-header {
     background: #ffffff;
@@ -328,6 +307,110 @@ h3 {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+/* ---------- RESPONSIVE OVERHAUL (Phase 25) ---------- */
+
+.sidebar-toggle {
+    display: none;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: var(--verde);
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-right: 15px;
+    font-size: 1.2rem;
+    transition: all 0.2s;
+}
+
+.sidebar-toggle:hover {
+    background: #e2e8f0;
+}
+
+@media (max-width: 1024px) {
+    .sidebar {
+        left: -100%; /* Oculto por defecto */
+        width: 280px;
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 10px 0 50px rgba(0,0,0,0.3);
+    }
+
+    .sidebar.active {
+        left: 0;
+    }
+
+    .main-wrapper {
+        margin-left: 0;
+    }
+
+    .sidebar-toggle {
+        display: block;
+    }
+
+    .navbar-top {
+        padding: 0 20px;
+    }
+
+    .nav-left .page-title {
+        font-size: 1.1rem;
+    }
+
+    .nav-left .page-subtitle {
+        display: none; /* Ahorrar espacio en móvil */
+    }
+
+    .user-meta {
+        display: none;
+    }
+}
+
+@media (max-width: 600px) {
+    .profile-trigger {
+        padding: 4px;
+        border-radius: 50%;
+    }
+    
+    .profile-trigger .user-avatar {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .app-content {
+        padding: 15px;
+    }
+
+    .grid-2, .grid-3, .grid-4 {
+        grid-template-columns: 1fr;
+    }
+
+    /* Search Bar Responsiveness */
+    .search-bar {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .search-bar .form-control, 
+    .search-bar select, 
+    .search-bar .btn {
+        max-width: 100% !important;
+        width: 100%;
+    }
+
+    /* Vacancy Grid Responsiveness */
+    .app-content > div[style*="display: grid"] {
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
+    }
+
+    #vacancyDetail {
+        order: -1; /* Muestra el detalle arriba si se selecciona, o según lógica UI */
+    }
+
+    /* Adjust list height for mobile */
+    .app-content div[style*="max-height: 700px"] {
+        max-height: 400px !important;
+    }
 }
 
 .page-header h1 {

@@ -248,3 +248,67 @@ tr:hover td { background: #f8fafc; }
     align-items: center;
     gap: 10px;
 }
+
+/* ---------- RESPONSIVE OVERHAUL (Phase 25) ---------- */
+
+@media (max-width: 768px) {
+    body {
+        padding: 15px 10px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .cards-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Table Responsiveness */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        min-width: 600px; /* Force scroll on very small screens */
+    }
+
+    /* Card adjustments */
+    .stat-card {
+        padding: 16px;
+    }
+
+    .stat-info h3 {
+        font-size: 1.25rem;
+    }
+
+    .item-card {
+        padding: 15px;
+    }
+
+    .card-actions {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0;
+    }
+
+    .section-header h2 {
+        font-size: 1.1rem;
+    }
+}

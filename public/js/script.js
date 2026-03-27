@@ -4,6 +4,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ===== STICKY NAVBAR LOGIC =====
     const mainNavbar = document.getElementById("mainNavbar");
+    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+    const navLinks = document.querySelector(".nav-links");
+
     if (mainNavbar) {
         window.addEventListener("scroll", () => {
             if (window.scrollY > 50) {
@@ -11,6 +14,21 @@ document.addEventListener("DOMContentLoaded", function () {
             } else {
                 mainNavbar.classList.remove("scrolled");
             }
+        });
+    }
+
+    if (mobileMenuBtn && navLinks) {
+        mobileMenuBtn.addEventListener("click", () => {
+            navLinks.classList.toggle("active");
+            mobileMenuBtn.classList.toggle("active");
+        });
+        
+        // Cerrar al hacer click en un link
+        document.querySelectorAll(".nav-item").forEach(link => {
+            link.addEventListener("click", () => {
+                navLinks.classList.remove("active");
+                mobileMenuBtn.classList.remove("active");
+            });
         });
     }
 

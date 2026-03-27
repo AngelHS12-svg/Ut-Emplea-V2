@@ -84,11 +84,8 @@
         <div class="form-step" id="step2">
             <h2 class="section-title"><i class="fas fa-graduation-cap"></i> Educación</h2>
             <div class="form-group">
-                <label class="form-label">Carrera (UT Oriental) <span class="required-mark">*</span></label>
-                <select name="id_carrera" class="form-control" data-required="true">
-                    <option value="">Seleccionar...</option>
-                    {% for id_c, nom in carreras %}<option value="{{ id_c }}">{{ nom }}</option>{% endfor %}
-                </select>
+                <label class="form-label">Carrera o Programa Educativo <span class="required-mark">*</span></label>
+                <input type="text" name="carrera" class="form-control" data-required="true" placeholder="Ej: TSU en Tecnologías de la Información">
             </div>
             <div class="grid grid-2">
                 <div class="form-group">
