@@ -49,6 +49,12 @@
             <a href="#" class="nav-item" onclick="cargarPagina('/admin/reportes'); return false;" id="nav-reportes">
                 <i class="fa-solid fa-file-lines"></i> <span>Reportes</span>
             </a>
+            
+            <div class="sidebar-divider"></div>
+            
+            <a href="#" class="nav-item" onclick="cargarPagina('/admin/manual'); return false;" id="nav-manual">
+                <i class="fa-solid fa-book"></i> <span>Manual del Sistema</span>
+            </a>
         </nav>
     </aside>
 
@@ -182,7 +188,8 @@
                 '/admin/consultar-candidatos': ['Consultar Estudiantes', 'Directorio de talentos registrados'],
                 '/admin/vacantes': ['Vacantes Activas', 'Monitoreo de ofertas laborales'],
                 '/admin/seguimiento': ['Seguimiento', 'Control de procesos de contratación'],
-                '/admin/reportes': ['Reportes del Sistema', 'Generación de informes periódicos']
+                '/admin/reportes': ['Reportes del Sistema', 'Generación de informes periódicos'],
+                '/admin/manual': ['Manual del Sistema', 'Guía completa de uso técnico y operativo']
             };
 
             if (titles[ruta]) {
