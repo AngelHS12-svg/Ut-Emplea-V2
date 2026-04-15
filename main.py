@@ -461,6 +461,22 @@ def admin_consultar_empresas():
     conn.close()
     return render_template("admi/consultar_empresas.html", empresas=empresas)
 
+@app.route("/admin/manual")
+@login_required
+def admin_manual():
+    if current_user.rol != "Administrador": return redirect(url_for("home"))
+    
+    # Leer el manual para inyectarlo en la vista
+    txt_path = os.path.join(os.path.dirname(__file__), 'manual_ut_emplea.txt')
+    contenido_manual = ""
+    try:
+        with open(txt_path, "r", encoding="utf-8") as f:
+            contenido_manual = f.read()
+    except Exception as e:
+        contenido_manual = "Error al cargar el manual: " + str(e)
+        
+    return render_template("admi/manual.html", contenido=contenido_manual)
+
 @app.route("/admin/validar-candidato")
 @login_required
 def admin_validar_candidato():
@@ -1375,6 +1391,13 @@ def registro_empresa():
         correo_rrhh = strip_tags(request.form.get("correo_rrhh"))
         codigo_postal = strip_tags(request.form.get("codigo_postal"))
 
+        # Seguridad Adicional: Prevenir secuencias de SQL Injection
+        patrones_sql = ["--", "DROP ", "UNION ", ";", "SELECT ", "DELETE "]
+        campos_criticos = [correo, nombre_empresa, correo_rrhh]
+        if any(any(p.lower() in str(c).lower() for p in patrones_sql) for c in campos_criticos):
+            flash("⚠️ Seguridad: Se detectaron caracteres no permitidos.")
+            return redirect(url_for("registro_empresa"))
+
         # Validaciones
         error = validar_registro_datos(correo, password, telefono, codigo_postal)
         if not error:
@@ -1439,6 +1462,13 @@ def registro_candidato():
         codigo_postal = strip_tags(request.form.get("codigo_postal"))
         ubicacion = strip_tags(request.form.get("ubicacion"))
         
+        # Seguridad Adicional: Prevenir secuencias de SQL Injection
+        patrones_sql = ["--", "DROP ", "UNION ", ";", "SELECT ", "DELETE "]
+        campos_criticos = [correo, nombre, apellido_paterno]
+        if any(any(p.lower() in str(c).lower() for p in patrones_sql) for c in campos_criticos):
+            flash("⚠️ Seguridad: Se detectaron caracteres no permitidos.")
+            return redirect(url_for("registro_candidato"))
+
         # Validaciones
         error = validar_registro_datos(correo, password, telefono, codigo_postal)
         if error:
@@ -1982,9 +2012,15 @@ def candidato_guardar_vacante(id_vacante):
 # ================= AUTH =================
 @app.route("/auth/login", methods=["POST"])
 def auth_login():
-    correo = request.form.get("correo")
-    password = request.form.get("password")
+    correo = request.form.get("correo", "").strip()
+    password = request.form.get("password", "")
     rol_seleccionado = request.form.get("rol")
+
+    # Seguridad Adicional: Prevenir secuencias de SQL Injection típicas (aunque Use params seguros)
+    patrones_sql_maliciosos = ["--", "DROP ", "UNION ", ";", "SELECT ", "DELETE "]
+    if any(patron.lower() in correo.lower() for patron in patrones_sql_maliciosos):
+        flash("⚠️ Seguridad: Se detectaron secuencias inválidas en el correo.")
+        return redirect(url_for("home"))
 
     conn = get_connection()
     cur = conn.cursor()

@@ -1,3 +1,159 @@
+{% extends "admi/layout_admi.html" %}
+
+{% block title %}Manual de Usuario Técnico y Operativo{% endblock %}
+
+{% block header %}
+<div class="header-container">
+    <h2><i class="fas fa-book-open"></i> Manual del Sistema</h2>
+    <div class="user-info">
+        <span class="user-role">{{ current_user.rol }}</span>
+        <a href="/logout" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+    .manual-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 20px;
+    }
+
+    .manual-paper {
+        background: #ffffff;
+        padding: 50px 60px;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        color: #334155;
+        line-height: 1.7;
+        font-size: 1.05rem;
+        margin-bottom: 40px;
+        border-top: 5px solid var(--primary);
+    }
+
+    .manual-paper h1 {
+        color: var(--primary);
+        font-size: 2rem;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    .manual-paper .subtitle {
+        color: var(--accent);
+        font-size: 1.25rem;
+        text-align: center;
+        margin-bottom: 40px;
+        font-weight: 600;
+        font-style: italic;
+    }
+
+    .manual-paper h2 {
+        color: var(--primary);
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 8px;
+        margin-top: 35px;
+        margin-bottom: 15px;
+        font-size: 1.4rem;
+    }
+
+    .manual-paper p,
+    .manual-paper ul {
+        margin-bottom: 15px;
+    }
+
+    .manual-paper ul {
+        padding-left: 25px;
+    }
+
+    .manual-paper li {
+        margin-bottom: 8px;
+    }
+
+    .manual-footer {
+        text-align: center;
+        font-size: 0.85rem;
+        color: #94a3b8;
+        border-top: 1px solid #e2e8f0;
+        padding-top: 20px;
+        margin-top: 40px;
+    }
+</style>
+
+<div class="manual-actions">
+    <button class="btn btn-primary" onclick="descargarManualPDF()">
+        <i class="fas fa-file-pdf"></i> Descargar PDF Manual
+    </button>
+</div>
+
+<div id="manualContent" class="manual-paper">
+    <!-- Header visual para el PDF -->
+    <h1>BOLSA DE TRABAJO - UT ORIENTAL</h1>
+    <div class="subtitle">Manual de Usuario Técnico y Operativo</div>
+
+    <!-- Contenido Parseado -->
+    <div id="manualTextParsed"></div>
+
+    <div class="manual-footer">
+        Generado en línea - Universidad Tecnológica de Oriental
+    </div>
+</div>
+
+<!-- Incluir html2pdf -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+    // Parsing básico del texto a HTML para respetar el estilo
+    document.addEventListener("DOMContentLoaded", function () {
+        // Obtenemos el texto crudo mandado desde jinja y previniendo inyección de escape
+        const rawText = {{ contenido| tojson | safe
+    }};
+    const lines = rawText.split('\n');
+
+    let htmlStr = '';
+    let listActive = false;
+
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+        if (!line) continue;
+        if (line.startsWith("===") || line.startsWith("---")) continue;
+
+        // Detectar encabezados principales (todas mayúsculas y mínimo de longitud)
+        if (line === line.toUpperCase() && line.length > 5 && !line.includes("UT ORIENTAL")) {
+            if (listActive) { htmlStr += '</ul>'; listActive = false; }
+            htmlStr += '<h2>' + line + '</h2>';
+        }
+        // Detectar elementos de lista
+        else if (line.match(/^[\-\*]\s|^[0-9]+\.\s/)) {
+            if (!listActive) { htmlStr += '<ul>'; listActive = true; }
+            htmlStr += '<li>' + line.replace(/^[\-\*\d\.]+\s/, '') + '</li>';
+        }
+        // Párrafo normal
+        else {
+            if (listActive) { htmlStr += '</ul>'; listActive = false; }
+            htmlStr += '<p>' + line + '</p>';
+        }
+    }
+    if (listActive) htmlStr += '</ul>';
+
+    document.getElementById("manualTextParsed").innerHTML = htmlStr;
+    });
+
+    function descargarManualPDF() {
+        const elemento = document.getElementById("manualContent");
+        const opciones = {
+            margin: 10,
+            filename: 'Manual_Ut_Emplea.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // Agregar clase para opacidad completa durante render del PDF por si hay animaciones
+        html2pdf().set(opciones).from(elemento).save();
+    }
+</script>
+{% endblock %}
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -260,7 +416,8 @@
                     <ul>
                         <li><strong>Prevención XSS:</strong> Sanitización de campos de texto mediante
                             <code>strip_tags</code> y detección de patrones <code>&lt;script&gt;</code> en el frontend y
-                            backend.</li>
+                            backend.
+                        </li>
                         <li><strong>Password Recovery:</strong> UUID tokens efímeros almacenados en BD con expiración
                             forzosa.</li>
                         <li><strong>SQL Injection:</strong> Uso mandatorio de consultas parametrizadas a través del
