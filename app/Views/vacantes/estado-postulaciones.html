@@ -48,6 +48,7 @@
     <div class="main-wrapper">
         <header class="navbar-top">
             <div class="nav-left">
+                <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
                 <h1 class="page-title">Historial de Aplicaciones</h1>
                 <p class="page-subtitle"><i class="fas fa-clipboard-list"></i> Consulta el resultado de tus postulaciones</p>
             </div>
@@ -239,8 +240,38 @@
         .stepper-item.completed {
             /* We simulate the line progress implicitly by the next items being gray */
         }
+        /* Responsive Stepper */
+        @media (max-width: 600px) {
+            .stepper-wrapper {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .stepper-wrapper::before {
+                display: none;
+            }
+            .stepper-item {
+                flex-direction: row;
+                gap: 12px;
+            }
+            .step-counter {
+                margin-bottom: 0;
+                flex-shrink: 0;
+            }
+            div[style*="display: flex"][style*="justify-content: space-between"] {
+                flex-direction: column !important;
+                gap: 10px;
+            }
+        }
     </style>
         </main>
     </div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <script>
+        (function(){
+            const t=document.getElementById('sidebarToggle'),s=document.querySelector('.sidebar'),o=document.getElementById('sidebarOverlay');
+            if(t&&s){t.addEventListener('click',()=>{s.classList.toggle('active');if(o)o.classList.toggle('active');});}
+            if(o){o.addEventListener('click',()=>{s.classList.remove('active');o.classList.remove('active');});}
+        })();
+    </script>
 </body>
 </html>

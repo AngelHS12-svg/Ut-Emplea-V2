@@ -47,6 +47,7 @@
     <div class="main-wrapper">
         <header class="navbar-top">
             <div class="nav-left">
+                <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
                 <h1 class="page-title">Detalle de la Vacante</h1>
                 <p class="page-subtitle">Revisión de oferta y candidatos postulados</p>
             </div>
@@ -297,6 +298,14 @@
             const modal = document.getElementById('decisionModal');
             if (event.target == modal) closeDecisionModal();
         }
+    </script>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <script>
+        (function(){
+            const t=document.getElementById('sidebarToggle'),s=document.querySelector('.sidebar'),o=document.getElementById('sidebarOverlay');
+            if(t&&s){t.addEventListener('click',()=>{s.classList.toggle('active');if(o)o.classList.toggle('active');});}
+            if(o){o.addEventListener('click',()=>{s.classList.remove('active');o.classList.remove('active');});}
+        })();
     </script>
 </body>
 

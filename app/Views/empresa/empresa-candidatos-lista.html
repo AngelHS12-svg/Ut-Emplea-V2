@@ -47,6 +47,7 @@
     <div class="main-wrapper">
         <header class="navbar-top">
             <div class="nav-left">
+                <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
                 <h1 class="page-title">Gestión de Candidatos</h1>
                 <p class="page-subtitle">Revisa y responde a las postulaciones de tus vacantes</p>
             </div>
@@ -119,19 +120,21 @@
         </main>
     </div>
 
+    </div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <style>
         .vacancy-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
-        .grid-2 {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-        }
-        @media (max-width: 768px) {
-            .grid-2 { grid-template-columns: 1fr; }
-        }
     </style>
+    <script>
+        (function(){
+            const t=document.getElementById('sidebarToggle'),s=document.querySelector('.sidebar'),o=document.getElementById('sidebarOverlay');
+            if(t&&s){t.addEventListener('click',()=>{s.classList.toggle('active');if(o)o.classList.toggle('active');});}
+            if(o){o.addEventListener('click',()=>{s.classList.remove('active');o.classList.remove('active');});}
+        })();
+    </script>
 </body>
 
 </html>

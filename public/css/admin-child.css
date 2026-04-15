@@ -249,7 +249,19 @@ tr:hover td { background: #f8fafc; }
     gap: 10px;
 }
 
-/* ---------- RESPONSIVE OVERHAUL (Phase 25) ---------- */
+/* ---------- RESPONSIVE (Phase 25 + Phase 33) ---------- */
+
+/* Tablet */
+@media (max-width: 900px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
 
 @media (max-width: 768px) {
     body {
@@ -277,7 +289,7 @@ tr:hover td { background: #f8fafc; }
     }
 
     table {
-        min-width: 600px; /* Force scroll on very small screens */
+        min-width: 600px;
     }
 
     /* Card adjustments */
@@ -301,6 +313,35 @@ tr:hover td { background: #f8fafc; }
         width: 100%;
         justify-content: center;
     }
+
+    /* Widget filter bars */
+    .widget-card[style*="display: flex"] {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    /* Inline 2-column grids inside modals/widgets */
+    div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Filter flex wrappers */
+    div[style*="display: flex"][style*="gap: 12px"],
+    div[style*="display: flex"][style*="gap: 15px"] {
+        flex-direction: column !important;
+    }
+
+    form[style*="display: flex"] {
+        flex-direction: column !important;
+        width: 100%;
+    }
+
+    form[style*="display: flex"] input,
+    form[style*="display: flex"] select,
+    form[style*="display: flex"] button,
+    form[style*="display: flex"] a {
+        width: 100% !important;
+    }
 }
 
 @media (max-width: 480px) {
@@ -310,5 +351,28 @@ tr:hover td { background: #f8fafc; }
 
     .section-header h2 {
         font-size: 1.1rem;
+    }
+
+    .stat-card {
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+
+    .stat-info h3 {
+        font-size: 1.1rem;
+    }
+
+    .stat-info p {
+        font-size: 0.8rem;
+    }
+
+    .widget-card {
+        padding: 15px;
     }
 }

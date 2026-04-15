@@ -47,6 +47,7 @@
     <div class="main-wrapper">
         <header class="navbar-top">
             <div class="nav-left">
+                <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
                 <h1 class="page-title">Estadísticas</h1>
                 <p class="page-subtitle">Resumen de tu actividad como empresa</p>
             </div>
@@ -185,6 +186,14 @@
                 }
             }
         });
+    </script>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <script>
+        (function(){
+            const t=document.getElementById('sidebarToggle'),s=document.querySelector('.sidebar'),o=document.getElementById('sidebarOverlay');
+            if(t&&s){t.addEventListener('click',()=>{s.classList.toggle('active');if(o)o.classList.toggle('active');});}
+            if(o){o.addEventListener('click',()=>{s.classList.remove('active');o.classList.remove('active');});}
+        })();
     </script>
 </body>
 </html>

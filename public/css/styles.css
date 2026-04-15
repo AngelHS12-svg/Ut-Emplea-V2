@@ -309,8 +309,11 @@ h3 {
     align-items: center;
 }
 
-/* ---------- RESPONSIVE OVERHAUL (Phase 25) ---------- */
+/* ==========================================================
+   RESPONSIVE OVERHAUL (Phase 25 + Phase 33 Reinforcement)
+   ========================================================== */
 
+/* Sidebar Toggle Button */
 .sidebar-toggle {
     display: none;
     background: #f1f5f9;
@@ -322,15 +325,36 @@ h3 {
     margin-right: 15px;
     font-size: 1.2rem;
     transition: all 0.2s;
+    flex-shrink: 0;
 }
 
 .sidebar-toggle:hover {
     background: #e2e8f0;
 }
 
+/* Sidebar Backdrop Overlay */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* ---- Tablet Landscape (≤1024px) ---- */
 @media (max-width: 1024px) {
     .sidebar {
-        left: -100%; /* Oculto por defecto */
+        left: -100%;
         width: 280px;
         transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: 10px 0 50px rgba(0,0,0,0.3);
@@ -345,11 +369,18 @@ h3 {
     }
 
     .sidebar-toggle {
-        display: block;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .navbar-top {
         padding: 0 20px;
+    }
+
+    .nav-left {
+        display: flex;
+        align-items: center;
     }
 
     .nav-left .page-title {
@@ -357,14 +388,131 @@ h3 {
     }
 
     .nav-left .page-subtitle {
-        display: none; /* Ahorrar espacio en móvil */
+        display: none;
     }
 
     .user-meta {
         display: none;
     }
+
+    .app-content {
+        padding: 25px 20px;
+    }
+
+    /* Grids start collapsing */
+    .grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
+/* ---- Tablet Portrait (≤900px) ---- */
+@media (max-width: 900px) {
+    .grid-3 {
+        grid-template-columns: 1fr;
+    }
+
+    .grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .quick-access {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .page-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+}
+
+/* ---- Mobile (≤768px) ---- */
+@media (max-width: 768px) {
+    .grid-2,
+    .grid-3,
+    .grid-4 {
+        grid-template-columns: 1fr !important;
+    }
+
+    .quick-access {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .filters-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Table Responsiveness */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        min-width: 500px;
+    }
+
+    /* Card adjustments */
+    .card {
+        padding: 1rem;
+    }
+
+    /* Vacancy card details */
+    .vacancy-details {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .vacancy-footer {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+
+    .vacancy-footer .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Profile header stacking */
+    .profile-header-card {
+        flex-direction: column !important;
+        text-align: center;
+        padding: 25px 20px !important;
+    }
+
+    .profile-header-card > div:last-child {
+        margin-left: 0 !important;
+        width: 100%;
+    }
+
+    .profile-header-card .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .profile-photo {
+        margin: 0 auto !important;
+    }
+}
+
+/* ---- Small Mobile (≤600px) ---- */
 @media (max-width: 600px) {
     .profile-trigger {
         padding: 4px;
@@ -377,14 +525,19 @@ h3 {
     }
     
     .app-content {
-        padding: 15px;
+        padding: 15px 12px;
     }
 
-    .grid-2, .grid-3, .grid-4 {
-        grid-template-columns: 1fr;
+    .navbar-top {
+        padding: 0 12px;
+        height: 65px;
     }
 
-    /* Search Bar Responsiveness */
+    .nav-left .page-title {
+        font-size: 0.95rem;
+    }
+
+    /* Search Bar */
     .search-bar {
         flex-direction: column;
         gap: 10px;
@@ -397,19 +550,102 @@ h3 {
         width: 100%;
     }
 
-    /* Vacancy Grid Responsiveness */
+    /* Inline Grid Overrides */
     .app-content > div[style*="display: grid"] {
         grid-template-columns: 1fr !important;
-        gap: 1.5rem !important;
+        gap: 1rem !important;
     }
 
     #vacancyDetail {
-        order: -1; /* Muestra el detalle arriba si se selecciona, o según lógica UI */
+        order: -1;
     }
 
-    /* Adjust list height for mobile */
     .app-content div[style*="max-height: 700px"] {
         max-height: 400px !important;
+    }
+
+    /* Buttons full width */
+    .btn {
+        font-size: 0.85rem;
+        padding: 0.6rem 1rem;
+    }
+
+    .actions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Stats card compact */
+    .stat-card {
+        padding: 18px;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.2rem;
+    }
+
+    .stat-info h3 {
+        font-size: 1.3rem;
+    }
+
+    /* Quick card compact */
+    .quick-card {
+        padding: 1.2rem;
+    }
+
+    .quick-card-icon {
+        width: 55px;
+        height: 55px;
+        font-size: 1.5rem;
+    }
+}
+
+/* ---- Universal Modal Responsiveness ---- */
+@media (max-width: 768px) {
+    .modal-content,
+    div[class*="modal"] > div[style*="width"] {
+        width: 95% !important;
+        max-width: 95% !important;
+        padding: 20px 15px !important;
+        margin: 10px auto;
+    }
+
+    /* Inline grid overrides inside modals */
+    div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ---- Iframe Responsiveness (Admin) ---- */
+@media (max-width: 1024px) {
+    iframe#contentFrame {
+        min-height: calc(100vh - 70px) !important;
+    }
+}
+
+/* ---- User Menu on Mobile ---- */
+@media (max-width: 480px) {
+    .user-menu {
+        gap: 8px;
+    }
+
+    .notifications-dropdown {
+        margin-right: 5px !important;
+    }
+
+    .nav-logout-btn {
+        width: 34px;
+        height: 34px;
+        font-size: 0.85rem;
+    }
+
+    h1, h2 {
+        font-size: 1.2rem;
+    }
+
+    h3 {
+        font-size: 1rem;
     }
 }
 
@@ -968,43 +1204,7 @@ tbody td {
     font-size: 0.85rem;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-    .grid-4 {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .grid-3 {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .sidebar {
-        width: 0;
-        padding: 0;
-        overflow: hidden;
-    }
-
-    .main-content {
-        margin-left: 0;
-        width: 100%;
-    }
-
-    .grid-2,
-    .grid-3,
-    .grid-4 {
-        grid-template-columns: 1fr;
-    }
-
-    .quick-access {
-        grid-template-columns: 1fr;
-    }
-
-    .filters-grid {
-        grid-template-columns: 1fr;
-    }
-}
+/* Responsive rules consolidated in Phase 33 block above */
 
 /* Utilidades */
 .text-center {

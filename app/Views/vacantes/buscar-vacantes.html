@@ -52,6 +52,7 @@
     <div class="main-wrapper">
         <header class="navbar-top">
             <div class="nav-left">
+                <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
                 <h1 class="page-title">Buscar Vacantes</h1>
                 <p class="page-subtitle"><i class="fas fa-search"></i> Explora y postúlate a vacantes disponibles</p>
             </div>
@@ -285,6 +286,14 @@
             const formGuardar = document.getElementById('form-guardar');
             if(formGuardar) formGuardar.action = "/candidato/guardar-vacante/" + ds.id;
         }
+    </script>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <script>
+        (function(){
+            const t=document.getElementById('sidebarToggle'),s=document.querySelector('.sidebar'),o=document.getElementById('sidebarOverlay');
+            if(t&&s){t.addEventListener('click',()=>{s.classList.toggle('active');if(o)o.classList.toggle('active');});}
+            if(o){o.addEventListener('click',()=>{s.classList.remove('active');o.classList.remove('active');});}
+        })();
     </script>
 </body>
 

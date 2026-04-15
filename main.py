@@ -2009,7 +2009,15 @@ def auth_login():
             if (rol_seleccionado == "admin" and rol_real == "Administrador") or \
                (rol_seleccionado == "empresa" and rol_real == "Empresa") or \
                (rol_seleccionado == "candidato" and rol_real == "Candidato"):
-                # === 2FA: Generar y enviar código ===
+                
+                # === EXCEPCIÓN TEMPORAL: Bypass 2FA para Administrador ===
+                if rol_real == "Administrador":
+                    user_obj = User(id_usuario, user_correo, id_rol, rol_real)
+                    login_user(user_obj)
+                    flash("Inicio de sesión exitoso (Modo Administrador - 2FA Omitido).")
+                    return redirect(url_for("admin"))
+
+                # === 2FA: Generar y enviar código (Para otros roles) ===
                 code_2fa = str(random.randint(100000, 999999))
                 expires_2fa = datetime.now() + timedelta(minutes=5)
                 

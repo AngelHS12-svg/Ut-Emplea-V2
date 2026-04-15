@@ -1,7 +1,12 @@
+* {
+    box-sizing: border-box;
+}
+
 body {
     font-family: sans-serif;
     margin: 0;
     padding: 0;
+    overflow-x: hidden; /* Prevent global horizontal scroll */
 }
 
 :root {
@@ -511,40 +516,54 @@ body {
 
 
 /* ---------- MODAL ---------- */
-
 .modal {
     display: none;
     position: fixed;
-    z-index: 999;
+    z-index: 9999; /* Asegurar que esté por encima de todo */
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(5px);
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     justify-content: center;
     align-items: center;
+    transition: all 0.3s ease;
 }
 
 .modal-content {
-    background: var(--blanco);
-    padding: 2.5rem;
-    border-radius: 15px;
-    width: 480px;
-    max-width: 90%;
+    background: #ffffff;
+    border-radius: 24px;
+    width: 95%;
+    max-width: 420px; /* Tamaño estándar para un login normal */
+    margin: auto;
+    padding: 2.5rem 2rem; 
+    box-sizing: border-box;
     position: relative;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-    animation: modalFade 0.3s ease;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: modalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden; 
 }
 
-@keyframes modalFade {
+/* Modal de selección de rol específico (proporcionado y elegante) */
+#modalUserType .modal-content {
+    max-width: 350px;
+    padding: 2.5rem 2rem;
+}
+
+#modalUserType h2 {
+    word-wrap: break-word;
+    font-size: 1.3rem !important;
+}
+
+@keyframes modalSlideIn {
     from {
-        transform: translateY(-30px);
+        transform: translateY(20px) scale(0.98);
         opacity: 0;
     }
-
     to {
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
         opacity: 1;
     }
 }
@@ -581,6 +600,7 @@ body {
 
 .user-option {
     width: 100%;
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     gap: 15px;
@@ -611,13 +631,13 @@ body {
 }
 
 /* ===== LOGIN BOX ===== */
-
 .login-box {
-    width: 420px;
+    width: 100%;
+    box-sizing: border-box;
     text-align: center;
-    background: linear-gradient(145deg, #ffffff, #f5f7f9);
-    border: 1px solid rgba(194, 145, 79, 0.3);
-    border-top: 5px solid var(--verde);
+    background: #ffffff;
+    border: none;
+    border-top: 6px solid var(--verde);
     padding: 2.5rem 2rem;
 }
 
@@ -892,10 +912,70 @@ body {
         text-align: center;
     }
 
-    /* Modal Responsiveness */
+    /* Modal Responsiveness (Left Aligned Drawer) */
+    .modal {
+        padding: 0; 
+        align-items: center; 
+        justify-content: flex-start; /* Posicionado a la izquierda */
+    }
+
     .modal-content {
-        width: 95% !important;
-        padding: 2rem 1.5rem;
+        width: 85% !important; 
+        max-width: 280px !important;
+        margin: 0 0 0 10px; /* Separado 10px del borde izquierdo */
+        border-radius: 18px;
+        padding: 1.2rem 0.8rem;
+        max-height: 85vh;
+        height: auto;
+        overflow-y: auto;
+        box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+        animation: modalSlideLeftCustom 0.3s ease;
+    }
+
+    @keyframes modalSlideLeftCustom {
+        from { transform: translateX(-30px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes modalFadeInResponsive {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-box {
+        padding: 1rem 0.5rem;
+        border-top: 4px solid var(--verde);
+    }
+
+    .logo-box {
+        margin-bottom: 15px;
+    }
+
+    .login-logo {
+        width: 80px;
+    }
+
+    .user-option {
+        padding: 14px 16px;
+        font-size: 1rem;
+        gap: 12px;
+    }
+
+    .user-option i {
+        font-size: 1.3rem;
+    }
+
+    #roleIndicator {
+        margin-bottom: 15px;
+        font-size: 0.9rem;
+    }
+
+    #loginForm {
+        gap: 12px;
+    }
+
+    #loginForm input {
+        padding: 12px 12px 12px 40px;
     }
 
     .login-box h2 {
