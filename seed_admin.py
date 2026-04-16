@@ -3,16 +3,20 @@ Script para crear un usuario administrador temporal para pruebas.
 Ejecutar: python seed_admin.py
 Credenciales: admin@utoriental.edu.mx / Admin123!
 """
+import os
 import psycopg2
 from werkzeug.security import generate_password_hash
 
-conn = psycopg2.connect(
-    host="localhost",
-    database="bolsa_trabajo_uto",
-    user="postgres",
-    password="angel123",
-    port="5432"
-)
+if os.getenv("DATABASE_URL"):
+    conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL"))
+else:
+    conn = psycopg2.connect(
+        host=os.getenv("DB_HOST", "localhost"),
+        database=os.getenv("DB_NAME", "bolsa_trabajo_uto"),
+        user=os.getenv("DB_USER", "postgres"),
+        password=os.getenv("DB_PASS", "angel123"),
+        port=os.getenv("DB_PORT", "5432")
+    )
 cur = conn.cursor()
 
 # Verificar si ya existe

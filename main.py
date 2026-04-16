@@ -81,15 +81,18 @@ class ConnectionWrapper:
 db_pool = None
 
 try:
-    db_pool = pool.ThreadedConnectionPool(
-        1, 120,  # Aumentamos a 120 conexiones para soportar 100+ usuarios concurrentes
-        host=os.getenv("DB_HOST", "localhost"),
-        database=os.getenv("DB_NAME", "bolsa_trabajo_uto"),
-        user=os.getenv("DB_USER", "postgres"),
-        password=os.getenv("DB_PASS", "angel123"),
-        port=os.getenv("DB_PORT", "5432"),
-        client_encoding='utf8'
-    )
+    if os.getenv("DATABASE_URL"):
+        db_pool = pool.ThreadedConnectionPool(1, 120, dsn=os.getenv("DATABASE_URL"))
+    else:
+        db_pool = pool.ThreadedConnectionPool(
+            1, 120,  # Aumentamos a 120 conexiones para soportar 100+ usuarios concurrentes
+            host=os.getenv("DB_HOST", "localhost"),
+            database=os.getenv("DB_NAME", "bolsa_trabajo_uto"),
+            user=os.getenv("DB_USER", "postgres"),
+            password=os.getenv("DB_PASS", "angel123"),
+            port=os.getenv("DB_PORT", "5432"),
+            client_encoding='utf8'
+        )
     print("Pool de conexiones creado con éxito.")
 except Exception as e:
     print(f"Error al crear el pool de conexiones: {e}")
@@ -106,14 +109,17 @@ def get_connection():
             pass # Si falla el pool, hacemos fallback a una conexión directa
 
     try:
-        return ConnectionWrapper(psycopg2.connect(
-            host=os.getenv("DB_HOST", "localhost"),
-            database=os.getenv("DB_NAME", "bolsa_trabajo_uto"),
-            user=os.getenv("DB_USER", "postgres"),
-            password=os.getenv("DB_PASS", "angel123"),
-            port=os.getenv("DB_PORT", "5432"),
-            client_encoding='utf8'
-        ))
+        if os.getenv("DATABASE_URL"):
+            return ConnectionWrapper(psycopg2.connect(dsn=os.getenv("DATABASE_URL")))
+        else:
+            return ConnectionWrapper(psycopg2.connect(
+                host=os.getenv("DB_HOST", "localhost"),
+                database=os.getenv("DB_NAME", "bolsa_trabajo_uto"),
+                user=os.getenv("DB_USER", "postgres"),
+                password=os.getenv("DB_PASS", "angel123"),
+                port=os.getenv("DB_PORT", "5432"),
+                client_encoding='utf8'
+            ))
     except UnicodeDecodeError:
         raise Exception("❌ NO SE PUDO CONECTAR A POSTGRESQL: Posiblemente la contraseña de la BD (angel123) es incorrecta para esta computadora, o el servicio PostgreSQL no se está ejecutando.")
 

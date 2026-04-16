@@ -2,6 +2,8 @@ import psycopg2
 import os
 
 def get_connection():
+    if os.getenv("DATABASE_URL"):
+        return psycopg2.connect(dsn=os.getenv("DATABASE_URL"))
     return psycopg2.connect(
         host=os.getenv("DB_HOST", "localhost"),
         database=os.getenv("DB_NAME", "bolsa_trabajo_uto"),
