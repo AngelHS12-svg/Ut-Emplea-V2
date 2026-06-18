@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # Servicio de Base de Datos (PostgreSQL)
+  db:
+    image: postgres:15-alpine
+    container_name: ut_emplea_db
+    restart: always
+    environment:
+      POSTGRES_DB: bolsa_trabajo_uto
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: angel123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bolsa_trabajo_uto"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Servicio de la Aplicación Web (Flask + Gunicorn)
+  web:
+    build: .
+    container_name: ut_emplea_web
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=db
+      - DB_NAME=bolsa_trabajo_uto
+      - DB_USER=postgres
+      - DB_PASS=angel123
+      - DB_PORT=5432
+      - FLASK_ENV=production
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

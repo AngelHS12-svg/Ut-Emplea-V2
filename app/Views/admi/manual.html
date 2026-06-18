@@ -1,480 +1,196 @@
-{% extends "admi/layout_admi.html" %}
-
-{% block title %}Manual de Usuario Técnico y Operativo{% endblock %}
-
-{% block header %}
-<div class="header-container">
-    <h2><i class="fas fa-book-open"></i> Manual del Sistema</h2>
-    <div class="user-info">
-        <span class="user-role">{{ current_user.rol }}</span>
-        <a href="/logout" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
-    </div>
-</div>
-{% endblock %}
-
-{% block content %}
-<style>
-    .manual-actions {
-        display: flex;
-        justify-content: flex-end;
-        margin-bottom: 20px;
-    }
-
-    .manual-paper {
-        background: #ffffff;
-        padding: 50px 60px;
-        border-radius: 8px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        color: #334155;
-        line-height: 1.7;
-        font-size: 1.05rem;
-        margin-bottom: 40px;
-        border-top: 5px solid var(--primary);
-    }
-
-    .manual-paper h1 {
-        color: var(--primary);
-        font-size: 2rem;
-        margin-bottom: 10px;
-        text-align: center;
-    }
-
-    .manual-paper .subtitle {
-        color: var(--accent);
-        font-size: 1.25rem;
-        text-align: center;
-        margin-bottom: 40px;
-        font-weight: 600;
-        font-style: italic;
-    }
-
-    .manual-paper h2 {
-        color: var(--primary);
-        border-bottom: 2px solid #e2e8f0;
-        padding-bottom: 8px;
-        margin-top: 35px;
-        margin-bottom: 15px;
-        font-size: 1.4rem;
-    }
-
-    .manual-paper p,
-    .manual-paper ul {
-        margin-bottom: 15px;
-    }
-
-    .manual-paper ul {
-        padding-left: 25px;
-    }
-
-    .manual-paper li {
-        margin-bottom: 8px;
-    }
-
-    .manual-footer {
-        text-align: center;
-        font-size: 0.85rem;
-        color: #94a3b8;
-        border-top: 1px solid #e2e8f0;
-        padding-top: 20px;
-        margin-top: 40px;
-    }
-</style>
-
-<div class="manual-actions">
-    <button class="btn btn-primary" onclick="descargarManualPDF()">
-        <i class="fas fa-file-pdf"></i> Descargar PDF Manual
-    </button>
-</div>
-
-<div id="manualContent" class="manual-paper">
-    <!-- Header visual para el PDF -->
-    <h1>BOLSA DE TRABAJO - UT ORIENTAL</h1>
-    <div class="subtitle">Manual de Usuario Técnico y Operativo</div>
-
-    <!-- Contenido Parseado -->
-    <div id="manualTextParsed"></div>
-
-    <div class="manual-footer">
-        Generado en línea - Universidad Tecnológica de Oriental
-    </div>
-</div>
-
-<!-- Incluir html2pdf -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script>
-    // Parsing básico del texto a HTML para respetar el estilo
-    document.addEventListener("DOMContentLoaded", function () {
-        // Obtenemos el texto crudo mandado desde jinja y previniendo inyección de escape
-        const rawText = {{ contenido| tojson | safe
-    }};
-    const lines = rawText.split('\n');
-
-    let htmlStr = '';
-    let listActive = false;
-
-    for (let i = 0; i < lines.length; i++) {
-        let line = lines[i].trim();
-        if (!line) continue;
-        if (line.startsWith("===") || line.startsWith("---")) continue;
-
-        // Detectar encabezados principales (todas mayúsculas y mínimo de longitud)
-        if (line === line.toUpperCase() && line.length > 5 && !line.includes("UT ORIENTAL")) {
-            if (listActive) { htmlStr += '</ul>'; listActive = false; }
-            htmlStr += '<h2>' + line + '</h2>';
-        }
-        // Detectar elementos de lista
-        else if (line.match(/^[\-\*]\s|^[0-9]+\.\s/)) {
-            if (!listActive) { htmlStr += '<ul>'; listActive = true; }
-            htmlStr += '<li>' + line.replace(/^[\-\*\d\.]+\s/, '') + '</li>';
-        }
-        // Párrafo normal
-        else {
-            if (listActive) { htmlStr += '</ul>'; listActive = false; }
-            htmlStr += '<p>' + line + '</p>';
-        }
-    }
-    if (listActive) htmlStr += '</ul>';
-
-    document.getElementById("manualTextParsed").innerHTML = htmlStr;
-    });
-
-    function descargarManualPDF() {
-        const elemento = document.getElementById("manualContent");
-        const opciones = {
-            margin: 10,
-            filename: 'Manual_Ut_Emplea.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        // Agregar clase para opacidad completa durante render del PDF por si hay animaciones
-        html2pdf().set(opciones).from(elemento).save();
-    }
-</script>
-{% endblock %}
-
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manual Integral de la Aplicación · Admin</title>
+    <title>Manual Integral · TalentLink</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/public/css/admin-child.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #0e312d 0%, #1a4d46 100%);
-            --accent-gradient: linear-gradient(135deg, #c2914f 0%, #e5b36a 100%);
+            --primary: #0e312d;
+            --accent: #c2914f;
+            --bg-light: #f8fafc;
+            --border-color: #e2e8f0;
         }
 
-        .manual-container {
-            max-width: 1000px;
-            margin: 20px auto;
-            background: white;
-            padding: 50px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-            position: relative;
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            color: #334155;
+            line-height: 1.6;
+            padding: 20px;
         }
 
-        .manual-header {
+        .manual-actions {
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            border-bottom: 3px solid #c2914f;
-            padding-bottom: 30px;
-            margin-bottom: 40px;
-        }
-
-        .nav-sections {
-            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
             gap: 10px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
         }
 
-        .nav-btn {
-            background: #f3f4f6;
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
             border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: #4b5563;
-        }
-
-        .nav-btn:hover {
-            background: #e5e7eb;
-        }
-
-        .section-tag {
-            display: inline-block;
-            background: rgba(194, 145, 79, 0.1);
-            color: #c2914f;
-            padding: 4px 12px;
-            border-radius: 50px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-        }
-
-        h2 {
-            color: #0e312d;
-            font-size: 1.8rem;
-            margin: 40px 0 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        h2 i {
-            color: #c2914f;
-        }
-
-        h3 {
-            color: #1a4d46;
-            font-size: 1.25rem;
-            margin: 25px 0 10px;
-            border-left: 4px solid #c2914f;
-            padding-left: 15px;
-        }
-
-        p,
-        li {
-            line-height: 1.7;
-            color: #374151;
-            margin-bottom: 12px;
-        }
-
-        .tech-box {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 20px;
-            border-radius: 12px;
-            margin: 20px 0;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.9rem;
-        }
-
-        .module-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin: 20px 0;
-        }
-
-        .module-card {
-            background: #ffffff;
-            border: 1px solid #f1f5f9;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-
-        .download-btn {
-            background: var(--primary-gradient);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 10px;
             cursor: pointer;
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 10px;
-            box-shadow: 0 4px 12px rgba(14, 49, 45, 0.2);
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .manual-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 50px 60px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border-top: 6px solid var(--primary);
+        }
+
+        .manual-header {
+            text-align: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 30px;
+            margin-bottom: 40px;
+        }
+
+        .manual-header h1 {
+            color: var(--primary);
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .manual-header .subtitle {
+            color: var(--accent);
+            font-size: 1.2rem;
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        h2 {
+            color: var(--primary);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        p, ul {
+            margin-bottom: 15px;
+            font-size: 1.05rem;
+        }
+
+        ul {
+            padding-left: 25px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .manual-footer {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #94a3b8;
+            border-top: 1px solid var(--border-color);
+            padding-top: 30px;
+            margin-top: 50px;
         }
 
         @media print {
-
-            .download-btn,
-            .nav-sections {
-                display: none;
-            }
-
-            .manual-container {
-                box-shadow: none;
-                padding: 0;
-                margin: 0;
-            }
+            .manual-actions { display: none; }
+            body { background: white; padding: 0; }
+            .manual-container { box-shadow: none; border: none; width: 100%; max-width: 100%; }
         }
     </style>
 </head>
-
 <body>
-    <div class="container">
-        <div class="manual-container" id="printableManual">
-            <div class="manual-header">
-                <div>
-                    <div class="section-tag">Documentación Oficial</div>
-                    <h1>Manual Integral de Usuario y Sistema</h1>
-                    <p style="color: #64748b; margin: 5px 0 0;">Guía Maestra de la Plataforma UT Oriental Emplea (v2.0)
-                    </p>
-                </div>
-                <button onclick="downloadPDF()" class="download-btn">
-                    <i class="fa-solid fa-file-export"></i> Exportar Guía Completa (PDF)
-                </button>
-            </div>
 
-            <div class="nav-sections">
-                <button class="nav-btn" onclick="document.getElementById('mod-admin').scrollIntoView()">Admin</button>
-                <button class="nav-btn"
-                    onclick="document.getElementById('mod-empresa').scrollIntoView()">Empresa</button>
-                <button class="nav-btn"
-                    onclick="document.getElementById('mod-candidato').scrollIntoView()">Candidato</button>
-                <button class="nav-btn" onclick="document.getElementById('mod-tech').scrollIntoView()">Técnico</button>
-            </div>
+    <div class="manual-actions">
+        <button class="btn btn-primary" onclick="descargarManualPDF()">
+            <i class="fas fa-file-pdf"></i> Exportar a PDF
+        </button>
+    </div>
 
-            <div class="manual-content">
-                <!-- MODULO ADMINISTRADOR -->
-                <section id="mod-admin">
-                    <h2><i class="fa-solid fa-shield-halved"></i> Módulo 1: Gestión Administrativa</h2>
-                    <p>El administrador es el eje central de confianza del sistema. Su función es filtrar y validar que
-                        el ecosistema se mantenga profesional y veraz.</p>
+    <div id="manualContent" class="manual-container">
+        <div class="manual-header">
+            <h1>TalentLink</h1>
+            <div class="subtitle">Manual de Usuario Técnico y Operativo</div>
+        </div>
 
-                    <h3>1.1 Validación de Entidades</h3>
-                    <p>Cada nuevo registro de Empresa o Candidato aparece en la cola de validación. El administrador
-                        debe verificar:</p>
-                    <ul>
-                        <li><strong>Empresas:</strong> Datos de RRHH, giro comercial y veracidad de la oferta.</li>
-                        <li><strong>Candidatos:</strong> Matrícula, carrera y estatus académico.</li>
-                    </ul>
+        <div id="manualTextParsed">
+            <!-- El contenido dinámico se cargará aquí -->
+        </div>
 
-                    <h3>1.2 Inteligencia de Negocios (Reportes)</h3>
-                    <p>El sistema genera reportes dinámicos que permiten medir el impacto institucional:</p>
-                    <ul>
-                        <li><strong>Dashboard:</strong> Estadísticas en tiempo real de vinculación.</li>
-                        <li><strong>Excel Pro:</strong> Generación de archivos .xlsx con formato institucional que
-                            incluyen: Resumen ejecutivo, detalles de vacantes, perfilado de candidatos e indicadores de
-                            colocación.</li>
-                    </ul>
-                </section>
-
-                <!-- MODULO EMPRESA -->
-                <section id="mod-empresa">
-                    <h2><i class="fa-solid fa-building"></i> Módulo 2: Aliados Empresariales</h2>
-                    <p>Diseñado para que las empresas gestionen su talento humano de manera autónoma pero supervisada.
-                    </p>
-
-                    <div class="module-grid">
-                        <div class="module-card">
-                            <h4 style="color: #c2914f; margin-bottom:10px;">Gestión de Vacantes</h4>
-                            <p style="font-size: 0.85rem;">Creación, edición y eliminación de ofertas laborales. Las
-                                vacantes incluyen perfiles, requisitos y sueldos.</p>
-                        </div>
-                        <div class="module-card">
-                            <h4 style="color: #c2914f; margin-bottom:10px;">Selección de Talento</h4>
-                            <p style="font-size: 0.85rem;">Visualización de postulados, descarga de CVs en PDF y cambio
-                                de estatus (Pendiente, Visto, Aceptado, Rechazado).</p>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- MODULO CANDIDATO -->
-                <section id="mod-candidato">
-                    <h2><i class="fa-solid fa-user-graduate"></i> Módulo 3: Talento Universitario</h2>
-                    <p>Enfoque en la experiencia del alumno/egresado para facilitar su inserción laboral.</p>
-
-                    <h3>3.1 Construcción de Perfil Profesional</h3>
-                    <p>El sistema permite crear un CV digital interactivo que incluye:</p>
-                    <ul>
-                        <li>Datos académicos y última experiencia laboral.</li>
-                        <li><strong>Idiomas y Certificaciones:</strong> Secciones especializadas para idiomas con nivel
-                            y certificaciones validadas.</li>
-                        <li><strong>CV Dinámico:</strong> Generación automática de una versión web del currículum para
-                            compartir.</li>
-                    </ul>
-
-                    <h3>3.2 Seguridad de Identidad (2FA)</h3>
-                    <p>Para proteger su información personal y laboral, el candidato cuenta con Segundo Factor de
-                        Autenticación vía correo electrónico, garantizando que solo él acceda a sus postulaciones.</p>
-                </section>
-
-                <!-- SECCION TECNICA -->
-                <section id="mod-tech">
-                    <h2><i class="fa-solid fa-code"></i> Especificaciones Técnicas y Seguridad</h2>
-                    <p>Información crítica para el mantenimiento y escalabilidad del sistema.</p>
-
-                    <h3>Soporte de Librerías y Herramientas</h3>
-                    <div class="tech-box">
-                        <ul>
-                            <li><strong>Backend:</strong> Python / Flask Framework</li>
-                            <li><strong>Base de Datos:</strong> PostgreSQL con Psycopg2 (Connection Pooling)</li>
-                            <li><strong>Reportes:</strong> Openpyxl (Generación de archivos Excel XLSX nativos)</li>
-                            <li><strong>Seguridad:</strong> Werkzeug (Hashing PBKDF2:SHA256)</li>
-                            <li><strong>Documentos:</strong> html2pdf.js / jsPDF (Conversión en cliente)</li>
-                        </ul>
-                    </div>
-
-                    <h3>Protocolos de Seguridad Implementados</h3>
-                    <ul>
-                        <li><strong>Prevención XSS:</strong> Sanitización de campos de texto mediante
-                            <code>strip_tags</code> y detección de patrones <code>&lt;script&gt;</code> en el frontend y
-                            backend.
-                        </li>
-                        <li><strong>Password Recovery:</strong> UUID tokens efímeros almacenados en BD con expiración
-                            forzosa.</li>
-                        <li><strong>SQL Injection:</strong> Uso mandatorio de consultas parametrizadas a través del
-                            driver de PostgreSQL.</li>
-                        <li><strong>Middleware:</strong> Decoradores <code>@login_required</code> para control de acceso
-                            por roles.</li>
-                    </ul>
-                </section>
-            </div>
-
-            <div
-                style="margin-top: 50px; border-top: 1px solid #f1f5f9; padding-top: 30px; text-align: center; color: #94a3b8; font-size: 0.85rem; font-weight: 500;">
-                © 2026 Universidad Tecnológica de Oriental | Departamento de Desarrollo Tecnológico e Innovación
-            </div>
+        <div class="manual-footer">
+            © 2026 TalentLink by UT de Oriental | Documentación Oficial del Sistema
         </div>
     </div>
 
     <script>
-        function downloadPDF() {
-            const btn = document.querySelector('.download-btn');
-            const originalText = btn.innerHTML;
+        document.addEventListener("DOMContentLoaded", function () {
+            const rawText = {{ contenido | tojson | safe }};
+            const lines = rawText.split('\n');
+            let htmlStr = '';
+            let listActive = false;
 
-            // Feedback visual
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando PDF...';
-            btn.disabled = true;
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+                if (!line || line.startsWith("===") || line.startsWith("---")) continue;
 
-            const element = document.getElementById('printableManual');
+                // Detectar encabezados (mayúsculas)
+                if (line === line.toUpperCase() && line.length > 5) {
+                    if (listActive) { htmlStr += '</ul>'; listActive = false; }
+                    htmlStr += '<h2>' + line + '</h2>';
+                }
+                // Detectar listas
+                else if (line.match(/^[\-\*]\s|^[0-9]+\.\s/)) {
+                    if (!listActive) { htmlStr += '<ul>'; listActive = true; }
+                    htmlStr += '<li>' + line.replace(/^[\-\*\d\.]+\s/, '') + '</li>';
+                }
+                // Párrafos
+                else {
+                    if (listActive) { htmlStr += '</ul>'; listActive = false; }
+                    htmlStr += '<p>' + line + '</p>';
+                }
+            }
+            if (listActive) htmlStr += '</ul>';
+            document.getElementById("manualTextParsed").innerHTML = htmlStr;
+        });
 
-            // Asegurar que estamos al inicio para evitar cortes en el canvas
-            window.scrollTo(0, 0);
-
+        function descargarManualPDF() {
+            const element = document.getElementById('manualContent');
             const opt = {
-                margin: [10, 10, 10, 10],
-                filename: 'Manual_UT_Oriental_Emplea_V2.pdf',
+                margin: 10,
+                filename: 'Manual_TalentLink_V2.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: {
-                    scale: 2,
-                    useCORS: true,
-                    logging: false,
-                    letterRendering: true
-                },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
-
-            // Usar la API de promesas de html2pdf para manejar el estado
-            html2pdf().from(element).set(opt).save().then(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }).catch(err => {
-                console.error('Error al generar PDF:', err);
-                alert('Hubo un error al generar el PDF. Por favor, intenta de nuevo.');
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            });
+            html2pdf().from(element).set(opt).save();
         }
     </script>
 </body>
-
 </html>

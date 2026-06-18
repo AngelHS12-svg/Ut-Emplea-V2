@@ -19,7 +19,7 @@
             </div>
             <div class="brand-text">
                 Panel de Empresa
-                <span>UT Oriental Emplea</span>
+                <span>TalentLink</span>
             </div>
         </div>
 
@@ -77,22 +77,22 @@
                     <div class="card-header">
                         <h2 class="card-title"><i class="fas fa-building"></i> Datos de la empresa</h2>
                     </div>
-                    <form>
+                    <form method="POST" action="{{ url_for('empresa.perfil') }}">
                         <div class="grid grid-2">
                             <div class="form-group">
                                 <label class="form-label">Nombre de la empresa / organización <span
                                         class="required">*</span></label>
-                                <input type="text" class="form-control" value="{{ empresa[0] if empresa else '' }}">
+                                <input type="text" name="nombre" class="form-control" value="{{ empresa[0] if empresa else '' }}" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Giro de la empresa <span class="required">*</span></label>
-                                <input type="text" class="form-control" value="{{ empresa[1] if empresa else '' }}">
+                                <input type="text" name="giro" class="form-control" value="{{ empresa[1] if empresa else '' }}" required>
                             </div>
                         </div>
                         <div class="grid grid-2">
                             <div class="form-group">
                                 <label class="form-label">Tipo de empresa <span class="required">*</span></label>
-                                <select class="form-control">
+                                <select name="tipo_empresa" class="form-control" required>
                                     <option {% if empresa and empresa[2] == 'Privada' %}selected{% endif %}>Privada</option>
                                     <option {% if empresa and empresa[2] == 'Publica' %}selected{% endif %}>Pública</option>
                                     <option {% if empresa and empresa[2] == 'Mixta' %}selected{% endif %}>Mixta</option>
@@ -101,12 +101,12 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Teléfono <span class="required">*</span></label>
-                                <input type="text" class="form-control" value="{{ empresa[3] if empresa else '' }}">
+                                <input type="text" name="telefono" class="form-control" value="{{ empresa[3] if empresa else '' }}" required>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Dirección <span class="required">*</span></label>
-                            <input type="text" class="form-control" value="{{ empresa[4] if empresa else '' }}">
+                            <input type="text" name="calle" class="form-control" value="{{ empresa[4] if empresa else '' }}" required>
                         </div>
 
                         <h3 style="margin-top: 2rem; color: var(--verde);">Datos de acceso y contacto</h3>
@@ -119,17 +119,17 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Nombre del director o jefe de RR.HH.</label>
-                                <input type="text" class="form-control" value="{{ empresa[5] if empresa else '' }}">
+                                <input type="text" name="rh_nombre" class="form-control" value="{{ empresa[5] if empresa else '' }}">
                             </div>
                         </div>
                         <div class="grid grid-2">
                             <div class="form-group">
                                 <label class="form-label">Teléfono de Recursos Humanos</label>
-                                <input type="text" class="form-control" value="{{ empresa[6] if empresa else '' }}">
+                                <input type="text" name="rh_telefono" class="form-control" value="{{ empresa[6] if empresa else '' }}">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Correo electrónico de RR.HH.</label>
-                                <input type="email" class="form-control" value="{{ empresa[7] if empresa else '' }}">
+                                <input type="email" name="rh_correo" class="form-control" value="{{ empresa[7] if empresa else '' }}">
                             </div>
                         </div>
 

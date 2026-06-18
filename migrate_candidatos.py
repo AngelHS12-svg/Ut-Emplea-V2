@@ -1,15 +1,20 @@
 import psycopg2
 import os
 
+def get_connection():
+    if os.getenv("DATABASE_URL"):
+        return psycopg2.connect(dsn=os.getenv("DATABASE_URL"))
+    return psycopg2.connect(
+        host=os.getenv("DB_HOST", "localhost"),
+        database=os.getenv("DB_NAME", "bolsa_trabajo_uto"),
+        user=os.getenv("DB_USER", "postgres"),
+        password=os.getenv("DB_PASS", "angel123"),
+        port=os.getenv("DB_PORT", "5432")
+    )
+
 def migrate():
     try:
-        conn = psycopg2.connect(
-            host=os.getenv("DB_HOST", "localhost"),
-            database=os.getenv("DB_NAME", "bolsa_trabajo_uto"),
-            user=os.getenv("DB_USER", "postgres"),
-            password=os.getenv("DB_PASS", "angel123"),
-            port=os.getenv("DB_PORT", "5432")
-        )
+        conn = get_connection()
         cur = conn.cursor()
         
         print("Iniciando migración de la tabla 'candidatos'...")
@@ -18,6 +23,7 @@ def migrate():
         alter_queries = [
             "ALTER TABLE candidatos ADD COLUMN IF NOT EXISTS codigo_postal VARCHAR(10)",
             "ALTER TABLE candidatos ADD COLUMN IF NOT EXISTS ubicacion VARCHAR(255)",
+            "ALTER TABLE candidatos ADD COLUMN IF NOT EXISTS carrera TEXT",
             "ALTER TABLE candidatos ADD COLUMN IF NOT EXISTS ultimo_grado_estudios VARCHAR(100)",
             "ALTER TABLE candidatos ADD COLUMN IF NOT EXISTS institucion_estudios VARCHAR(255)",
             "ALTER TABLE candidatos ADD COLUMN IF NOT EXISTS carrera_estudios VARCHAR(255)",
@@ -31,6 +37,8 @@ def migrate():
             "ALTER TABLE candidatos ADD COLUMN IF NOT EXISTS area_trabajo VARCHAR(100)",
             "ALTER TABLE candidatos ADD COLUMN IF NOT EXISTS especialidad VARCHAR(100)",
             "ALTER TABLE candidatos ADD COLUMN IF NOT EXISTS tags_especialidad TEXT",
+            "ALTER TABLE candidatos ADD COLUMN IF NOT EXISTS idiomas TEXT",
+            "ALTER TABLE candidatos ADD COLUMN IF NOT EXISTS cursos_certificaciones TEXT",
             "ALTER TABLE candidatos ADD COLUMN IF NOT EXISTS foto_perfil_url TEXT"
         ]
         

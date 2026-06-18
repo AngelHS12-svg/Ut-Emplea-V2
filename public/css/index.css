@@ -206,13 +206,15 @@ background-color:  rgba(194, 145, 79, 0.15);
 }
 
 /* Responsive */
-@media (max-width: 800px) {
-  body {
-    flex-direction: column;
-  }
+@media (max-width: 1024px) {
   .sidebar {
-    width: 100%;
-    height: auto;
-    position: relative;
+    position: fixed;
+    left: -100%;
+    z-index: 1000;
+    transition: left 0.3s ease;
+    height: 100vh;
+  }
+  .sidebar.active {
+    left: 0;
   }
 }

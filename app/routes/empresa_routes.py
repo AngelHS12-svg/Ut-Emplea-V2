@@ -195,24 +195,79 @@ def candidatos():
     return render_template('empresa/empresa-candidatos-lista.html', vacantes=vacantes)
 
 # ================= PERFIL =================
-@empresa_bp.route("/perfil")
+@empresa_bp.route("/perfil", methods=["GET", "POST"])
 @login_required
 def perfil():
     if current_user.rol != "Empresa": return redirect(url_for("home"))
     
     conn = get_connection()
-    # Usamos un cursor normal pero podemos mapear a dict si fuera necesario. 
-    # Para mantener consistencia con el resto del archivo, usaremos el cursor por defecto.
     cur = conn.cursor()
     
+    # Obtener ID de empresa para el usuario actual
+    cur.execute("SELECT id_empresa FROM empresas WHERE id_usuario = %s", (current_user.id,))
+    id_empresa_row = cur.fetchone()
+    if not id_empresa_row:
+        cur.close()
+        conn.close()
+        return redirect(url_for("home"))
+    
+    id_empresa = id_empresa_row[0]
+    
+    if request.method == "POST":
+        nombre = strip_tags(request.form.get("nombre"))
+        giro = strip_tags(request.form.get("giro"))
+        tipo_empresa = strip_tags(request.form.get("tipo_empresa"))
+        telefono = strip_tags(request.form.get("telefono"))
+        calle = strip_tags(request.form.get("calle"))
+        rh_nombre = strip_tags(request.form.get("rh_nombre"))
+        rh_telefono = strip_tags(request.form.get("rh_telefono"))
+        rh_correo = strip_tags(request.form.get("rh_correo"))
+        
+        try:
+            # 1. Actualizar tabla empresas
+            cur.execute("""
+                UPDATE empresas 
+                SET nombre = %s, giro = %s, tipo_empresa = %s, telefono = %s 
+                WHERE id_empresa = %s
+            """, (nombre, giro, tipo_empresa, telefono, id_empresa))
+            
+            # 2. Actualizar o insertar tabla direcciones_empresa
+            cur.execute("SELECT 1 FROM direcciones_empresa WHERE id_empresa = %s", (id_empresa,))
+            if cur.fetchone():
+                cur.execute("UPDATE direcciones_empresa SET calle = %s WHERE id_empresa = %s", (calle, id_empresa))
+            else:
+                cur.execute("INSERT INTO direcciones_empresa (id_empresa, calle) VALUES (%s, %s)", (id_empresa, calle))
+                
+            # 3. Actualizar o insertar tabla recursos_humanos
+            cur.execute("SELECT 1 FROM recursos_humanos WHERE id_empresa = %s", (id_empresa,))
+            if cur.fetchone():
+                cur.execute("""
+                    UPDATE recursos_humanos SET nombre = %s, telefono = %s, correo = %s 
+                    WHERE id_empresa = %s
+                """, (rh_nombre, rh_telefono, rh_correo, id_empresa))
+            else:
+                cur.execute("""
+                    INSERT INTO recursos_humanos (id_empresa, nombre, telefono, correo) 
+                    VALUES (%s, %s, %s, %s)
+                """, (id_empresa, rh_nombre, rh_telefono, rh_correo))
+                
+            conn.commit()
+            flash("Perfil actualizado correctamente.")
+        except Exception as e:
+            conn.rollback()
+            flash(f"Error al actualizar el perfil: {str(e)}")
+        
+        return redirect(url_for("empresa.perfil"))
+        
+    # Lógica GET
     cur.execute("""
         SELECT e.nombre, e.giro, e.tipo_empresa, e.telefono, d.calle, 
                rh.nombre as rh_nombre, rh.telefono as rh_telefono, rh.correo as rh_correo
         FROM empresas e
         LEFT JOIN direcciones_empresa d ON e.id_empresa = d.id_empresa
         LEFT JOIN recursos_humanos rh ON e.id_empresa = rh.id_empresa
-        WHERE e.id_usuario = %s
-    """, (current_user.id,))
+        WHERE e.id_empresa = %s
+    """, (id_empresa,))
     
     empresa = cur.fetchone()
     cur.close()

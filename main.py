@@ -35,8 +35,12 @@ def validar_registro_datos(correo, password, telefono, cp=None):
     if len(password) < 12:
         return "La contraseña debe tener al menos 12 caracteres."
     if not re.search(r"[A-Z]", password) or not re.search(r"[a-z]", password) or \
-       not re.search(r"\d", password) or not re.search(r"[@$!%*?&]", password):
+       not re.search(r"\d", password) or not re.search(r"[^A-Za-z0-9]", password):
         return "La contraseña debe incluir mayúscula, minúscula, número y símbolo especial."
+        
+    consecutivos = ['012', '123', '234', '345', '456', '567', '678', '789', '890', '098', '987', '876', '765', '654', '543', '432', '321', '210', '109']
+    if any(seq in password for seq in consecutivos):
+        return "La contraseña no debe tener números consecutivos (ej. 123 o 321)."
     
     # Validar Teléfono (10 dígitos)
     if not telefono or len(telefono) != 10 or not telefono.isdigit():
@@ -135,13 +139,13 @@ app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = 'angelhsnew123@gmail.com'
 app.config['MAIL_PASSWORD'] = 'nxjwdgnrmtgdndoa' # App Password de la cuenta personal
-app.config['MAIL_DEFAULT_SENDER'] = ('UT Oriental Emplea', 'angelhsnew123@gmail.com')
+app.config['MAIL_DEFAULT_SENDER'] = ('TalentLink', 'angelhsnew123@gmail.com')
 
 def enviar_email(destinatario, asunto, mensaje_texto):
     """Envía un correo electrónico utilizando smtplib."""
     try:
         msg = MIMEMultipart()
-        msg['From'] = f"{Header('UT Oriental Emplea', 'utf-8')} <{app.config['MAIL_USERNAME']}>"
+        msg['From'] = f"{Header('TalentLink', 'utf-8')} <{app.config['MAIL_USERNAME']}>"
         msg['To'] = destinatario
         msg['Subject'] = Header(asunto, 'utf-8')
         
@@ -316,13 +320,6 @@ def admin():
         flash("Acceso denegado: Se requiere rol de Administrador")
         return redirect(url_for("home"))
     return render_template("admi/index.html")
-
-@app.route("/admin/manual")
-@login_required
-def admin_manual():
-    if current_user.rol != "Administrador":
-        return redirect(url_for("home"))
-    return render_template("admi/manual.html")
 
 @app.route("/admin/inicio")
 @login_required
@@ -1182,7 +1179,7 @@ def admin_exportar_excel():
         SELECT COALESCE(c.carrera, 'Sin carrera'), COUNT(c.id_candidato)
         FROM candidatos c
         {wc_a}
-        GROUP BY ca.nombre ORDER BY COUNT(c.id_candidato) DESC
+        GROUP BY 1 ORDER BY 2 DESC
     """, params)
     carreras_data = cur.fetchall()
     for i, (carrera, count) in enumerate(carreras_data, row + 1):

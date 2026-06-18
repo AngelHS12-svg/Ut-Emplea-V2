@@ -1,4 +1,4 @@
-# UT Oriental Emplea v2.0
+# TalentLink v2.0
 
 ¡Bienvenido a la plataforma oficial de vinculación laboral de la Universidad Tecnológica de Oriental! Esta aplicación es un ecosistema integral diseñado para conectar a estudiantes y egresados con el sector empresarial de manera segura, eficiente y profesional.
 

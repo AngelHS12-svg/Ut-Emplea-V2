@@ -16,14 +16,23 @@ def clean_db():
     conn = get_connection()
     cur = conn.cursor()
     try:
-        print("Eliminando candidatos...")
-        cur.execute("DELETE FROM candidatos")
-        print("Eliminando empresas...")
-        cur.execute("DELETE FROM empresas")
-        print("Eliminando notificaciones...")
-        cur.execute("DELETE FROM notificaciones")
-        print("Eliminando vacantes...")
-        cur.execute("DELETE FROM vacantes")
+        tables = [
+            "postulaciones",
+            "requisitos_vacante",
+            "vacantes_guardadas",
+            "vacantes",
+            "recursos_humanos",
+            "direcciones_empresa",
+            "validacion_empresas",
+            "validacion_candidatos",
+            "empresas",
+            "candidatos",
+            "notificaciones"
+        ]
+        for table in tables:
+            print(f"Eliminando {table}...")
+            cur.execute(f"DELETE FROM {table}")
+            
         print("Eliminando usuarios que no sean Admi...")
         cur.execute("DELETE FROM usuarios WHERE id_rol != 1")
         conn.commit()

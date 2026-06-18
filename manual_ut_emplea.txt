@@ -1,0 +1,78 @@
+================================================================================
+          MANUAL INTEGRAL DEL SISTEMA - ADMINISTRACIÓN UT ORIENTAL
+================================================================================
+
+BIENVENIDO AL PANEL DE ADMINISTRACIÓN
+Este manual proporciona una guía detallada sobre las funciones, procesos y
+controles disponibles para el administrador de la plataforma TalentLink.
+
+--------------------------------------------------------------------------------
+1. DASHBOARD DE INICIO (ESTADÍSTICAS)
+--------------------------------------------------------------------------------
+El módulo de Inicio ofrece una visión general del estado del sistema:
+- Empresas Activas: Cantidad de empresas validadas y operativas.
+- Candidatos Totales: Número de estudiantes y egresados registrados.
+- Vacantes Activas: Ofertas laborales actualmente disponibles.
+- Pendientes de Validación: Alerta sobre registros que requieren su revisión.
+
+--------------------------------------------------------------------------------
+2. GESTIÓN Y VALIDACIÓN DE EMPRESAS
+--------------------------------------------------------------------------------
+Para garantizar la calidad de las ofertas, toda empresa debe ser validada:
+- Validar Empresa: Revise los datos fiscales, giro y contacto de la empresa.
+- Acciones: Puede "Aprobar" para dar acceso inmediato o "Rechazar" si los datos
+  son insuficientes o incorrectos.
+- Consultar Empresas: Listado histórico de todas las empresas (Aprobadas,
+  Rechazadas y Pendientes) con opción de ver detalles de contacto.
+
+--------------------------------------------------------------------------------
+3. GESTIÓN Y VALIDACIÓN DE CANDIDATOS (ESTUDIANTES)
+--------------------------------------------------------------------------------
+Similar a las empresas, los estudiantes pasan por un filtro de calidad:
+- Validar Estudiante: Verifique el nombre, carrera y año de egreso.
+- Consultar Estudiantes: Acceda al directorio completo de talentos.
+- Nota: Una vez aprobado, el estudiante recibe una notificación automática por
+  correo electrónico para que pueda completar su CV y postularse.
+
+--------------------------------------------------------------------------------
+4. MONITOREO DE VACANTES
+--------------------------------------------------------------------------------
+El administrador tiene control total sobre las ofertas publicadas:
+- Vacantes Activas: Visualice el título, empresa y número de postulaciones.
+- Gestión: Puede eliminar vacantes que no cumplan con las políticas de la
+  universidad o que contengan información inapropiada.
+- Notificaciones: Al eliminar una vacante, el sistema notifica automáticamente
+  a la empresa responsable indicando la acción.
+
+--------------------------------------------------------------------------------
+5. SEGUIMIENTO COORDINADO
+--------------------------------------------------------------------------------
+Este módulo permite observar la interacción real entre talento y empresa:
+- Historial de Postulaciones: Vea quién se postula a qué vacante y cuándo.
+- Estados: Monitoree si los candidatos están en estado "Visto", "Aceptado" o
+  "Rechazado" por las empresas.
+- Transparencia: Facilita la labor de vinculación al tener datos sobre la 
+  colocación laboral en tiempo real.
+
+--------------------------------------------------------------------------------
+6. REPORTES Y EXPORTACIÓN DE DATOS
+--------------------------------------------------------------------------------
+Generación de inteligencia institucional:
+- Filtros por Fecha: Obtenga datos específicos por periodos de tiempo.
+- Reporte de Colocación: Cuadro detallado con espacios gestionados y 
+  segmentación por sexo (Hombres/Mujeres) de los colocados.
+- Exportación Excel: Los reportes se generan en formato .xlsx profesional,
+  con estilos institucionales, listos para presentaciones oficiales.
+
+--------------------------------------------------------------------------------
+7. SEGURIDAD Y SOPORTE TÉCNICO
+--------------------------------------------------------------------------------
+El sistema cuenta con blindajes automáticos:
+- Protección SQLi y XSS: Validación de datos en cada entrada del sistema.
+- Autenticación 2FA: El acceso administrativo requiere verificación por correo.
+- Resguardo de CVs: Los archivos PDF están en un directorio protegido, accesible
+  solo bajo reglas estrictas de autorización.
+
+--------------------------------------------------------------------------------
+© 2026 Universidad Tecnológica de Oriental | Bolsa de Trabajo V2.0
+================================================================================

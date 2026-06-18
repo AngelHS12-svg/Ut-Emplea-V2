@@ -196,7 +196,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // ===== TYPEWRITER EFFECT FOR HERO TITLE =====
     const heroTitle = document.querySelector(".hero-title");
     if (heroTitle) {
-        const text = "UT Oriental Emplea";
+        const text = "TalentLink";
         heroTitle.innerHTML = "";
         heroTitle.classList.add("typewriter-caret");
         
