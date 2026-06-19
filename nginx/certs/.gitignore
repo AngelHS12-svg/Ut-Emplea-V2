@@ -1,0 +1,4 @@
+# Esta carpeta contiene los certificados SSL generados por generate_ssl.sh
+# Los archivos cert.crt y cert.key son generados en el servidor y NO se suben a Git
+cert.crt
+cert.key
