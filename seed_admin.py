@@ -1,7 +1,7 @@
 """
-Script para crear un usuario administrador temporal para pruebas.
+Script para crear el usuario administrador oficial.
 Ejecutar: python seed_admin.py
-Credenciales: admin@utoriental.edu.mx / Admin123!
+Credenciales: bolsadetrabajo@utdeoriental.edu.mx / UT_Oriental_2026!#
 """
 import os
 import psycopg2
@@ -16,34 +16,37 @@ else:
         user=os.getenv("DB_USER", "postgres"),
         password=os.getenv("DB_PASS", "angel123"),
         port=os.getenv("DB_PORT", "5432")
-# 1. Eliminar absolutamente TODOS los usuarios de la base de datos
+    )
+
+cur = conn.cursor()
+
+# 1. Eliminar TODAS las cuentas existentes
 cur.execute("DELETE FROM usuarios")
 conn.commit()
-print("Todas las cuentas anteriores han sido eliminadas.")
+print("Todas las cuentas anteriores eliminadas.")
 
-# 2. Insertar el administrador real
+# 2. Insertar el administrador oficial
 correo_admin = "bolsadetrabajo@utdeoriental.edu.mx"
 hashed = generate_password_hash("UT_Oriental_2026!#")
 
-cur.execute("""
-    INSERT INTO usuarios (id_rol, correo, password, activo)
-    VALUES (1, %s, %s, true)
-""", (correo_admin, hashed))
-
+cur.execute(
+    "INSERT INTO usuarios (id_rol, correo, password, activo) VALUES (1, %s, %s, true)",
+    (correo_admin, hashed)
+)
 conn.commit()
 print("Usuario admin creado exitosamente.")
-print(f"Correo: {correo_admin}")
-print("Contraseña: UT_Oriental_2026!#")
+print("Correo: " + correo_admin)
+print("Contrasena: UT_Oriental_2026!#")
 
-# Insertar carreras si no existen
+# 3. Insertar carreras si no existen
 cur.execute("SELECT COUNT(*) FROM carreras")
 if cur.fetchone()[0] == 0:
     carreras = [
-        ("Ingeniería en Sistemas Computacionales", "Desarrollo de software y sistemas"),
-        ("Administración", "Gestión empresarial"),
-        ("Contaduría Pública", "Contabilidad y finanzas"),
-        ("Ingeniería Industrial", "Procesos y producción"),
-        ("Diseño Gráfico", "Diseño visual y multimedia"),
+        ("Ingenieria en Sistemas Computacionales", "Desarrollo de software y sistemas"),
+        ("Administracion", "Gestion empresarial"),
+        ("Contaduria Publica", "Contabilidad y finanzas"),
+        ("Ingenieria Industrial", "Procesos y produccion"),
+        ("Diseno Grafico", "Diseno visual y multimedia"),
     ]
     for nombre, desc in carreras:
         cur.execute("INSERT INTO carreras (nombre, descripcion) VALUES (%s, %s)", (nombre, desc))
