@@ -20,19 +20,19 @@ else:
 cur = conn.cursor()
 
 # Verificar si ya existe
-cur.execute("SELECT id_usuario FROM usuarios WHERE correo = %s", ("admin@utoriental.edu.mx",))
+cur.execute("SELECT id_usuario FROM usuarios WHERE correo = %s", ("bolsadetrabajo@utdeoriental.edu.mx",))
 if cur.fetchone():
     print("El usuario admin ya existe.")
 else:
-    hashed = generate_password_hash("Admin123!")
+    hashed = generate_password_hash("UT_Oriental_2026!#")
     cur.execute("""
-        INSERT INTO usuarios (id_rol, correo, password)
-        VALUES (1, %s, %s)
-    """, ("admin@utoriental.edu.mx", hashed))
+        INSERT INTO usuarios (id_rol, correo, password, activo)
+        VALUES (1, %s, %s, true)
+    """, ("bolsadetrabajo@utdeoriental.edu.mx", hashed))
     conn.commit()
     print("Usuario admin creado exitosamente.")
-    print("Correo: admin@utoriental.edu.mx")
-    print("Contraseña: Admin123!")
+    print("Correo: bolsadetrabajo@utdeoriental.edu.mx")
+    print("Contraseña: UT_Oriental_2026!#")
 
 # Insertar carreras si no existen
 cur.execute("SELECT COUNT(*) FROM carreras")
