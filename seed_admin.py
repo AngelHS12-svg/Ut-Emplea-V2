@@ -19,20 +19,34 @@ else:
     )
 cur = conn.cursor()
 
-# Verificar si ya existe
-cur.execute("SELECT id_usuario FROM usuarios WHERE correo = %s", ("bolsadetrabajo@utdeoriental.edu.mx",))
+# 1. Eliminar el administrador de prueba anterior si existe
+cur.execute("DELETE FROM usuarios WHERE correo = %s", ("admin@utoriental.edu.mx",))
+conn.commit()
+
+# 2. Insertar o actualizar el administrador real
+correo_admin = "bolsadetrabajo@utdeoriental.edu.mx"
+hashed = generate_password_hash("UT_Oriental_2026!#")
+
+cur.execute("SELECT id_usuario FROM usuarios WHERE correo = %s", (correo_admin,))
 if cur.fetchone():
-    print("El usuario admin ya existe.")
+    # Si ya existe (por si acaso), actualizamos la contraseña y lo activamos
+    cur.execute("""
+        UPDATE usuarios 
+        SET password = %s, activo = true, id_rol = 1 
+        WHERE correo = %s
+    """, (hashed, correo_admin))
+    print("El usuario admin ya existía. Se actualizó la contraseña correctamente.")
 else:
-    hashed = generate_password_hash("UT_Oriental_2026!#")
+    # Si no existe, lo insertamos
     cur.execute("""
         INSERT INTO usuarios (id_rol, correo, password, activo)
         VALUES (1, %s, %s, true)
-    """, ("bolsadetrabajo@utdeoriental.edu.mx", hashed))
-    conn.commit()
+    """, (correo_admin, hashed))
     print("Usuario admin creado exitosamente.")
-    print("Correo: bolsadetrabajo@utdeoriental.edu.mx")
-    print("Contraseña: UT_Oriental_2026!#")
+
+conn.commit()
+print(f"Correo: {correo_admin}")
+print("Contraseña: UT_Oriental_2026!#")
 
 # Insertar carreras si no existen
 cur.execute("SELECT COUNT(*) FROM carreras")
