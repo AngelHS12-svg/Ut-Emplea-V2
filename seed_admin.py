@@ -16,35 +16,22 @@ else:
         user=os.getenv("DB_USER", "postgres"),
         password=os.getenv("DB_PASS", "angel123"),
         port=os.getenv("DB_PORT", "5432")
-    )
-cur = conn.cursor()
-
-# 1. Eliminar el administrador de prueba anterior si existe
-cur.execute("DELETE FROM usuarios WHERE correo = %s", ("admin@utoriental.edu.mx",))
+# 1. Eliminar absolutamente TODOS los usuarios de la base de datos
+cur.execute("DELETE FROM usuarios")
 conn.commit()
+print("Todas las cuentas anteriores han sido eliminadas.")
 
-# 2. Insertar o actualizar el administrador real
+# 2. Insertar el administrador real
 correo_admin = "bolsadetrabajo@utdeoriental.edu.mx"
 hashed = generate_password_hash("UT_Oriental_2026!#")
 
-cur.execute("SELECT id_usuario FROM usuarios WHERE correo = %s", (correo_admin,))
-if cur.fetchone():
-    # Si ya existe (por si acaso), actualizamos la contraseña y lo activamos
-    cur.execute("""
-        UPDATE usuarios 
-        SET password = %s, activo = true, id_rol = 1 
-        WHERE correo = %s
-    """, (hashed, correo_admin))
-    print("El usuario admin ya existía. Se actualizó la contraseña correctamente.")
-else:
-    # Si no existe, lo insertamos
-    cur.execute("""
-        INSERT INTO usuarios (id_rol, correo, password, activo)
-        VALUES (1, %s, %s, true)
-    """, (correo_admin, hashed))
-    print("Usuario admin creado exitosamente.")
+cur.execute("""
+    INSERT INTO usuarios (id_rol, correo, password, activo)
+    VALUES (1, %s, %s, true)
+""", (correo_admin, hashed))
 
 conn.commit()
+print("Usuario admin creado exitosamente.")
 print(f"Correo: {correo_admin}")
 print("Contraseña: UT_Oriental_2026!#")
 
