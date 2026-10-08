@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Servicio de Base de Datos (PostgreSQL)
   db:
@@ -7,9 +5,9 @@ services:
     container_name: ut_emplea_db
     restart: always
     environment:
-      POSTGRES_DB: bolsa_trabajo_uto
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: angel123
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -25,11 +23,13 @@ services:
     restart: always
     environment:
       - DB_HOST=db
-      - DB_NAME=bolsa_trabajo_uto
-      - DB_USER=postgres
-      - DB_PASS=angel123
-      - DB_PORT=5432
-      - FLASK_ENV=production
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT:-5432}
+      - FLASK_ENV=${FLASK_ENV:-production}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
     volumes:
       - ./uploads:/app/uploads
       - ./public:/app/public
@@ -38,8 +38,8 @@ services:
         condition: service_healthy
     # El puerto 5000 ya NO se expone directamente al exterior,
     # solo Nginx puede comunicarse con la app internamente
-    expose:
-      - "5000"
+    ports:
+      - "5000:5000"
 
   # Servicio Nginx (Proxy Inverso + SSL)
   nginx:
@@ -53,8 +53,10 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/certs:/etc/nginx/certs:ro
       - ./public:/app/public:ro
+      - ./nginx/certs-le:/etc/nginx/certs-le:ro
     depends_on:
       - web
+
 
 volumes:
   postgres_data:
