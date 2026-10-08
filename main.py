@@ -90,10 +90,10 @@ try:
     else:
         db_pool = pool.ThreadedConnectionPool(
             1, 120,  # Aumentamos a 120 conexiones para soportar 100+ usuarios concurrentes
-            host=os.getenv("DB_HOST", "localhost"),
-            database=os.getenv("DB_NAME", "bolsa_trabajo_uto"),
-            user=os.getenv("DB_USER", "postgres"),
-            password=os.getenv("DB_PASS", "angel123"),
+            host=os.getenv("DB_HOST", "db"),
+            database=os.environ["DB_NAME"],
+            user=os.environ["DB_USER"],
+            password=os.environ["DB_PASSWORD"],
             port=os.getenv("DB_PORT", "5432"),
             client_encoding='utf8'
         )
@@ -117,10 +117,10 @@ def get_connection():
             return ConnectionWrapper(psycopg2.connect(dsn=os.getenv("DATABASE_URL")))
         else:
             return ConnectionWrapper(psycopg2.connect(
-                host=os.getenv("DB_HOST", "localhost"),
-                database=os.getenv("DB_NAME", "bolsa_trabajo_uto"),
-                user=os.getenv("DB_USER", "postgres"),
-                password=os.getenv("DB_PASS", "angel123"),
+                host=os.getenv("DB_HOST", "db"),
+                database=os.environ["DB_NAME"],
+                user=os.environ["DB_USER"],
+                password=os.environ["DB_PASSWORD"],
                 port=os.getenv("DB_PORT", "5432"),
                 client_encoding='utf8'
             ))
@@ -137,9 +137,9 @@ app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024  # 32MB max
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_USERNAME'] = 'angelhsnew123@gmail.com'
-app.config['MAIL_PASSWORD'] = 'nxjwdgnrmtgdndoa' # App Password de la cuenta personal
-app.config['MAIL_DEFAULT_SENDER'] = ('TalentLink', 'angelhsnew123@gmail.com')
+app.config['MAIL_USERNAME'] = os.environ["MAIL_USERNAME"]
+app.config['MAIL_PASSWORD'] = os.environ["MAIL_PASSWORD"] # App Password de la cuenta personal
+app.config['MAIL_DEFAULT_SENDER'] = ('TalentLink', os.environ["MAIL_USERNAME"])
 
 def enviar_email(destinatario, asunto, mensaje_texto):
     """Envía un correo electrónico utilizando smtplib."""
@@ -227,7 +227,7 @@ def crear_notificacion(id_usuario, tipo, mensaje, url="", asunto_p=None, cuerpo_
         if user_row and user_row[0]:
             destinatario = user_row[0]
             asunto = asunto_p or f"Notificación: {tipo.capitalize()}"
-            link_info = f"\n\nPuedes ver más detalles aquí: http://localhost:5001{url}" if url else ""
+            link_info = f"\n\nPuedes ver más detalles aquí: https://talentlink.duckdns.org{url}" if url else ""
             
             if cuerpo_p:
                 cuerpo = cuerpo_p
@@ -410,8 +410,8 @@ def admin_aprobar_empresa(id_empresa):
         id_user, correo, nombre_empresa = emp_data
         asunto = "¡Cuenta Aprobada! - Bolsa de Trabajo UT"
         cuerpo = (f"Hola {nombre_empresa},\n\nTu registro de empresa ha sido aprobado por el administrador. "
-                  f"Ya puedes iniciar sesión y comenzar a publicar vacantes.\n\n"
-                  f"Acceso: http://localhost:5001/login")
+                  f"Ya puedes publicar vacantes y gestionar tus procesos de selección.\n\n"
+                  f"Acceso: https://talentlink.duckdns.org/login")
         crear_notificacion(id_user, "aprobacion", "Tu registro de empresa ha sido aprobado.", "/empresa", asunto, cuerpo)
         
     cur.close()
@@ -520,10 +520,16 @@ def admin_aprobar_candidato(id_candidato):
     cand_data = cur.fetchone()
     if cand_data:
         id_user, correo, nombre_cand = cand_data
-        asunto = "¡Cuenta Aprobada! - Bolsa de Trabajo UT"
-        cuerpo = (f"Hola {nombre_cand},\n\nTu perfil profesional ha sido aprobado por el administrador. "
-                  f"Ya puedes iniciar sesión y postularte a las mejores vacantes.\n\n"
-                  f"Acceso: http://localhost:5001/login")
+        asunto = "¡Tu cuenta ha sido aprobada! - TalentLink by UT de Oriental"
+        cuerpo = (f"Hola {nombre_cand},\n\n"
+                  f"¡Buenas noticias! Tu registro en TalentLink by UT de Oriental ha sido aprobado.\n\n"
+                  f"Ya puedes iniciar sesión, completar tu perfil profesional, consultar oportunidades laborales "
+                  f"y postularte a vacantes acordes con tu formación, experiencia e intereses profesionales.\n\n"
+                  f"Ingresa a TalentLink:\n"
+                  f"https://talentlink.duckdns.org/login\n\n"
+                  f"Empresas y talento, conectados en un mismo espacio.\n\n"
+                  f"Saludos,\n"
+                  f"TalentLink by UT de Oriental")
         crear_notificacion(id_user, "aprobacion", "Tu registro de candidato ha sido aprobado.", "/candidato-dashboard", asunto, cuerpo)
         
     cur.close()

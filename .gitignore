@@ -9,3 +9,13 @@ db.sqlite3
 .pytest_cache/
 .vscode/
 .idea/
+# Respaldos creados en el servidor
+*.save
+*.save.*
+*.backup
+
+# Certificados TLS
+nginx/certs-le/
+
+# Respaldo local de base de datos
+respaldo_antes_limpieza.sql
