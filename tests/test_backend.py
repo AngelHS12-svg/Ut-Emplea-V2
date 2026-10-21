@@ -11,30 +11,11 @@ Notas:
  • Flask test_client se usa para las peticiones HTTP.
 ========================================================================
 """
-import sys, os, types, importlib
+import sys, os
 from unittest.mock import patch, MagicMock
 from datetime import datetime, date
 
 import pytest
-
-# ---------------------------------------------------------------------------
-# Parche temprano de psycopg2 (antes de importar NADA del proyecto)
-# ---------------------------------------------------------------------------
-_fake_extras = types.ModuleType("psycopg2.extras")
-_fake_extras.RealDictCursor = MagicMock()
-_fake_extensions = types.ModuleType("psycopg2.extensions")
-_fake_pool = types.ModuleType("psycopg2.pool")
-_fake_pool.ThreadedConnectionPool = MagicMock()
-_fake_psycopg2 = types.ModuleType("psycopg2")
-_fake_psycopg2.connect = MagicMock()
-_fake_psycopg2.extras = _fake_extras
-_fake_psycopg2.extensions = _fake_extensions
-_fake_psycopg2.pool = _fake_pool
-sys.modules["psycopg2"] = _fake_psycopg2
-sys.modules["psycopg2.extras"] = _fake_extras
-sys.modules["psycopg2.extensions"] = _fake_extensions
-sys.modules["psycopg2.pool"] = _fake_pool
-
 
 @pytest.fixture
 def app():

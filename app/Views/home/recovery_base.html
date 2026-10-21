@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>{% block title %}Recupera tu acceso{% endblock %} · Talent Link</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/recovery.css', v='2') }}">
+    {% include 'shared/security-head.html' %}
+    <script src="{{ url_for('static', filename='js/recovery.js', v='1') }}" defer></script>
+</head>
+<body>
+    <header class="recovery-header">
+        <a class="brand" href="{{ url_for('home') }}" aria-label="Talent Link, inicio">Talent<span>Link</span><span class="brand-dot" aria-hidden="true">.</span></a>
+        <span class="header-caption">Bolsa de trabajo <span aria-hidden="true">/</span> UT de Oriental</span>
+        <a class="home-link" href="{{ url_for('home') }}"><span aria-hidden="true">←</span> Volver al inicio</a>
+    </header>
+    <main class="recovery-layout">
+        <aside class="recovery-story" aria-label="Proceso de recuperación">
+            <span class="eyebrow">GESTIÓN DE CUENTA</span>
+            <h1>Recuperación de contraseña</h1>
+            <p>Restablece el acceso a tu cuenta de Talent Link en tres pasos.</p>
+            <ol class="recovery-steps" aria-label="Pasos de recuperación">
+                {% for number, title, description in [(1, 'Solicita un enlace', 'Usa el correo de tu cuenta.'), (2, 'Crea una contraseña', 'Abre el enlace que recibiste.'), (3, 'Inicia sesión', 'Accede con tu nueva contraseña.')] %}
+                <li class="{% if active_step == number %}is-current{% elif active_step > number %}is-complete{% endif %}" {% if active_step == number %}aria-current="step"{% endif %}>
+                    <span class="step-number" aria-hidden="true">{{ '%02d'|format(number) }}</span>
+                    <div><strong>{{ title }}</strong><span>{{ description }}</span></div>
+                </li>
+                {% endfor %}
+            </ol>
+            <div class="university-mark">
+                <img src="{{ url_for('static', filename='img/Logotipo UT de Oriental-Color.png') }}" alt="Universidad Tecnológica de Oriental" width="56" height="56">
+                <span>Universidad Tecnológica<br>de Oriental<small>Vinculación y oportunidades laborales</small></span>
+            </div>
+        </aside>
+        <section class="recovery-panel" aria-labelledby="recovery-title">
+            <div class="panel-inner">{% block content %}{% endblock %}</div>
+            <footer class="panel-footer"><span class="footer-indicator" aria-hidden="true"></span>Recuperación mediante tu correo registrado</footer>
+        </section>
+    </main>
+    <footer class="recovery-footer"><span>Talent Link · Universidad Tecnológica de Oriental</span><span>© 2026</span></footer>
+</body>
+</html>

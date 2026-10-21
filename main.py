@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory, session, make_response, abort
 import psycopg2
 import os
-import uuid
 import secrets
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -15,6 +14,8 @@ from email.header import Header
 from app.config.database import get_connection, close_request_connections
 from app.config.security import configure_security, credential_stamp
 from app.utils.passwords import password_error
+from app.utils.password_reset import create_reset_token, read_reset_token, matches_current_password
+from app.utils.vacancies import public_vacancy, vacancy_return_id
 from app.routes.empresa_routes import empresa_bp
 from app.utils.security import strip_tags, detectar_script, detectar_sqli, validar_archivo
 import re
@@ -30,6 +31,13 @@ except ImportError:
 app = Flask(__name__, template_folder="app/Views", static_folder="public")
 configure_security(app)
 app.teardown_request(close_request_connections)
+
+
+def vacante_url(id_vacante):
+    return app.config['PUBLIC_BASE_URL'] + url_for('vacante_publica', id_vacante=id_vacante)
+
+
+app.jinja_env.globals['vacante_url'] = vacante_url
 
 def validar_registro_datos(correo, password, telefono, cp=None):
     correo = correo or ""
@@ -97,7 +105,9 @@ login_manager.login_view = "home"
 def add_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['Referrer-Policy'] = (
+        'no-referrer' if request.path.startswith('/auth/reset-password/')
+        else 'strict-origin-when-cross-origin')
     response.headers['Cache-Control'] = 'no-store'
     # CSP básica para permitir recursos locales y Google Fonts/CDNs conocidos
     response.headers['Content-Security-Policy'] = "default-src 'self' mailto: tel:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://ui-avatars.com; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none';"
@@ -1575,6 +1585,7 @@ def candidato_buscar():
         JOIN empresas e ON v.id_empresa = e.id_empresa
         LEFT JOIN requisitos_vacante r ON v.id_vacante = r.id_vacante
         WHERE v.estatus = 'activa' AND e.estatus = 'aprobada'
+          AND (v.fecha_vencimiento IS NULL OR v.fecha_vencimiento >= CURRENT_DATE)
         ORDER BY v.fecha_publicacion DESC
     """)
     vacantes = cur.fetchall()
@@ -1594,6 +1605,7 @@ def candidato_ver():
         FROM vacantes v
         JOIN empresas e ON v.id_empresa = e.id_empresa
         WHERE v.estatus = 'activa' AND e.estatus = 'aprobada'
+          AND (v.fecha_vencimiento IS NULL OR v.fecha_vencimiento >= CURRENT_DATE)
         ORDER BY v.fecha_publicacion DESC
     """)
     vacantes = cur.fetchall()
@@ -1833,41 +1845,39 @@ def candidato_actualizar_perfil():
     return redirect(url_for("candidato_perfil"))
 
 @app.route("/candidato/detalle-vacante/<int:id_vacante>")
-@login_required
 def candidato_detalle_vacante(id_vacante):
-    if current_user.rol != "Candidato": return redirect(url_for("home"))
+    # Conserva enlaces y notificaciones anteriores sin duplicar la URL de la oferta.
+    return redirect(url_for('vacante_publica', id_vacante=id_vacante), code=301)
+
+
+@app.route('/vacantes/<int:id_vacante>')
+def vacante_publica(id_vacante):
+    if not vacancy_return_id(id_vacante):
+        return render_template('vacantes/publica.html', vacante=None), 404
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("""
-        SELECT v.id_vacante, v.titulo, v.descripcion, v.salario, v.modalidad,
-               v.horario, v.lugar_trabajo, v.fecha_publicacion,
-               e.nombre as empresa, r.escolaridad, r.experiencia, r.descripcion as req_desc
-        FROM vacantes v
-        JOIN empresas e ON v.id_empresa = e.id_empresa
-        LEFT JOIN requisitos_vacante r ON v.id_vacante = r.id_vacante
-        WHERE v.id_vacante = %s
-    """, (id_vacante,))
-    vacante = cur.fetchone()
-    
-    # Verificar si ya se postuló
-    cur.execute("SELECT id_candidato FROM candidatos WHERE id_usuario = %s", (current_user.id,))
-    cand = cur.fetchone()
     ya_postulado = False
-    if cand:
-        cur.execute("SELECT id_postulacion FROM postulaciones WHERE id_vacante = %s AND id_candidato = %s",
-                     (id_vacante, cand[0]))
-        ya_postulado = cur.fetchone() is not None
-    
-    # Verificar si ya la guardó
     ya_guardada = False
-    if cand:
-        cur.execute("SELECT id_guardada FROM vacantes_guardadas WHERE id_vacante = %s AND id_candidato = %s",
-                     (id_vacante, cand[0]))
-        ya_guardada = cur.fetchone() is not None
-        
-    cur.close()
-    conn.close()
-    return render_template("vacantes/detalle-vacante.html", vacante=vacante, ya_postulado=ya_postulado, ya_guardada=ya_guardada)
+    try:
+        vacante = public_vacancy(cur, id_vacante)
+        if not vacante:
+            return render_template('vacantes/publica.html', vacante=None), 404
+        if current_user.is_authenticated and current_user.rol == 'Candidato':
+            cur.execute('SELECT id_candidato FROM candidatos WHERE id_usuario=%s', (current_user.id,))
+            cand = cur.fetchone()
+            if cand:
+                cur.execute('SELECT id_postulacion FROM postulaciones WHERE id_vacante=%s AND id_candidato=%s',
+                            (id_vacante, cand[0]))
+                ya_postulado = cur.fetchone() is not None
+                cur.execute('SELECT id_guardada FROM vacantes_guardadas WHERE id_vacante=%s AND id_candidato=%s',
+                            (id_vacante, cand[0]))
+                ya_guardada = cur.fetchone() is not None
+    finally:
+        cur.close()
+        conn.close()
+    return render_template('vacantes/publica.html', vacante=vacante,
+                           canonical_url=vacante_url(id_vacante),
+                           ya_postulado=ya_postulado, ya_guardada=ya_guardada)
 
 @app.route("/candidato/postularse/<int:id_vacante>", methods=["POST"])
 @login_required
@@ -1886,8 +1896,16 @@ def candidato_postularse(id_vacante):
     try:
         cur.execute("""
             INSERT INTO postulaciones (id_vacante, id_candidato, estado)
-            VALUES (%s, %s, 'en revision')
-        """, (id_vacante, cand[0]))
+            SELECT v.id_vacante, %s, 'en revision'
+            FROM vacantes v JOIN empresas e ON e.id_empresa=v.id_empresa
+            WHERE v.id_vacante=%s AND v.estatus='activa' AND e.estatus='aprobada'
+              AND (v.fecha_vencimiento IS NULL OR v.fecha_vencimiento >= CURRENT_DATE)
+              AND NOT EXISTS (SELECT 1 FROM postulaciones p WHERE p.id_vacante=v.id_vacante AND p.id_candidato=%s)
+            RETURNING id_postulacion
+        """, (cand[0], id_vacante, cand[0]))
+        if not cur.fetchone():
+            flash('La vacante ya no admite postulaciones o ya te postulaste.')
+            return redirect(url_for('vacante_publica', id_vacante=id_vacante))
         conn.commit()
         
         cur.execute("""
@@ -1909,7 +1927,7 @@ def candidato_postularse(id_vacante):
     finally:
         cur.close()
         conn.close()
-    return redirect(url_for("candidato_detalle_vacante", id_vacante=id_vacante))
+    return redirect(url_for("vacante_publica", id_vacante=id_vacante))
 
 @app.route("/candidato/guardar-vacante/<int:id_vacante>", methods=["POST"])
 @login_required
@@ -1928,8 +1946,16 @@ def candidato_guardar_vacante(id_vacante):
     try:
         cur.execute("""
             INSERT INTO vacantes_guardadas (id_vacante, id_candidato)
-            VALUES (%s, %s)
-        """, (id_vacante, cand[0]))
+            SELECT v.id_vacante, %s
+            FROM vacantes v JOIN empresas e ON e.id_empresa=v.id_empresa
+            WHERE v.id_vacante=%s AND v.estatus='activa' AND e.estatus='aprobada'
+              AND (v.fecha_vencimiento IS NULL OR v.fecha_vencimiento >= CURRENT_DATE)
+              AND NOT EXISTS (SELECT 1 FROM vacantes_guardadas g WHERE g.id_vacante=v.id_vacante AND g.id_candidato=%s)
+            RETURNING id_guardada
+        """, (cand[0], id_vacante, cand[0]))
+        if not cur.fetchone():
+            flash('La vacante ya no está disponible o ya la guardaste.')
+            return redirect(url_for('vacante_publica', id_vacante=id_vacante))
         conn.commit()
         
         cur.execute("""
@@ -1950,7 +1976,7 @@ def candidato_guardar_vacante(id_vacante):
     finally:
         cur.close()
         conn.close()
-    return redirect(url_for("candidato_detalle_vacante", id_vacante=id_vacante))
+    return redirect(url_for("vacante_publica", id_vacante=id_vacante))
 
 # ================= AUTH =================
 def _enviar_codigo_verificacion(id_usuario, nuevo=False):
@@ -1984,6 +2010,8 @@ def auth_login():
     correo = request.form.get("correo", "").strip()
     password = request.form.get("password", "")
     rol_seleccionado = request.form.get("rol")
+    return_id = vacancy_return_id(request.form.get('vacante_id')) if rol_seleccionado == 'candidato' else None
+    retry = {'login': '1', 'vacante': return_id} if return_id else {}
     # Descartar cualquier desafío o sesión anterior al iniciar otro acceso.
     session.clear()
     conn = get_connection()
@@ -2002,15 +2030,17 @@ def auth_login():
     if (not user_data or not check_password_hash(user_data[2], password)
             or roles.get(rol_seleccionado) != user_data[3]):
         flash("Correo, contraseña o tipo de usuario incorrectos.")
-        return redirect(url_for("home"))
+        return redirect(url_for("home", **retry))
     if not user_data[5]:
         flash("Su cuenta está pendiente de aprobación o no está activa.")
-        return redirect(url_for("home"))
+        return redirect(url_for("home", **retry))
     if not _enviar_codigo_verificacion(user_data[0]):
         flash("No se pudo enviar el código. Inténtalo de nuevo más tarde.")
-        return redirect(url_for("home"))
+        return redirect(url_for("home", **retry))
     session['2fa_user_id'] = user_data[0]
     session['2fa_correo'] = user_data[1]
+    if return_id and user_data[3] == 'Candidato':
+        session['2fa_vacante_id'] = return_id
     flash("Se ha enviado un código de verificación a tu correo electrónico.")
     return redirect(url_for("auth_verify_2fa"))
 
@@ -2055,10 +2085,13 @@ def auth_verify_2fa_post():
     if not user_data:
         flash("Código incorrecto, expirado o cuenta inactiva. Inténtalo de nuevo.")
         return redirect(url_for("auth_verify_2fa"))
+    return_id = vacancy_return_id(session.get('2fa_vacante_id'))
     session.clear()
     login_user(User(*user_data[:4]))
     session['_credential_stamp'] = credential_stamp(user_data[4])
     session.permanent = True
+    if return_id and user_data[3] == 'Candidato':
+        return redirect(url_for('vacante_publica', id_vacante=return_id))
     destinos = {"Administrador": "admin", "Empresa": "empresa.inicio", "Candidato": "candidato_dashboard"}
     return redirect(url_for(destinos.get(user_data[3], "home")))
 
@@ -2076,103 +2109,128 @@ def auth_resend_2fa():
     return redirect(url_for("auth_verify_2fa"))
 
 # ================= FORGOT PASSWORD =================
-@app.route("/auth/forgot-password", methods=["POST"])
+@app.route("/auth/forgot-password", methods=["GET", "POST"])
 def auth_forgot_password():
+    if request.method == 'GET':
+        return render_template('home/forgot_password.html', sent=request.args.get('sent') == '1')
     correo = request.form.get("correo", "").strip()
-    if not correo:
-        flash("Por favor ingresa tu correo electrónico.")
-        return redirect(url_for("home"))
-    
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT id_usuario FROM usuarios WHERE correo = %s", (correo,))
-    user = cur.fetchone()
-    cur.close()
-    conn.close()
-    
-    if user:
-        # Generar token y almacenar en DB
-        token = str(uuid.uuid4())
+    if len(correo) > 150 or not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', correo):
+        return render_template('home/forgot_password.html', sent=False, correo=correo,
+                               error='Ingresa un correo electrónico válido.'), 400
+
+    # No requiere reset_token/reset_expires: instalaciones anteriores no tienen esas columnas.
+    conn = cur = None
+    try:
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("""
-            UPDATE usuarios SET reset_token = %s, reset_expires = CURRENT_TIMESTAMP + INTERVAL '1 hour'
-            WHERE id_usuario = %s AND activo IS TRUE
-        """, (token, user[0]))
-        conn.commit()
-        cur.close()
-        conn.close()
-        
-        # Enviar email con link de reset
+        cur.execute("SELECT id_usuario, password FROM usuarios WHERE correo=%s AND activo IS TRUE", (correo,))
+        user = cur.fetchone()
+    except Exception:
+        app.logger.exception('Error al solicitar recuperación de contraseña')
+        return render_template('home/forgot_password.html', sent=False, correo=correo,
+                               error='El servicio no está disponible por ahora. Inténtalo más tarde.'), 503
+    finally:
+        if cur is not None:
+            cur.close()
+        if conn is not None:
+            conn.close()
+
+    if user:
+        token = create_reset_token(user[0], user[1])
         reset_url = app.config['PUBLIC_BASE_URL'] + url_for('auth_reset_password', token=token)
-        asunto = "Restablecer Contraseña - UT Oriental Emplea"
+        asunto = "Restablecer contraseña - Talent Link"
         mensaje = (f"Hola,\n\nRecibimos una solicitud para restablecer tu contraseña.\n\n"
                   f"Haz clic en el siguiente enlace para crear una nueva contraseña:\n\n"
                   f"{reset_url}\n\n"
-                  f"Este enlace expira en 1 hora.\n\n"
+                  f"Este enlace expira en 1 hora y deja de ser válido al cambiar tu contraseña.\n\n"
                   f"Si no solicitaste este cambio, ignora este mensaje.\n\n"
-                  f"Saludos,\nUT Oriental Emplea")
-        enviar_email(correo, asunto, mensaje)
-    
-    # Siempre mostrar mismo mensaje por seguridad
-    flash("Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.")
-    return redirect(url_for("home"))
+                  f"Saludos,\nEl equipo de Talent Link")
+        if not enviar_email(correo, asunto, mensaje):
+            # No revelar si existe una cuenta ni exponer datos del SMTP al visitante.
+            app.logger.error('No se pudo enviar un correo de recuperación')
+
+    return redirect(url_for('auth_forgot_password', sent='1'), code=303)
+
+
+def _reset_account(cur, data):
+    cur.execute('SELECT id_usuario, password FROM usuarios WHERE id_usuario=%s AND activo IS TRUE',
+                (data['uid'],))
+    user = cur.fetchone()
+    return user if user and matches_current_password(data, user[1]) else None
+
+
+def _invalid_reset_link():
+    return render_template('home/reset_password.html', invalid=True), 400
 
 @app.route("/auth/reset-password/<token>", methods=["GET"])
 def auth_reset_password(token):
-    conn = get_connection()
-    cur = conn.cursor()
+    data = read_reset_token(token)
+    if data is None:
+        return _invalid_reset_link()
+    conn = cur = None
     try:
-        cur.execute("""
-            SELECT id_usuario FROM usuarios
-            WHERE reset_token=%s AND reset_expires>CURRENT_TIMESTAMP AND activo IS TRUE
-        """, (token,))
-        user = cur.fetchone()
+        conn = get_connection()
+        cur = conn.cursor()
+        user = _reset_account(cur, data)
+    except Exception:
+        app.logger.exception('Error al consultar enlace de recuperación')
+        return render_template('home/reset_password.html', unavailable=True), 503
     finally:
-        cur.close()
-        conn.close()
+        if cur is not None:
+            cur.close()
+        if conn is not None:
+            conn.close()
     if not user:
-        flash("El enlace de recuperación no es válido o ha expirado.")
-        return redirect(url_for("home"))
-
+        return _invalid_reset_link()
     return render_template("home/reset_password.html", token=token)
 
 @app.route("/auth/reset-password/<token>", methods=["POST"])
 def auth_reset_password_post(token):
+    data = read_reset_token(token)
+    if data is None:
+        return _invalid_reset_link()
     new_password = request.form.get("password", "")
-    if new_password != request.form.get("confirm_password", ""):
-        flash("Las contraseñas no coinciden.")
-        return redirect(url_for("auth_reset_password", token=token))
     error = password_error(new_password)
+    if new_password != request.form.get("confirm_password", ""):
+        error = 'Las contraseñas no coinciden.'
     if error:
-        flash(error)
-        return redirect(url_for("auth_reset_password", token=token))
-    hashed = generate_password_hash(new_password)
-    conn = get_connection()
-    cur = conn.cursor()
+        return render_template('home/reset_password.html', token=token, error=error), 400
+    conn = cur = None
     try:
-        # Verificación, cambio y consumo del token son atómicos.
+        conn = get_connection()
+        cur = conn.cursor()
+        user = _reset_account(cur, data)
+        if not user:
+            return _invalid_reset_link()
+        hashed = generate_password_hash(new_password)
+        # Comparar el hash anterior en el UPDATE impide reutilización incluso concurrente.
         cur.execute("""
-            UPDATE usuarios SET password=%s, reset_token=NULL, reset_expires=NULL,
-                two_fa_code=NULL, two_fa_expires=NULL
-            WHERE reset_token=%s AND reset_expires>CURRENT_TIMESTAMP AND activo IS TRUE
+            UPDATE usuarios SET password=%s, two_fa_code=NULL, two_fa_expires=NULL
+            WHERE id_usuario=%s AND password=%s AND activo IS TRUE
             RETURNING id_usuario
-        """, (hashed, token))
+        """, (hashed, user[0], user[1]))
         changed = cur.fetchone()
         conn.commit()
-        if changed:
-            session.clear()
-            flash("Contraseña actualizada exitosamente. Ya puedes iniciar sesión.")
-        else:
-            flash("El enlace de recuperación no es válido o ha expirado.")
+        if not changed:
+            return _invalid_reset_link()
     except Exception:
-        conn.rollback()
+        if conn is not None:
+            conn.rollback()
         app.logger.exception("Error al restablecer contraseña")
-        flash("No se pudo actualizar la contraseña. Inténtalo de nuevo más tarde.")
+        return render_template('home/reset_password.html', token=token,
+                               error='No se pudo actualizar la contraseña. Inténtalo más tarde.'), 503
     finally:
-        cur.close()
-        conn.close()
-    return redirect(url_for("home"))
+        if cur is not None:
+            cur.close()
+        if conn is not None:
+            conn.close()
+    session.clear()
+    return redirect(url_for('auth_password_reset_complete'), code=303)
+
+
+@app.route('/auth/password-reset-complete')
+def auth_password_reset_complete():
+    return render_template('home/reset_password.html', complete=True)
 
 # ================= API ENDPOINTS =================
 @app.route("/api/vacante/<int:id_vacante>")

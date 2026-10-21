@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ vacante.titulo ~ ' · ' ~ vacante.empresa if vacante else 'Vacante no disponible' }} · Talent Link</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    {% if vacante %}
+    <meta name="description" content="{{ vacante.descripcion|striptags|truncate(160) }}">
+    <link rel="canonical" href="{{ canonical_url }}">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{{ vacante.titulo }} · {{ vacante.empresa }}">
+    <meta property="og:description" content="{{ vacante.descripcion|striptags|truncate(160) }}">
+    <meta property="og:url" content="{{ canonical_url }}">
+    <meta property="og:site_name" content="Talent Link">
+    {% else %}<meta name="robots" content="noindex">{% endif %}
+    {% include 'shared/security-head.html' %}
+    {% include 'shared/vacancy-share-assets.html' %}
+</head>
+<body class="tl-vacancy-page">
+    <header class="tl-vacancy-header">
+        <a class="tl-brand" href="{{ url_for('home') }}" aria-label="Talent Link, inicio">Talent<span>Link</span><b aria-hidden="true">.</b></a>
+        <span class="tl-institution">Bolsa de trabajo · UT de Oriental</span>
+        {% if current_user.is_authenticated %}
+        <a class="tl-header-link" href="{{ url_for('candidato_buscar') if current_user.rol == 'Candidato' else url_for('empresa.consultar') if current_user.rol == 'Empresa' else url_for('admin') }}">Ir a mi panel <span aria-hidden="true">→</span></a>
+        {% else %}
+        <a class="tl-header-link" href="{{ url_for('home', login='1', vacante=vacante.id) if vacante else url_for('home', login='1') }}">Iniciar sesión <span aria-hidden="true">→</span></a>
+        {% endif %}
+    </header>
+    <main class="tl-vacancy-main">
+    {% if vacante %}
+        <nav class="tl-breadcrumb" aria-label="Ubicación"><a href="{{ url_for('home') }}">Inicio</a><span aria-hidden="true">/</span><span>Oferta laboral</span><span aria-hidden="true">/</span><span>Vacante #{{ vacante.id }}</span></nav>
+        {% for message in get_flashed_messages() %}<p class="tl-notice" role="status">{{ message }}</p>{% endfor %}
+        <article>
+            <header class="tl-offer-heading">
+                <div class="tl-offer-topline"><span class="tl-company">{{ vacante.empresa }}</span><span class="tl-status {{ '' if vacante.disponible else 'tl-status-closed' }}">{{ 'Convocatoria abierta' if vacante.disponible else 'Convocatoria finalizada' }}</span></div>
+                <h1>{{ vacante.titulo }}</h1>
+                <div class="tl-offer-facts"><span>{{ vacante.lugar or 'Ubicación por definir' }}</span>{% if vacante.modalidad %}<span>{{ vacante.modalidad }}</span>{% endif %}{% if vacante.publicada %}<span>Publicada el {{ vacante.publicada.strftime('%d/%m/%Y') }}</span>{% endif %}</div>
+            </header>
+            <div class="tl-offer-layout">
+                <div class="tl-offer-content">
+                    <section class="tl-offer-section"><h2>Descripción del puesto</h2><p class="tl-multiline">{{ vacante.descripcion }}</p></section>
+                    {% if vacante.perfil %}<section class="tl-offer-section"><h2>Perfil que buscamos</h2><p class="tl-multiline">{{ vacante.perfil }}</p></section>{% endif %}
+                    {% if vacante.escolaridad or vacante.experiencia or vacante.requisitos %}
+                    <section class="tl-offer-section"><h2>Requisitos</h2>
+                        <dl class="tl-requirements">
+                            {% if vacante.escolaridad %}<div><dt>Escolaridad</dt><dd class="tl-multiline">{{ vacante.escolaridad }}</dd></div>{% endif %}
+                            {% if vacante.experiencia %}<div><dt>Experiencia</dt><dd class="tl-multiline">{{ vacante.experiencia }}</dd></div>{% endif %}
+                            {% if vacante.requisitos %}<div><dt>Conocimientos y habilidades</dt><dd class="tl-multiline">{{ vacante.requisitos }}</dd></div>{% endif %}
+                        </dl>
+                    </section>{% endif %}
+                    {% if vacante.horario %}<section class="tl-offer-section"><h2>Horario de trabajo</h2><p class="tl-multiline">{{ vacante.horario }}</p></section>{% endif %}
+                </div>
+                <aside class="tl-application" aria-label="Postulación y enlace de la vacante">
+                    <p class="tl-offer-id">VACANTE #{{ vacante.id }}</p>
+                    <h2>Información de la oferta</h2>
+                    <dl class="tl-offer-summary">
+                        <div><dt>Salario mensual</dt><dd>{{ ('$' ~ '{:,.2f}'.format(vacante.salario) ~ ' MXN') if vacante.salario is not none else 'No especificado' }}</dd></div>
+                        {% if vacante.plazas %}<div><dt>Plazas disponibles</dt><dd>{{ vacante.plazas }}</dd></div>{% endif %}
+                        <div><dt>Cierre de convocatoria</dt><dd>{{ vacante.vencimiento.strftime('%d/%m/%Y') if vacante.vencimiento else 'Sin fecha especificada' }}</dd></div>
+                    </dl>
+                    {% if not vacante.disponible %}
+                    <p class="tl-notice">La fecha de postulación ha finalizado.</p>
+                    {% elif current_user.is_authenticated and current_user.rol == 'Candidato' %}
+                        {% if ya_postulado %}<p class="tl-application-done" role="status">✓ Ya te postulaste a esta vacante</p><a class="tl-action tl-action-outline" href="{{ url_for('candidato_postulaciones') }}">Ver mis postulaciones</a>
+                        {% else %}
+                        <form method="POST" action="{{ url_for('candidato_postularse', id_vacante=vacante.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="tl-action">Postularme <span aria-hidden="true">→</span></button>
+                        </form>{% endif %}
+                        {% if ya_guardada %}<p class="tl-saved-note">Vacante guardada en tu cuenta</p>{% else %}
+                        <form method="POST" action="{{ url_for('candidato_guardar_vacante', id_vacante=vacante.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="tl-action tl-action-outline">Guardar vacante</button>
+                        </form>{% endif %}
+                    {% elif not current_user.is_authenticated %}
+                    <a class="tl-action" href="{{ url_for('home', login='1', vacante=vacante.id) }}">Iniciar sesión para postularme <span aria-hidden="true">→</span></a>
+                    <p class="tl-account-note">¿Aún no tienes cuenta? <a href="{{ url_for('registro_candidato') }}">Regístrate como candidato</a></p>
+                    {% else %}<p class="tl-account-note">Las postulaciones se realizan desde una cuenta de candidato.</p>{% endif %}
+                    <div class="tl-share-section"><h3>Comparte esta oportunidad</h3><button type="button" class="tl-copy-link" data-copy-vacancy="{{ canonical_url }}">Copiar enlace</button><a class="tl-visible-link" href="{{ canonical_url }}">{{ canonical_url }}</a></div>
+                </aside>
+            </div>
+        </article>
+    {% else %}
+        <section class="tl-unavailable"><span class="tl-offer-id">OFERTA LABORAL</span><h1>Vacante no disponible</h1><p>Esta oferta no está publicada o ya no se encuentra disponible.</p><a class="tl-action" href="{{ url_for('home') }}">Volver al inicio <span aria-hidden="true">→</span></a></section>
+    {% endif %}
+    </main>
+    <footer class="tl-vacancy-footer"><span>Talent Link · Universidad Tecnológica de Oriental</span><span>© 2026</span></footer>
+</body>
+</html>

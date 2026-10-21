@@ -283,17 +283,22 @@ def test_unchanged_password_keeps_session(client):
 
 
 def test_reset_consumes_valid_token_in_single_update(client):
+    from app.utils.password_reset import create_reset_token
+    import main
     csrf = token(client)
     conn = MagicMock()
-    conn.cursor.return_value.fetchone.return_value = (1,)
+    conn.cursor.return_value.fetchone.side_effect = [(1, 'old-hash'), (1,)]
+    with main.app.app_context():
+        reset = create_reset_token(1, 'old-hash')
     with patch('main.get_connection', return_value=conn):
-        response = client.post('/auth/reset-password/local-token', data={
+        response = client.post('/auth/reset-password/' + reset, data={
             'csrf_token': csrf, 'password': 'SafePass8!xQ4', 'confirm_password': 'SafePass8!xQ4'})
-    assert response.status_code == 302
-    conn.cursor.return_value.execute.assert_called_once()
+    assert response.status_code == 303
+    assert conn.cursor.return_value.execute.call_count == 2
     query, params = conn.cursor.return_value.execute.call_args.args
-    assert 'reset_expires>CURRENT_TIMESTAMP' in query and 'reset_token=NULL' in query
-    assert params[1] == 'local-token'
+    assert 'password=%s AND activo IS TRUE' in query
+    assert 'two_fa_code=NULL' in query and 'two_fa_expires=NULL' in query
+    assert params[1:] == (1, 'old-hash')
     assert params[0] != 'SafePass8!xQ4'
     conn.close.assert_called_once()
 
@@ -301,7 +306,7 @@ def test_reset_consumes_valid_token_in_single_update(client):
 def test_reset_email_uses_configured_origin_instead_of_host_header(client, secure_app):
     csrf = token(client)
     conn = MagicMock()
-    conn.cursor.return_value.fetchone.return_value = (1,)
+    conn.cursor.return_value.fetchone.return_value = (1, 'old-hash')
     with patch('main.get_connection', return_value=conn), patch('main.enviar_email') as mail:
         client.post('/auth/forgot-password', headers={'Host': 'attacker.example'},
                     data={'csrf_token': csrf, 'correo': 'user@example.invalid'})

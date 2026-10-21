@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/public/css/admin-child.css">
     {% include 'shared/security-head.html' %}
+    {% include 'shared/vacancy-share-assets.html' %}
 </head>
 <body>
     <div class="container">
@@ -27,6 +28,7 @@
                 <div class="card-top">
                     <div>
                         <h4 class="card-title">{{ v[1] }}</h4>
+                        <span class="tl-id-label">Vacante #{{ v[0] }}</span>
                         <p style="font-size: 0.8rem; color: var(--text-muted);">{{ v[2] }}</p>
                     </div>
                     <span class="status-badge {% if v[5] == 'activa' %}status-approved{% else %}status-rejected{% endif %}">
@@ -53,6 +55,7 @@
                     </div>
                 </div>
 
+                <div class="tl-share-row" style="margin-bottom: 12px;"><a href="{{ url_for('vacante_publica', id_vacante=v[0]) }}" class="tl-copy-link">Ver enlace público</a><button type="button" class="tl-copy-link" data-copy-vacancy="{{ vacante_url(v[0]) }}">Copiar enlace</button></div>
                 <div class="card-actions">
                     <button class="btn btn-outline" style="width: 100%; justify-content: center;"
                         data-titulo="{{ v[1] }}"
@@ -187,7 +190,7 @@
             };
 
             document.getElementById('modal-vac-titulo').textContent = d.titulo || 'Sin título';
-            document.getElementById('modal-vac-empresa').textContent = d.empresa || 'Sin empresa';"></i>' + (d.empresa || 'Sin empresa');
+            document.getElementById('modal-vac-empresa').textContent = d.empresa || 'Sin empresa';
             document.getElementById('modal-vac-salario').textContent = '$' + (d.salario || '0');
             document.getElementById('modal-vac-postulados').textContent = (d.postulados || '0') + ' candidatos';
             document.getElementById('modal-vac-fecha').textContent = d.fecha || 'N/A';

@@ -97,7 +97,7 @@ def publicar():
                 cur.execute("""
                     INSERT INTO notificaciones (id_usuario, tipo, mensaje, url)
                     VALUES (%s, 'vacantes', %s, %s)
-                """, (cand_user[0], f"Nueva vacante disponible: {titulo}", f"/candidato/detalle-vacante/{id_vacante}"))
+                """, (cand_user[0], f"Nueva vacante disponible: {titulo}", url_for('vacante_publica', id_vacante=id_vacante)))
 
             conn.commit()
             flash("Vacante publicada exitosamente")

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/public/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     {% include 'shared/security-head.html' %}
+    {% include 'shared/vacancy-share-assets.html' %}
 </head>
 </head>
 
@@ -120,7 +121,7 @@
                         <tbody>
                             {% for vacante in vacantes %}
                             <tr>
-                                <td>{{ vacante[1] }}</td>
+                                <td>{{ vacante[1] }}<span class="tl-id-label">Vacante #{{ vacante[0] }}</span></td>
                                 <td>{{ vacante[2].strftime('%d/%m/%Y') if vacante[2] else 'N/A' }}</td>
                                 <td>
                                     {% if vacante[3] == 'activa' %}
@@ -133,6 +134,7 @@
                                 <td>
                                     <a href="/empresa/vacante/{{ vacante[0] }}/ver" title="Ver detalles y postulados"><i class="fas fa-eye" style="color: var(--verde); margin-right: 10px;"></i></a>
                                     <a href="/empresa/vacante/{{ vacante[0] }}/editar" title="Editar vacante"><i class="fas fa-edit" style="color: var(--dorado); margin-right: 10px;"></i></a>
+                                    <div class="tl-share-row"><a href="{{ url_for('vacante_publica', id_vacante=vacante[0]) }}" class="tl-copy-link">Ver enlace público</a><button type="button" class="tl-copy-link" data-copy-vacancy="{{ vacante_url(vacante[0]) }}">Copiar enlace</button></div>
                                     <form action="/empresa/vacante/{{ vacante[0] }}/eliminar" method="POST" style="display: inline;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta vacante? Esta acción no se puede deshacer.');">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" style="background: none; border: none; padding: 0; cursor: pointer;">

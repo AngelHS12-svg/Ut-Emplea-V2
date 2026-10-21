@@ -1,0 +1,96 @@
+/* Componentes de enlace compartido; clases aisladas del diseño de los paneles. */
+.tl-copy-link { display: inline-flex; align-items: center; justify-content: center; padding: 9px 13px; border: 1px solid #b9c9be; border-radius: 5px; background: #fff; color: #0e312d; font: 600 12px/1.5 'Montserrat', sans-serif; cursor: pointer; text-decoration: none; }
+.tl-copy-link:hover { background: #f0f5ef; border-color: #0e312d; }
+.tl-copy-link:focus-visible, .tl-action:focus-visible { outline: 3px solid #c2914f; outline-offset: 3px; }
+.tl-id-label { display: block; font-size: 11px; font-weight: 500; color: #58685e; margin: 6px 0; }
+.tl-share-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.tl-share-feedback { position: fixed; z-index: 20000; bottom: 24px; right: 24px; max-width: calc(100% - 48px); background: #0e312d; color: white; padding: 14px 20px; border: 1px solid #c2914f; border-radius: 6px; font: 500 13px/1.6 'Montserrat', sans-serif; box-shadow: 0 6px 24px #0002; }
+.tl-share-dialog { width: 520px; max-width: calc(100% - 32px); border: 1px solid #d7ded5; border-radius: 8px; padding: 28px; background: white; color: #0e312d; font: 14px/1.7 'Montserrat', sans-serif; }
+.tl-share-dialog::backdrop { background: #0e312d88; }
+.tl-share-dialog label { display: block; font-weight: 600; margin-bottom: 12px; }
+.tl-share-dialog input { box-sizing: border-box; width: 100%; padding: 12px; border: 1px solid #b9c9be; border-radius: 4px; font: inherit; margin-bottom: 16px; }
+.tl-vacancy-page { margin: 0; background: #f5f6f3; color: #233d37; font-family: 'Montserrat', sans-serif; }
+.tl-vacancy-page *, .tl-vacancy-page *::before, .tl-vacancy-page *::after { box-sizing: border-box; }
+.tl-vacancy-page a { color: inherit; }
+.tl-vacancy-page button { font-family: inherit; }
+.tl-vacancy-page :focus-visible { outline: 3px solid #c2914f; outline-offset: 4px; }
+.tl-vacancy-header, .tl-vacancy-main, .tl-vacancy-footer { width: calc(100% - 80px); max-width: 1120px; margin: 0 auto; }
+.tl-vacancy-header { display: flex; align-items: center; gap: 24px; padding: 30px 0 24px; border-bottom: 1px solid #dce3d9; }
+.tl-brand { text-decoration: none; font-size: 28px; font-weight: 800; letter-spacing: -1.3px; }
+.tl-brand > span { font-weight: 500; }
+.tl-brand > b { color: #931935; }
+.tl-institution { font-size: 11px; color: #687367; padding-left: 24px; border-left: 1px solid #cdd5c8; }
+.tl-header-link { margin-left: auto; text-decoration: none; font-size: 12px; font-weight: 500; }
+.tl-header-link > span { padding-left: 10px; }
+.tl-breadcrumb { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11px; color: #69796c; padding: 24px 0; line-height: 1.7; }
+.tl-breadcrumb a { text-underline-offset: 3px; }
+.tl-breadcrumb > span:last-child { font-weight: 600; color: #0e312d; }
+.tl-offer-heading { padding: 30px 36px; border: 1px solid #dce3d9; border-top: 3px solid #c2914f; border-radius: 7px; background: white; }
+.tl-offer-topline { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.tl-company { color: #0e312d; font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.tl-status { color: #24533a; background: #edf4e9; padding: 6px 10px; border: 1px solid #d4e4ca; border-radius: 4px; font-size: 10px; font-weight: 600; }
+.tl-status-closed { background: #f6f0e5; color: #795321; border-color: #e8d8bc; }
+.tl-offer-heading h1 { margin: 20px 0; max-width: 900px; font-size: 32px; line-height: 1.3; font-weight: 600; letter-spacing: -.8px; overflow-wrap: anywhere; }
+.tl-offer-facts { display: flex; flex-wrap: wrap; gap: 12px 20px; font-size: 12px; color: #65735e; line-height: 1.7; }
+.tl-offer-facts > span + span { border-left: 1px solid #dce3d9; padding-left: 20px; }
+.tl-offer-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; margin-top: 24px; align-items: start; }
+.tl-offer-content { border: 1px solid #dce3d9; background: white; border-radius: 7px; padding: 0 36px; }
+.tl-offer-section { padding: 28px 0; }
+.tl-offer-section + .tl-offer-section { border-top: 1px solid #e5e9df; }
+.tl-offer-section h2 { font-size: 17px; font-weight: 600; line-height: 1.5; margin: 0 0 16px; }
+.tl-offer-section p, .tl-requirements { color: #58664f; font-size: 13px; line-height: 1.9; margin: 0; }
+.tl-multiline { white-space: pre-wrap; overflow-wrap: anywhere; }
+.tl-requirements > div + div { margin-top: 18px; }
+.tl-requirements dt { color: #233d37; font-weight: 600; font-size: 12px; margin: 0 0 5px; }
+.tl-requirements dd { margin: 0; }
+.tl-application { border: 1px solid #dce3d9; border-radius: 7px; border-top: 3px solid #0e312d; padding: 26px; background: white; }
+.tl-offer-id { color: #826133; font-size: 10px; font-weight: 600; letter-spacing: 1px; margin: 0 0 16px; }
+.tl-application h2 { font-size: 16px; font-weight: 600; margin: 0 0 24px; }
+.tl-offer-summary { margin: 0 0 26px; }
+.tl-offer-summary > div + div { margin-top: 20px; }
+.tl-offer-summary dt { font-size: 11px; color: #6e7a66; margin-bottom: 7px; }
+.tl-offer-summary dd { font-size: 13px; font-weight: 600; margin: 0; line-height: 1.6; }
+.tl-action { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 45px; padding: 13px; border: 1px solid #0e312d; border-radius: 5px; background: #0e312d; font-size: 11px; font-weight: 600; line-height: 1.6; text-align: left; text-decoration: none; cursor: pointer; }
+.tl-vacancy-page .tl-action { color: white; }
+.tl-action:hover { background: #1a4c40; }
+.tl-action > span { color: #d5ae77; }
+.tl-action-outline { background: white; border-color: #b9c9be; margin-top: 10px; }
+.tl-vacancy-page .tl-action-outline { color: #0e312d; }
+.tl-action-outline:hover { background: #f0f5ef; }
+.tl-account-note, .tl-saved-note { color: #6a7862; font-size: 10px; line-height: 1.9; margin: 14px 0 0; }
+.tl-account-note a { font-weight: 600; text-underline-offset: 3px; }
+.tl-application-done { color: #24533a; font-size: 12px; line-height: 1.8; background: #edf4e9; padding: 12px; border-radius: 4px; }
+.tl-share-section { border-top: 1px solid #e5e9df; margin-top: 26px; padding-top: 22px; }
+.tl-share-section h3 { font-size: 12px; font-weight: 600; margin: 0 0 14px; }
+.tl-visible-link { display: block; overflow-wrap: anywhere; font-size: 10px; line-height: 1.8; margin-top: 12px; color: #65735e; text-underline-offset: 3px; }
+.tl-notice { padding: 14px 18px; background: #f6f0e5; border: 1px solid #e8d8bc; border-radius: 4px; font-size: 12px; line-height: 1.8; }
+.tl-unavailable { padding: 60px 36px; max-width: 640px; margin: 40px auto; border: 1px solid #dce3d9; border-top: 3px solid #c2914f; border-radius: 7px; background: white; }
+.tl-unavailable h1 { font-size: 28px; font-weight: 600; }
+.tl-unavailable p { font-size: 14px; color: #65735e; line-height: 1.9; margin-bottom: 26px; }
+.tl-unavailable .tl-action { max-width: 250px; }
+.tl-vacancy-footer { display: flex; justify-content: space-between; gap: 12px; padding: 30px 0; font-size: 10px; line-height: 1.8; color: #74806b; }
+@media (max-width: 860px) {
+    .tl-vacancy-header, .tl-vacancy-main, .tl-vacancy-footer { width: calc(100% - 40px); }
+    .tl-offer-layout { grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; }
+    .tl-offer-content { padding: 0 24px; }
+    .tl-application { padding: 22px; }
+    .tl-institution { display: none; }
+}
+@media (max-width: 680px) {
+    .tl-vacancy-header, .tl-vacancy-main, .tl-vacancy-footer { width: calc(100% - 32px); }
+    .tl-vacancy-header { padding: 24px 0 18px; gap: 12px; }
+    .tl-brand { font-size: 25px; }
+    .tl-header-link { font-size: 10px; }
+    .tl-breadcrumb { padding: 18px 0; font-size: 10px; gap: 10px; }
+    .tl-offer-heading { padding: 24px; }
+    .tl-offer-heading h1 { font-size: 25px; }
+    .tl-offer-facts { font-size: 11px; gap: 10px 14px; }
+    .tl-offer-facts > span + span { padding-left: 14px; }
+    .tl-offer-layout { display: flex; flex-direction: column; margin-top: 16px; }
+    .tl-offer-content, .tl-application { width: 100%; }
+    .tl-application { order: -1; }
+    .tl-offer-section h2 { font-size: 16px; }
+    .tl-offer-section p, .tl-requirements { font-size: 12px; }
+    .tl-vacancy-footer { font-size: 8px; }
+    .tl-unavailable { padding: 30px 24px; }
+}

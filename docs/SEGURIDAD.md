@@ -13,7 +13,7 @@ Los cambios están preparados en la carpeta local. No se accedió al servidor po
 - El registro antiguo de empresas redirige con 307 al registro principal, conservando los datos y sus validaciones. Se mantiene la protección CSRF en ambas rutas.
 - Se preservan idiomas y certificaciones al guardar un perfil cuyo formulario no envía esos campos.
 - Todas las rutas usan el mismo proveedor de conexiones, con pool por worker, sin conexiones adicionales ilimitadas. Se devuelven al terminar cada solicitud y se descartarán si falla su recuperación. Se corrigieron además cierres explícitos en las operaciones afectadas.
-- Recuperación de contraseña usa el dominio configurado, sin confiar en el encabezado Host; consume el token atómicamente y anula códigos pendientes. Registro y recuperación comparten la política de contraseña. Los errores técnicos revisados dejan de enviarse al usuario.
+- Recuperación de contraseña usa el dominio configurado, sin confiar en el encabezado Host. Los enlaces firmados con ItsDangerous caducan en una hora y están ligados a la contraseña actual mediante HMAC; no contienen la contraseña ni su hash. El cambio compara el hash anterior en el UPDATE para evitar reutilización concurrente y anula códigos 2FA pendientes. No necesita las columnas `reset_token` ni `reset_expires`, ausentes en la instalación que reportó el error. Registro y recuperación comparten la política de contraseña. Los errores técnicos revisados dejan de enviarse al usuario.
 - Los scripts administrativos ya no incluyen contraseñas predeterminadas ni se ejecutan al importarlos. Crear administrador es idempotente y no elimina usuarios. La contraseña se pide sin mostrarla o se recibe mediante entorno para uso controlado.
 - Compose deja de publicar el puerto 5000; Nginx sigue siendo la entrada pública. Se prepararon límites por IP para `/auth/`, respuesta 429 y un healthcheck de BD que usa las variables correctas. Se agregó `.dockerignore` para excluir secretos, documentos de usuarios y dependencias locales del contexto de construcción.
 
@@ -73,12 +73,12 @@ Con las dependencias de desarrollo instaladas en un entorno aislado:
 ```shell
 python -m pip install -r requirements-dev.txt
 python -m pytest
-node --test tests/security_ui.test.js
+node --test tests/security_ui.test.js tests/vacancy_share.test.js
 ```
 
 También se puede lanzar Python desde la raíz con `python -B docs/auditoria_local.py`. Los fixtures fuerzan valores ficticios de entorno y bloquean red y SMTP durante las pruebas. Las operaciones administrativas se prueban con mocks; no crean cuentas reales.
 
-Resultado de esta revisión: **82 pruebas Python y 3 pruebas JavaScript aprobadas**, sin saltos. Incluyen sesiones con otra firma, revocación tras cambio de contraseña, CSRF ausente/incorrecto/de otra sesión, autorización positiva y negativa, 2FA, recuperación, recursos de BD, plantillas y salida HTML segura.
+Resultado de esta revisión: **134 pruebas Python y 6 pruebas JavaScript aprobadas**, sin saltos. Incluyen sesiones con otra firma, revocación tras cambio de contraseña, CSRF ausente/incorrecto/de otra sesión, autorización positiva y negativa, 2FA, recuperación, recursos de BD, plantillas y salida HTML segura. Las regresiones de recuperación cubren correo → enlace → formulario → contraseña, para empresa y candidato, en otra sesión del navegador; firma alterada, caducidad, uso previo, cuenta inactiva, carrera entre cambios, contraseña inválida y fallos de BD/SMTP.
 
 La ejecución principal utilizó Python 3.12, Flask 3.1.3, Flask-Login 0.6.3, Jinja2 3.1.6, Werkzeug 3.1.6 y pytest 9.0.2 disponibles localmente. `requirements.txt` fija Werkzeug 3.1.8: no se instaló ni construyó una imagen desde cero en esta máquina. Los mocks no sustituyen una prueba de SQL, concurrencia, restricciones o rendimiento con PostgreSQL real. Docker, Nginx y PostgreSQL no están disponibles como ejecutables locales; queda pendiente validar la imagen y el despliegue en un entorno separado. No se usó producción como entorno de prueba.
 

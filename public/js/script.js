@@ -138,29 +138,17 @@ document.addEventListener("DOMContentLoaded", function () {
             modalLogin.style.display = "none";
         }
 
-        // Close forgot password modal on outside click
-        const modalForgot = document.getElementById("modalForgot");
-        if (modalForgot && e.target === modalForgot) {
-            modalForgot.style.display = "none";
-        }
     });
 
-    // ===== FORGOT PASSWORD MODAL =====
-    const openForgotBtn = document.getElementById("openForgotPassword");
-    const modalForgot = document.getElementById("modalForgot");
-    const closeForgot = document.getElementById("closeForgot");
-
-    if (openForgotBtn && modalForgot) {
-        openForgotBtn.addEventListener("click", function(e) {
-            e.preventDefault();
-            modalLogin.style.display = "none";
-            modalForgot.style.display = "flex";
-        });
-    }
-    if (closeForgot && modalForgot) {
-        closeForgot.addEventListener("click", function() {
-            modalForgot.style.display = "none";
-        });
+    // Regreso desde la recuperación de contraseña.
+    if (new URLSearchParams(window.location.search).get('login') === '1') {
+        if (/^[1-9][0-9]{0,9}$/.test(document.getElementById('loginVacanteId').value)) {
+            inputRol.value = 'candidato';
+            roleIndicator.textContent = 'Rol: CANDIDATO';
+            modalLogin.style.display = 'flex';
+        } else {
+            modalUserType.style.display = 'flex';
+        }
     }
 
     // ===== SCROLL 3D ANIMATION FOR HERO (suavizado) =====

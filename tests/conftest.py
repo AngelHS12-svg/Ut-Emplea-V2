@@ -1,8 +1,22 @@
 """Aislamiento obligatorio: las pruebas no pueden conectar a BD, SMTP ni red reales."""
 import socket
 import smtplib
+import sys
+import types
+from unittest.mock import MagicMock
 
 import pytest
+
+# Disponible incluso al ejecutar un solo archivo de pruebas; nunca abre PostgreSQL.
+_fake_psycopg2 = types.ModuleType('psycopg2')
+_fake_psycopg2.connect = MagicMock()
+sys.modules['psycopg2'] = _fake_psycopg2
+for name in ('extras', 'extensions', 'pool'):
+    module = types.ModuleType('psycopg2.' + name)
+    setattr(_fake_psycopg2, name, module)
+    sys.modules['psycopg2.' + name] = module
+_fake_psycopg2.extras.RealDictCursor = MagicMock()
+_fake_psycopg2.pool.ThreadedConnectionPool = MagicMock()
 
 
 @pytest.fixture(autouse=True)

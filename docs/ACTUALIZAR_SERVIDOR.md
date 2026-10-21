@@ -44,12 +44,17 @@ La clave de sesión no modifica contraseñas ni registros de usuarios. El admini
 
 ```bash
 git pull --ff-only origin main
+chmod 755 public
+find public/css public/js -type d -exec chmod 755 {} +
+find public/css public/js -type f -exec chmod 644 {} +
 docker compose config --quiet
 docker compose build web
 docker compose run --rm --no-deps nginx nginx -t
 ```
 
 La comprobación de Nginx utiliza los certificados montados y la red de la instalación existente. Todos los pasos deben terminar correctamente antes de reemplazar servicios. El código, las pruebas y los archivos de configuración se revisaron en local; la imagen y estas comprobaciones requieren Docker y se validan en el entorno de despliegue o una copia separada.
+
+Los permisos permiten a Nginx leer el código público nuevo incluso si el respaldo dejó activo `umask 077`. No se cambian los permisos de `.env`, respaldos ni uploads. Para actualizaciones posteriores a la primera entrega de seguridad, conservar la clave de sesión y seguir [RECUPERACION_PASSWORD.md](RECUPERACION_PASSWORD.md); no volver a rotar `SECRET_KEY` en cada despliegue.
 
 ## 4. Reemplazar únicamente los servicios de aplicación
 
