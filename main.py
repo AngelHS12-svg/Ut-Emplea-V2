@@ -1,9 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory, session, make_response
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory, session, make_response, abort
 import psycopg2
-from psycopg2 import pool
 import os
 import uuid
-import random
+import secrets
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -13,6 +12,9 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.header import Header
 
+from app.config.database import get_connection, close_request_connections
+from app.config.security import configure_security, credential_stamp
+from app.utils.passwords import password_error
 from app.routes.empresa_routes import empresa_bp
 from app.utils.security import strip_tags, detectar_script, detectar_sqli, validar_archivo
 import re
@@ -26,22 +28,19 @@ except ImportError:
     pass
 
 app = Flask(__name__, template_folder="app/Views", static_folder="public")
+configure_security(app)
+app.teardown_request(close_request_connections)
 
 def validar_registro_datos(correo, password, telefono, cp=None):
+    correo = correo or ""
+    password = password or ""
     if not re.match(r"[^@]+@[^@]+\.[^@]+", correo):
         return "Correo electrónico no válido."
     
-    # Validar Contraseña (mín 12, mayus, minus, num, especial)
-    if len(password) < 12:
-        return "La contraseña debe tener al menos 12 caracteres."
-    if not re.search(r"[A-Z]", password) or not re.search(r"[a-z]", password) or \
-       not re.search(r"\d", password) or not re.search(r"[^A-Za-z0-9]", password):
-        return "La contraseña debe incluir mayúscula, minúscula, número y símbolo especial."
-        
-    consecutivos = ['012', '123', '234', '345', '456', '567', '678', '789', '890', '098', '987', '876', '765', '654', '543', '432', '321', '210', '109']
-    if any(seq in password for seq in consecutivos):
-        return "La contraseña no debe tener números consecutivos (ej. 123 o 321)."
-    
+    error = password_error(password)
+    if error:
+        return error
+
     # Validar Teléfono (10 dígitos)
     if not telefono or len(telefono) != 10 or not telefono.isdigit():
         return "El teléfono debe tener exactamente 10 dígitos numéricos."
@@ -53,80 +52,6 @@ def validar_registro_datos(correo, password, telefono, cp=None):
             
     return None
 app.register_blueprint(empresa_bp, url_prefix='/empresa')
-app.secret_key = "secret_key_prueba"
-import os
-import psycopg2
-from psycopg2 import pool
-
-# ================= DATABASE CONNECTION POOL =================
-class ConnectionWrapper:
-    def __init__(self, conn, pool_instance=None):
-        self._conn = conn
-        self._pool = pool_instance
-
-    def __getattr__(self, name):
-        return getattr(self._conn, name)
-
-    def cursor(self, *args, **kwargs):
-        return self._conn.cursor(*args, **kwargs)
-
-    def commit(self):
-        return self._conn.commit()
-
-    def rollback(self):
-        return self._conn.rollback()
-
-    def close(self):
-        if self._pool:
-            self._pool.putconn(self._conn)
-        else:
-            self._conn.close()
-
-db_pool = None
-
-try:
-    if os.getenv("DATABASE_URL"):
-        db_pool = pool.ThreadedConnectionPool(1, 120, dsn=os.getenv("DATABASE_URL"))
-    else:
-        db_pool = pool.ThreadedConnectionPool(
-            1, 120,  # Aumentamos a 120 conexiones para soportar 100+ usuarios concurrentes
-            host=os.getenv("DB_HOST", "db"),
-            database=os.environ["DB_NAME"],
-            user=os.environ["DB_USER"],
-            password=os.environ["DB_PASSWORD"],
-            port=os.getenv("DB_PORT", "5432"),
-            client_encoding='utf8'
-        )
-    print("Pool de conexiones creado con éxito.")
-except Exception as e:
-    print(f"Error al crear el pool de conexiones: {e}")
-
-def get_connection():
-    if db_pool:
-        # En caso de que el pool esté vacío o fallando, podríamos intentar un reconnect, 
-        # pero es más fácil obtener una conexión limpia.
-        try:
-            conn = db_pool.getconn()
-            if conn:
-                return ConnectionWrapper(conn, db_pool)
-        except Exception:
-            pass # Si falla el pool, hacemos fallback a una conexión directa
-
-    try:
-        if os.getenv("DATABASE_URL"):
-            return ConnectionWrapper(psycopg2.connect(dsn=os.getenv("DATABASE_URL")))
-        else:
-            return ConnectionWrapper(psycopg2.connect(
-                host=os.getenv("DB_HOST", "db"),
-                database=os.environ["DB_NAME"],
-                user=os.environ["DB_USER"],
-                password=os.environ["DB_PASSWORD"],
-                port=os.getenv("DB_PORT", "5432"),
-                client_encoding='utf8'
-            ))
-    except UnicodeDecodeError:
-        raise Exception("❌ NO SE PUDO CONECTAR A POSTGRESQL: Posiblemente la contraseña de la BD (angel123) es incorrecta para esta computadora, o el servicio PostgreSQL no se está ejecutando.")
-
 # Configuración de uploads
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads', 'cv')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -153,10 +78,9 @@ def enviar_email(destinatario, asunto, mensaje_texto):
         msg.attach(MIMEText(mensaje_texto, 'plain', 'utf-8'))
         
         # Configuración del servidor con SSL
-        server = smtplib.SMTP_SSL(app.config['MAIL_SERVER'], app.config['MAIL_PORT'])
-        server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
-        server.sendmail(app.config['MAIL_USERNAME'], destinatario, msg.as_string())
-        server.quit()
+        with smtplib.SMTP_SSL(app.config['MAIL_SERVER'], app.config['MAIL_PORT'], timeout=15) as server:
+            server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+            server.sendmail(app.config['MAIL_USERNAME'], destinatario, msg.as_string())
         print(f"📧 Correo enviado a {destinatario}: {asunto}")
         return True
     except Exception as e:
@@ -173,9 +97,10 @@ login_manager.login_view = "home"
 def add_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['Cache-Control'] = 'no-store'
     # CSP básica para permitir recursos locales y Google Fonts/CDNs conocidos
-    response.headers['Content-Security-Policy'] = "default-src 'self' mailto: tel:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://ui-avatars.com; connect-src 'self';"
+    response.headers['Content-Security-Policy'] = "default-src 'self' mailto: tel:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://ui-avatars.com; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none';"
     return response
 
 class User(UserMixin):
@@ -191,13 +116,14 @@ def load_user(user_id):
     cur = conn.cursor()
     try:
         cur.execute("""
-            SELECT u.id_usuario, u.correo, u.id_rol, r.nombre 
+            SELECT u.id_usuario, u.correo, u.id_rol, r.nombre, u.password
             FROM usuarios u 
             JOIN roles r ON u.id_rol = r.id_rol 
-            WHERE u.id_usuario = %s
+            WHERE u.id_usuario = %s AND u.activo IS TRUE
         """, (user_id,))
         user_data = cur.fetchone()
-        if user_data:
+        if user_data and secrets.compare_digest(
+                session.get('_credential_stamp', ''), credential_stamp(user_data[4])):
             return User(user_data[0], user_data[1], user_data[2], user_data[3])
     except Exception as e:
         print(f"Error en load_user: {e}")
@@ -279,7 +205,7 @@ def obtener_notificaciones():
         } for row in cur.fetchall()]
         return jsonify(notificaciones)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "No se pudo completar la solicitud."}), 500
     finally:
         cur.close()
         conn.close()
@@ -298,7 +224,7 @@ def leer_notificacion(id_notificacion):
         return jsonify({"success": True})
     except Exception as e:
         conn.rollback()
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "No se pudo completar la solicitud."}), 500
     finally:
         cur.close()
         conn.close()
@@ -426,6 +352,7 @@ def admin_rechazar_empresa(id_empresa):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("UPDATE empresas SET estatus = 'rechazada' WHERE id_empresa = %s", (id_empresa,))
+    cur.execute("UPDATE usuarios SET activo = false WHERE id_usuario = (SELECT id_usuario FROM empresas WHERE id_empresa = %s)", (id_empresa,))
     cur.execute("""
         INSERT INTO validacion_empresas (id_empresa, aprobado, comentario)
         VALUES (%s, false, 'Rechazada por administrador')
@@ -544,6 +471,7 @@ def admin_rechazar_candidato(id_candidato):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("UPDATE candidatos SET estatus = 'rechazado' WHERE id_candidato = %s", (id_candidato,))
+    cur.execute("UPDATE usuarios SET activo = false WHERE id_usuario = (SELECT id_usuario FROM candidatos WHERE id_candidato = %s)", (id_candidato,))
     cur.execute("""
         INSERT INTO validacion_candidatos (id_candidato, aprobado, comentario)
         VALUES (%s, false, 'Rechazado por administrador')
@@ -1447,7 +1375,8 @@ def registro_empresa():
             return redirect(url_for("home"))
         except Exception as e:
             conn.rollback()
-            flash(f"Error al registrar: {str(e)}")
+            app.logger.exception("Error al completar la operación")
+            flash("No se pudo completar la operación. Inténtalo de nuevo.")
             return redirect(url_for("registro_empresa"))
         finally:
             cur.close()
@@ -1570,7 +1499,8 @@ def registro_candidato():
         except Exception as e:
             conn.rollback()
             print(f"Error al registrar candidato: {e}")
-            flash(f"Error al registrar: {str(e)}")
+            app.logger.exception("Error al completar la operación")
+            flash("No se pudo completar la operación. Inténtalo de nuevo.")
             return redirect(url_for("registro_candidato"))
         finally:
             cur.close()
@@ -1789,7 +1719,8 @@ def candidato_subir_foto():
         flash("Foto de perfil actualizada exitosamente.")
     except Exception as e:
         conn.rollback()
-        flash(f"Error al actualizar foto: {e}")
+        app.logger.exception("Error al completar la operación")
+        flash("No se pudo completar la operación. Inténtalo de nuevo.")
     finally:
         cur.close()
         conn.close()
@@ -1850,8 +1781,8 @@ def candidato_actualizar_perfil():
     area_trabajo = strip_tags(request.form.get("area_trabajo"))
     especialidad = strip_tags(request.form.get("especialidad"))
     tags_especialidad = strip_tags(request.form.get("tags_especialidad"))
-    idiomas = strip_tags(request.form.get("idiomas"))
-    cursos_certificaciones = strip_tags(request.form.get("cursos_certificaciones"))
+    idiomas = strip_tags(request.form["idiomas"]) if "idiomas" in request.form else None
+    cursos_certificaciones = strip_tags(request.form["cursos_certificaciones"]) if "cursos_certificaciones" in request.form else None
 
     # Detección de scripts maliciosos
     todos_campos = [nombre, apellido_paterno, apellido_materno, ubicacion,
@@ -1876,7 +1807,7 @@ def candidato_actualizar_perfil():
                 fecha_inicio_laboral = %s, fecha_fin_laboral = %s, actividades_logros = %s,
                 puesto_deseado = %s, sueldo_deseado = %s, area_trabajo = %s,
                 especialidad = %s, tags_especialidad = %s,
-                idiomas = %s, cursos_certificaciones = %s
+                idiomas = COALESCE(%s, idiomas), cursos_certificaciones = COALESCE(%s, cursos_certificaciones)
             WHERE id_usuario = %s
         """, (
             nombre, apellido_paterno, apellido_materno,
@@ -1894,7 +1825,8 @@ def candidato_actualizar_perfil():
         flash("Perfil actualizado correctamente.")
     except Exception as e:
         conn.rollback()
-        flash(f"Error al actualizar perfil: {e}")
+        app.logger.exception("Error al completar la operación")
+        flash("No se pudo completar la operación. Inténtalo de nuevo.")
     finally:
         cur.close()
         conn.close()
@@ -1972,7 +1904,8 @@ def candidato_postularse(id_vacante):
         flash("Te has postulado exitosamente.")
     except Exception as e:
         conn.rollback()
-        flash(f"Error al postularse: {str(e)}")
+        app.logger.exception("Error al completar la operación")
+        flash("No se pudo completar la operación. Inténtalo de nuevo.")
     finally:
         cur.close()
         conn.close()
@@ -2012,189 +1945,134 @@ def candidato_guardar_vacante(id_vacante):
         flash("Vacante guardada exitosamente.")
     except Exception as e:
         conn.rollback()
-        flash(f"Error al guardar vacante: {str(e)}")
+        app.logger.exception("Error al completar la operación")
+        flash("No se pudo completar la operación. Inténtalo de nuevo.")
     finally:
         cur.close()
         conn.close()
     return redirect(url_for("candidato_detalle_vacante", id_vacante=id_vacante))
 
 # ================= AUTH =================
+def _enviar_codigo_verificacion(id_usuario, nuevo=False):
+    code = str(secrets.randbelow(900000) + 100000)
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            UPDATE usuarios SET two_fa_code=%s,
+                two_fa_expires=CURRENT_TIMESTAMP + INTERVAL '5 minutes'
+            WHERE id_usuario=%s AND activo IS TRUE
+            RETURNING correo
+        """, (code, id_usuario))
+        row = cur.fetchone()
+        conn.commit()
+    finally:
+        cur.close()
+        conn.close()
+    if not row:
+        return False
+    asunto = ("Nuevo Código de Verificación - Talent Link" if nuevo
+              else "Código de Verificación - Talent Link")
+    mensaje = (f"Hola,\n\nTu código de verificación es: {code}\n\n"
+               "Este código expira en 5 minutos.\n\n"
+               "Si no solicitaste este código, ignora este mensaje.\n\nSaludos,\nTalent Link")
+    return enviar_email(row[0], asunto, mensaje)
+
+
 @app.route("/auth/login", methods=["POST"])
 def auth_login():
     correo = request.form.get("correo", "").strip()
     password = request.form.get("password", "")
     rol_seleccionado = request.form.get("rol")
-
-    # Seguridad Adicional: Prevenir secuencias de SQL Injection típicas (aunque Use params seguros)
-    patrones_sql_maliciosos = ["--", "DROP ", "UNION ", ";", "SELECT ", "DELETE "]
-    if any(patron.lower() in correo.lower() for patron in patrones_sql_maliciosos):
-        flash("⚠️ Seguridad: Se detectaron secuencias inválidas en el correo.")
-        return redirect(url_for("home"))
-
+    # Descartar cualquier desafío o sesión anterior al iniciar otro acceso.
+    session.clear()
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("""
-        SELECT u.id_usuario, u.correo, u.password, r.nombre AS rol, u.id_rol, u.activo
-        FROM usuarios u
-        JOIN roles r ON u.id_rol = r.id_rol
-        WHERE u.correo = %s
-    """, (correo,))
-    user_data = cur.fetchone()
-    cur.close()
-    conn.close()
-
-    if user_data:
-        id_usuario, user_correo, hashed_password, rol_real, id_rol, is_active = user_data
-        if check_password_hash(hashed_password, password):
-            # Verificar si la cuenta está activa
-            if not is_active and rol_real != "Administrador":
-                flash("Su cuenta está pendiente de aprobación por un administrador.")
-                return redirect(url_for("home"))
-
-            if (rol_seleccionado == "admin" and rol_real == "Administrador") or \
-               (rol_seleccionado == "empresa" and rol_real == "Empresa") or \
-               (rol_seleccionado == "candidato" and rol_real == "Candidato"):
-                
-                # === EXCEPCIÓN TEMPORAL: Bypass 2FA para Administrador ===
-                if rol_real == "Administrador":
-                    user_obj = User(id_usuario, user_correo, id_rol, rol_real)
-                    login_user(user_obj)
-                    flash("Inicio de sesión exitoso (Modo Administrador - 2FA Omitido).")
-                    return redirect(url_for("admin"))
-
-                # === 2FA: Generar y enviar código (Para otros roles) ===
-                code_2fa = str(random.randint(100000, 999999))
-                expires_2fa = datetime.now() + timedelta(minutes=5)
-                
-                conn = get_connection()
-                cur = conn.cursor()
-                cur.execute("""
-                    UPDATE usuarios 
-                    SET two_fa_code = %s, two_fa_expires = %s 
-                    WHERE id_usuario = %s
-                """, (code_2fa, expires_2fa, id_usuario))
-                conn.commit()
-                cur.close()
-                conn.close()
-
-                session['2fa_user_id'] = id_usuario
-                session['2fa_correo'] = user_correo
-                session['2fa_rol'] = rol_real
-                session['2fa_id_rol'] = id_rol
-                
-                # Enviar código por email
-                asunto = "Código de Verificación - UT Oriental Emplea"
-                mensaje = (f"Hola,\n\nTu código de verificación es: {code_2fa}\n\n"
-                          f"Este código expira en 5 minutos.\n\n"
-                          f"Si no solicitaste este código, ignora este mensaje.\n\n"
-                          f"Saludos,\nUT Oriental Emplea")
-                enviar_email(user_correo, asunto, mensaje)
-                
-                flash("Se ha enviado un código de verificación a tu correo electrónico.")
-                return redirect(url_for("auth_verify_2fa"))
-            else:
-                flash("El rol seleccionado no coincide con su cuenta.")
-                return redirect(url_for("home"))
-        else:
-            flash("Contraseña incorrecta.")
-            return redirect(url_for("home"))
-    else:
-        flash("El correo no está registrado.")
+    try:
+        cur.execute("""
+            SELECT u.id_usuario, u.correo, u.password, r.nombre, u.id_rol, u.activo
+            FROM usuarios u JOIN roles r ON u.id_rol=r.id_rol
+            WHERE u.correo=%s
+        """, (correo,))
+        user_data = cur.fetchone()
+    finally:
+        cur.close()
+        conn.close()
+    roles = {"admin": "Administrador", "empresa": "Empresa", "candidato": "Candidato"}
+    if (not user_data or not check_password_hash(user_data[2], password)
+            or roles.get(rol_seleccionado) != user_data[3]):
+        flash("Correo, contraseña o tipo de usuario incorrectos.")
         return redirect(url_for("home"))
+    if not user_data[5]:
+        flash("Su cuenta está pendiente de aprobación o no está activa.")
+        return redirect(url_for("home"))
+    if not _enviar_codigo_verificacion(user_data[0]):
+        flash("No se pudo enviar el código. Inténtalo de nuevo más tarde.")
+        return redirect(url_for("home"))
+    session['2fa_user_id'] = user_data[0]
+    session['2fa_correo'] = user_data[1]
+    flash("Se ha enviado un código de verificación a tu correo electrónico.")
+    return redirect(url_for("auth_verify_2fa"))
 
-# ================= 2FA VERIFICATION =================
+
 @app.route("/auth/verify-2fa", methods=["GET"])
 def auth_verify_2fa():
     if '2fa_user_id' not in session:
         flash("Sesión de verificación expirada. Inicia sesión de nuevo.")
         return redirect(url_for("home"))
-    correo_parcial = session.get('2fa_correo', '')
-    if '@' in correo_parcial:
-        parts = correo_parcial.split('@')
-        correo_parcial = parts[0][:3] + '***@' + parts[1]
+    correo = session.get('2fa_correo', '')
+    local, separator, domain = correo.partition('@')
+    correo_parcial = local[:3] + '***@' + domain if separator else ''
     return render_template("home/verify_2fa.html", correo_parcial=correo_parcial)
+
 
 @app.route("/auth/verify-2fa", methods=["POST"])
 def auth_verify_2fa_post():
-    codigo_ingresado = request.form.get("codigo", "").strip()
-    
-    # Verificar en base de datos
+    id_usuario = session.get('2fa_user_id')
+    if not id_usuario:
+        flash("Sesión de verificación expirada. Inicia sesión de nuevo.")
+        return redirect(url_for("home"))
+    codigo = request.form.get("codigo", "").strip()
+    if not re.fullmatch(r"[0-9]{6}", codigo):
+        flash("Ingresa los seis dígitos del código.")
+        return redirect(url_for("auth_verify_2fa"))
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT two_fa_code, two_fa_expires FROM usuarios WHERE id_usuario = %s", (session['2fa_user_id'],))
-    db_2fa = cur.fetchone()
-    cur.close()
-    conn.close()
-
-    if not db_2fa or not db_2fa[0]:
-        flash("No se encontró un código de verificación activo.")
-        return redirect(url_for("home"))
-
-    db_code, db_expires = db_2fa
-    
-    # Verificar expiración
-    if datetime.now() > db_expires:
-        flash("El código ha expirado. Inicia sesión de nuevo.")
-        return redirect(url_for("home"))
-    
-    if codigo_ingresado == db_code:
-        # Código correcto → completar login
-        id_usuario = session['2fa_user_id']
-        correo = session['2fa_correo']
-        id_rol = session['2fa_id_rol']
-        rol_real = session['2fa_rol']
-        
-        # Limpiar datos 2FA de la sesión y BD
-        conn = get_connection()
-        cur = conn.cursor()
-        cur.execute("UPDATE usuarios SET two_fa_code = NULL, two_fa_expires = NULL WHERE id_usuario = %s", (id_usuario,))
+    try:
+        # Verificar y consumir en una sola operación: no admite reutilización concurrente.
+        cur.execute("""
+            UPDATE usuarios u SET two_fa_code=NULL, two_fa_expires=NULL
+            FROM roles r
+            WHERE u.id_usuario=%s AND u.id_rol=r.id_rol AND u.activo IS TRUE
+                AND u.two_fa_code=%s AND u.two_fa_expires>CURRENT_TIMESTAMP
+            RETURNING u.id_usuario, u.correo, u.id_rol, r.nombre, u.password
+        """, (id_usuario, codigo))
+        user_data = cur.fetchone()
         conn.commit()
+    finally:
         cur.close()
         conn.close()
-
-        session.pop('2fa_user_id', None)
-        session.pop('2fa_correo', None)
-        session.pop('2fa_rol', None)
-        session.pop('2fa_id_rol', None)
-        
-        user_obj = User(id_usuario, correo, id_rol, rol_real)
-        login_user(user_obj)
-        
-        if rol_real == "Administrador":
-            return redirect(url_for("admin"))
-        elif rol_real == "Empresa":
-            return redirect(url_for("empresa.inicio"))
-        else:
-            return redirect(url_for("candidato_dashboard"))
-    else:
-        flash("Código incorrecto. Inténtalo de nuevo.")
+    if not user_data:
+        flash("Código incorrecto, expirado o cuenta inactiva. Inténtalo de nuevo.")
         return redirect(url_for("auth_verify_2fa"))
+    session.clear()
+    login_user(User(*user_data[:4]))
+    session['_credential_stamp'] = credential_stamp(user_data[4])
+    session.permanent = True
+    destinos = {"Administrador": "admin", "Empresa": "empresa.inicio", "Candidato": "candidato_dashboard"}
+    return redirect(url_for(destinos.get(user_data[3], "home")))
+
 
 @app.route("/auth/resend-2fa", methods=["POST"])
 def auth_resend_2fa():
-    if '2fa_correo' not in session:
+    id_usuario = session.get('2fa_user_id')
+    if not id_usuario:
         flash("Sesión expirada. Inicia sesión de nuevo.")
         return redirect(url_for("home"))
-    
-    code_2fa = str(random.randint(100000, 999999))
-    expires_2fa = datetime.now() + timedelta(minutes=5)
-    
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("UPDATE usuarios SET two_fa_code = %s, two_fa_expires = %s WHERE id_usuario = %s", 
-                (code_2fa, expires_2fa, session['2fa_user_id']))
-    conn.commit()
-    cur.close()
-    conn.close()
-    
-    correo = session['2fa_correo']
-    asunto = "Nuevo Código de Verificación - UT Oriental Emplea"
-    mensaje = (f"Hola,\n\nTu nuevo código de verificación es: {code_2fa}\n\n"
-              f"Este código expira en 5 minutos.\n\n"
-              f"Saludos,\nUT Oriental Emplea")
-    enviar_email(correo, asunto, mensaje)
-    
-    flash("Se ha enviado un nuevo código a tu correo.")
+    if _enviar_codigo_verificacion(id_usuario, nuevo=True):
+        flash("Se ha enviado un nuevo código a tu correo.")
+    else:
+        flash("No se pudo enviar el código. Inténtalo de nuevo más tarde.")
     return redirect(url_for("auth_verify_2fa"))
 
 # ================= FORGOT PASSWORD =================
@@ -2215,20 +2093,18 @@ def auth_forgot_password():
     if user:
         # Generar token y almacenar en DB
         token = str(uuid.uuid4())
-        expires = datetime.now() + timedelta(hours=1)
-        
         conn = get_connection()
         cur = conn.cursor()
         cur.execute("""
-            UPDATE usuarios SET reset_token = %s, reset_expires = %s 
-            WHERE id_usuario = %s
-        """, (token, expires, user[0]))
+            UPDATE usuarios SET reset_token = %s, reset_expires = CURRENT_TIMESTAMP + INTERVAL '1 hour'
+            WHERE id_usuario = %s AND activo IS TRUE
+        """, (token, user[0]))
         conn.commit()
         cur.close()
         conn.close()
         
         # Enviar email con link de reset
-        reset_url = url_for('auth_reset_password', token=token, _external=True)
+        reset_url = app.config['PUBLIC_BASE_URL'] + url_for('auth_reset_password', token=token)
         asunto = "Restablecer Contraseña - UT Oriental Emplea"
         mensaje = (f"Hola,\n\nRecibimos una solicitud para restablecer tu contraseña.\n\n"
                   f"Haz clic en el siguiente enlace para crear una nueva contraseña:\n\n"
@@ -2246,76 +2122,56 @@ def auth_forgot_password():
 def auth_reset_password(token):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id_usuario, reset_expires FROM usuarios WHERE reset_token = %s", (token,))
-    user = cur.fetchone()
-    cur.close()
-    conn.close()
-
+    try:
+        cur.execute("""
+            SELECT id_usuario FROM usuarios
+            WHERE reset_token=%s AND reset_expires>CURRENT_TIMESTAMP AND activo IS TRUE
+        """, (token,))
+        user = cur.fetchone()
+    finally:
+        cur.close()
+        conn.close()
     if not user:
         flash("El enlace de recuperación no es válido o ha expirado.")
         return redirect(url_for("home"))
-    
-    expires = user[1]
-    if datetime.now() > expires:
-        flash("El enlace de recuperación ha expirado. Solicita uno nuevo.")
-        return redirect(url_for("home"))
-    
+
     return render_template("home/reset_password.html", token=token)
 
 @app.route("/auth/reset-password/<token>", methods=["POST"])
 def auth_reset_password_post(token):
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT id_usuario, reset_expires FROM usuarios WHERE reset_token = %s", (token,))
-    user = cur.fetchone()
-    
-    if not user:
-        cur.close()
-        conn.close()
-        flash("El enlace de recuperación no es válido o ha expirado.")
-        return redirect(url_for("home"))
-    
-    user_id, expires = user
-    if datetime.now() > expires:
-        cur.close()
-        conn.close()
-        flash("El enlace de recuperación ha expirado.")
-        return redirect(url_for("home"))
-    
     new_password = request.form.get("password", "")
-    confirm_password = request.form.get("confirm_password", "")
-    
-    if new_password != confirm_password:
+    if new_password != request.form.get("confirm_password", ""):
         flash("Las contraseñas no coinciden.")
         return redirect(url_for("auth_reset_password", token=token))
-    
-    # Validar contraseña
-    if len(new_password) < 12:
-        flash("La contraseña debe tener al menos 12 caracteres.")
+    error = password_error(new_password)
+    if error:
+        flash(error)
         return redirect(url_for("auth_reset_password", token=token))
-    if not re.search(r"[A-Z]", new_password) or not re.search(r"[a-z]", new_password) or \
-       not re.search(r"\d", new_password) or not re.search(r"[@$!%*?&]", new_password):
-        flash("La contraseña debe incluir mayúscula, minúscula, número y símbolo especial.")
-        return redirect(url_for("auth_reset_password", token=token))
-    
     hashed = generate_password_hash(new_password)
     conn = get_connection()
     cur = conn.cursor()
     try:
+        # Verificación, cambio y consumo del token son atómicos.
         cur.execute("""
-            UPDATE usuarios 
-            SET password = %s, reset_token = NULL, reset_expires = NULL 
-            WHERE id_usuario = %s
-        """, (hashed, user_id))
+            UPDATE usuarios SET password=%s, reset_token=NULL, reset_expires=NULL,
+                two_fa_code=NULL, two_fa_expires=NULL
+            WHERE reset_token=%s AND reset_expires>CURRENT_TIMESTAMP AND activo IS TRUE
+            RETURNING id_usuario
+        """, (hashed, token))
+        changed = cur.fetchone()
         conn.commit()
-        flash("Contraseña actualizada exitosamente. Ya puedes iniciar sesión.")
-    except Exception as e:
+        if changed:
+            session.clear()
+            flash("Contraseña actualizada exitosamente. Ya puedes iniciar sesión.")
+        else:
+            flash("El enlace de recuperación no es válido o ha expirado.")
+    except Exception:
         conn.rollback()
-        flash(f"Error al actualizar la contraseña: {e}")
+        app.logger.exception("Error al restablecer contraseña")
+        flash("No se pudo actualizar la contraseña. Inténtalo de nuevo más tarde.")
     finally:
         cur.close()
         conn.close()
-    
     return redirect(url_for("home"))
 
 # ================= API ENDPOINTS =================
@@ -2355,10 +2211,11 @@ def api_get_vacante(id_vacante):
         "requisitos": row[11] or "No especificados"
     }
 
-@app.route("/logout")
+@app.route("/logout", methods=["POST"])
 @login_required
 def logout():
     logout_user()
+    session.clear()
     flash("Sesión cerrada correctamente.")
     return redirect(url_for("home"))
 
@@ -2573,146 +2430,158 @@ def empresa_ver_vacante(id_vacante):
     conn.close()
     return render_template("empresa/empresa-postulaciones.html", vacante=vacante, postulaciones=postulaciones)
 
+def _vacante_empresa(cur, id_vacante):
+    cur.execute("""
+        SELECT v.id_vacante, v.titulo, v.descripcion, v.salario, v.modalidad,
+               v.horario, v.lugar_trabajo, v.fecha_vencimiento, v.num_vacantes, v.perfil,
+               r.escolaridad, r.experiencia, r.descripcion
+        FROM vacantes v
+        JOIN empresas e ON v.id_empresa = e.id_empresa
+        LEFT JOIN requisitos_vacante r ON v.id_vacante = r.id_vacante
+        WHERE v.id_vacante = %s AND e.id_usuario = %s
+        FOR UPDATE OF v
+    """, (id_vacante, current_user.id))
+    return cur.fetchone()
+
+
 @app.route("/empresa/vacante/<int:id_vacante>/editar", methods=["GET", "POST"])
 @login_required
 def empresa_editar_vacante(id_vacante):
-    if current_user.rol != "Empresa": return redirect(url_for("home"))
+    if current_user.rol != "Empresa":
+        abort(403)
     conn = get_connection()
     cur = conn.cursor()
-    
-    if request.method == "POST":
-        titulo = request.form.get("titulo")
-        descripcion = request.form.get("descripcion")
-        salario = request.form.get("salario")
-        modalidad = request.form.get("modalidad")
-        horario = request.form.get("horario")
-        lugar = request.form.get("lugar")
-        fecha_vencimiento = request.form.get("fecha_vencimiento")
-        escolaridad = request.form.get("escolaridad")
-        experiencia = request.form.get("experiencia")
-        conocimientos = request.form.get("conocimientos")
-        num_vacantes = request.form.get("num_vacantes")
-        perfil = request.form.get("perfil")
-        
-        try:
-            cur.execute("""
-                UPDATE vacantes SET titulo=%s, descripcion=%s, salario=%s, modalidad=%s, 
-                horario=%s, lugar_trabajo=%s, fecha_vencimiento=%s, num_vacantes=%s, perfil=%s
-                WHERE id_vacante = %s
-            """, (titulo, descripcion, float(salario) if salario else None, modalidad, horario, lugar, fecha_vencimiento, int(num_vacantes) if num_vacantes else 1, perfil, id_vacante))
-            
-            cur.execute("""
-                UPDATE requisitos_vacante SET escolaridad=%s, experiencia=%s, descripcion=%s
-                WHERE id_vacante = %s
-            """, (escolaridad, experiencia, conocimientos, id_vacante))
-            
-            conn.commit()
-            flash("Vacante actualizada exitosamente.")
+    try:
+        vacante = _vacante_empresa(cur, id_vacante)
+        if not vacante:
+            abort(404)
+        if request.method == "POST":
+            try:
+                salario = request.form.get("salario")
+                num_vacantes = int(request.form.get("num_vacantes") or 1)
+                if num_vacantes < 1 or (salario and float(salario) < 0):
+                    raise ValueError("Valores fuera de rango")
+                cur.execute("""
+                    UPDATE vacantes SET titulo=%s, descripcion=%s, salario=%s, modalidad=%s,
+                        horario=%s, lugar_trabajo=%s, fecha_vencimiento=%s, num_vacantes=%s, perfil=%s
+                    WHERE id_vacante=%s
+                        AND id_empresa IN (SELECT id_empresa FROM empresas WHERE id_usuario=%s)
+                """, (request.form.get("titulo"), request.form.get("descripcion"),
+                      float(salario) if salario else None, request.form.get("modalidad"),
+                      request.form.get("horario"), request.form.get("lugar"),
+                      request.form.get("fecha_vencimiento") or None, num_vacantes,
+                      request.form.get("perfil"), id_vacante, current_user.id))
+                cur.execute("""
+                    UPDATE requisitos_vacante SET escolaridad=%s, experiencia=%s, descripcion=%s
+                    WHERE id_vacante=%s
+                """, (request.form.get("escolaridad"), request.form.get("experiencia"),
+                      request.form.get("conocimientos"), id_vacante))
+                conn.commit()
+                flash("Vacante actualizada exitosamente.")
+            except Exception:
+                conn.rollback()
+                app.logger.exception("No se pudo editar la vacante")
+                flash("No se pudo actualizar la vacante. Revisa los datos e inténtalo de nuevo.")
             return redirect(url_for("empresa.consultar"))
-        except Exception as e:
-            conn.rollback()
-            flash(f"Error al actualizar: {str(e)}")
-    
-    # GET: Cargar datos actuales
-    cur.execute("""
-        SELECT v.id_vacante, v.titulo, v.descripcion, v.salario, v.modalidad, 
-               v.horario, v.lugar_trabajo, v.fecha_vencimiento, v.num_vacantes, v.perfil,
-               r.escolaridad, r.experiencia, r.descripcion as req_desc
-        FROM vacantes v
-        LEFT JOIN requisitos_vacante r ON v.id_vacante = r.id_vacante
-        WHERE v.id_vacante = %s
-    """, (id_vacante,))
-    vacante = cur.fetchone()
-    cur.close()
-    conn.close()
-    
-    return render_template("empresa/empresa-editar-vacante.html", vacante=vacante)
+        return render_template("empresa/empresa-editar-vacante.html", vacante=vacante)
+    finally:
+        cur.close()
+        conn.close()
+
 
 @app.route("/empresa/vacante/<int:id_vacante>/eliminar", methods=["POST"])
 @login_required
 def empresa_eliminar_vacante(id_vacante):
-    if current_user.rol != "Empresa": return redirect(url_for("home"))
+    if current_user.rol != "Empresa":
+        abort(403)
     conn = get_connection()
     cur = conn.cursor()
+    eliminado = False
     try:
-        # Primero eliminar requisitos (por FK)
-        cur.execute("DELETE FROM requisitos_vacante WHERE id_vacante = %s", (id_vacante,))
-        # Eliminar postulaciones (opcional o obligatorio dependiendo de la lógica, 
-        # usualmente si hay postulaciones no se debería eliminar tan fácil, 
-        # pero para esta tarea lo haremos simple)
-        cur.execute("DELETE FROM postulaciones WHERE id_vacante = %s", (id_vacante,))
-        cur.execute("DELETE FROM vacantes WHERE id_vacante = %s", (id_vacante,))
-        conn.commit()
-        notificar_admins("vacantes", "Una empresa ha eliminado una vacante.", "/admin/vacantes")
-        flash("Vacante eliminada.")
-    except Exception as e:
-        conn.rollback()
-        flash(f"Error al eliminar: {str(e)}")
+        if not _vacante_empresa(cur, id_vacante):
+            abort(404)
+        try:
+            cur.execute("DELETE FROM requisitos_vacante WHERE id_vacante=%s", (id_vacante,))
+            cur.execute("DELETE FROM vacantes_guardadas WHERE id_vacante=%s", (id_vacante,))
+            cur.execute("DELETE FROM postulaciones WHERE id_vacante=%s", (id_vacante,))
+            cur.execute("""
+                DELETE FROM vacantes WHERE id_vacante=%s
+                    AND id_empresa IN (SELECT id_empresa FROM empresas WHERE id_usuario=%s)
+            """, (id_vacante, current_user.id))
+            conn.commit()
+            eliminado = True
+            flash("Vacante eliminada.")
+        except Exception:
+            conn.rollback()
+            app.logger.exception("No se pudo eliminar la vacante")
+            flash("No se pudo eliminar la vacante. Inténtalo de nuevo.")
     finally:
         cur.close()
         conn.close()
+    if eliminado:
+        notificar_admins("vacantes", "Una empresa ha eliminado una vacante.", "/admin/vacantes")
     return redirect(url_for("empresa.consultar"))
+
+
+def _decidir_postulacion(id_postulacion, estado):
+    if current_user.rol != "Empresa":
+        abort(403)
+    comentario = request.form.get("comentario", "")
+    if len(comentario) > 4000:
+        abort(400, description="El comentario es demasiado largo.")
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT p.id_vacante, c.id_usuario
+            FROM postulaciones p
+            JOIN vacantes v ON p.id_vacante = v.id_vacante
+            JOIN empresas e ON v.id_empresa = e.id_empresa
+            JOIN candidatos c ON p.id_candidato = c.id_candidato
+            WHERE p.id_postulacion=%s AND e.id_usuario=%s
+            FOR UPDATE OF p, v
+        """, (id_postulacion, current_user.id))
+        result = cur.fetchone()
+        if not result:
+            abort(404)
+        cur.execute("""
+            UPDATE postulaciones SET estado=%s, comentarios=%s
+            WHERE id_postulacion=%s AND id_vacante IN (
+                SELECT v.id_vacante FROM vacantes v JOIN empresas e ON v.id_empresa=e.id_empresa
+                WHERE e.id_usuario=%s
+            )
+        """, (estado, comentario, id_postulacion, current_user.id))
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+        conn.close()
+    aceptada = estado == "aceptado"
+    msg = "Has sido aceptado en una vacante." if aceptada else "Tu postulación ha sido rechazada."
+    if comentario:
+        msg += f" Mensaje: {comentario}"
+    asunto = ("¡Felicidades! Has sido aceptado - Talent Link" if aceptada
+              else "Actualización de Postulación - Talent Link")
+    crear_notificacion(result[1], estado, msg, "/candidato/estado-postulaciones", asunto,
+                       f"Hola,\n\n{msg}\n\nIngresa al portal para ver más detalles.")
+    notificar_admins("seleccion", "Una empresa ha actualizado una postulación.", "/admin/seguimiento")
+    flash("Postulación actualizada con éxito.")
+    return redirect(url_for("empresa_ver_vacante", id_vacante=result[0]))
+
 
 @app.route("/empresa/postulacion/<int:id_postulacion>/aceptar", methods=["POST"])
 @login_required
 def empresa_aceptar_postulacion(id_postulacion):
-    if current_user.rol != "Empresa": return redirect(url_for("home"))
-    comentario = request.form.get("comentario", "")
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("UPDATE postulaciones SET estado = 'aceptado', comentarios = %s WHERE id_postulacion = %s", (comentario, id_postulacion))
-    cur.execute("SELECT id_vacante, id_candidato FROM postulaciones WHERE id_postulacion = %s", (id_postulacion,))
-    result = cur.fetchone()
-    vacante = (result[0],) if result else None
-    if result:
-        cur.execute("SELECT id_usuario FROM candidatos WHERE id_candidato = %s", (result[1],))
-        cand_user = cur.fetchone()
-        if cand_user:
-            msg = "Has sido aceptado en una vacante."
-            if comentario: msg += f" Mensaje: {comentario}"
-            
-            asunto_c = "¡Felicidades! Has sido aceptado - UT Oriental Emplea"
-            cuerpo_c = f"Hola,\n\nBuenas noticias: Una empresa ha aceptado tu postulación.\n\n{msg}\n\nIngresa al portal para ver más detalles."
-            crear_notificacion(cand_user[0], "aceptado", msg, "/candidato/estado-postulaciones", asunto_c, cuerpo_c)
-        notificar_admins("seleccion", "Una empresa ha aceptado a un candidato.", "/admin/seguimiento")
-    conn.commit()
-    cur.close()
-    conn.close()
-    flash("Candidato aceptado con éxito.")
-    if vacante:
-        return redirect(url_for("empresa_ver_vacante", id_vacante=vacante[0]))
-    return redirect(url_for("empresa.consultar"))
+    return _decidir_postulacion(id_postulacion, "aceptado")
+
 
 @app.route("/empresa/postulacion/<int:id_postulacion>/rechazar", methods=["POST"])
 @login_required
 def empresa_rechazar_postulacion(id_postulacion):
-    if current_user.rol != "Empresa": return redirect(url_for("home"))
-    comentario = request.form.get("comentario", "")
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("UPDATE postulaciones SET estado = 'rechazado', comentarios = %s WHERE id_postulacion = %s", (comentario, id_postulacion))
-    cur.execute("SELECT id_vacante, id_candidato FROM postulaciones WHERE id_postulacion = %s", (id_postulacion,))
-    result = cur.fetchone()
-    vacante = (result[0],) if result else None
-    if result:
-        cur.execute("SELECT id_usuario FROM candidatos WHERE id_candidato = %s", (result[1],))
-        cand_user = cur.fetchone()
-        if cand_user:
-            msg = "Tu postulación ha sido rechazada."
-            if comentario: msg += f" Motivo: {comentario}"
-            
-            asunto_r = "Actualización de Postulación - UT Oriental Emplea"
-            cuerpo_r = f"Hola,\n\nSe ha actualizado el estado de tu postulación.\n\n{msg}\n\nTe deseamos éxito en otras vacantes."
-            crear_notificacion(cand_user[0], "rechazado", msg, "/candidato/estado-postulaciones", asunto_r, cuerpo_r)
-        notificar_admins("seleccion", "Una empresa ha rechazado a un candidato.", "/admin/seguimiento")
-    conn.commit()
-    cur.close()
-    conn.close()
-    flash("Candidato rechazado con éxito.")
-    if vacante:
-        return redirect(url_for("empresa_ver_vacante", id_vacante=vacante[0]))
-    return redirect(url_for("empresa.consultar"))
+    return _decidir_postulacion(id_postulacion, "rechazado")
 
 # ================= MAIN =================
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='127.0.0.1', port=5001, debug=(os.getenv('FLASK_ENV') == 'development' and os.getenv('FLASK_DEBUG') == '1'))

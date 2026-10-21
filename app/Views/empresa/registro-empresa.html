@@ -126,6 +126,7 @@
             margin-left: 2px;
         }
     </style>
+    {% include 'shared/security-head.html' %}
 </head>
 
 <body>
@@ -153,6 +154,7 @@
         </div>
 
         <form id="registroForm" action="/registro-empresa" method="POST" class="card">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <!-- STEP 1: Datos de la Empresa -->
             <div class="form-step active" id="step1">

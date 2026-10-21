@@ -10,6 +10,7 @@
         href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% include 'shared/security-head.html' %}
 </head>
 
 <body class="app-shell">
@@ -67,9 +68,10 @@
                         <span>{{ current_user.rol }}</span>
                     </div>
                 </div>
-                <a href="/logout" class="nav-logout-btn" title="Cerrar Sesión">
-                    <i class="fas fa-sign-out-alt"></i>
-                </a>
+                <form action="/logout" method="POST" style="margin:0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="nav-logout-btn" title="Cerrar sesión" style="border:0;cursor:pointer;font:inherit;width:100%;"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+            </form>
             </div>
         </header>
 
@@ -192,11 +194,13 @@
                         <div style="display: flex; gap: 1rem; border-top: 2px solid var(--borde); padding-top: 2rem;">
                             <!-- Form links dynamically updatable -->
                             <form id="form-postular" action="{{ url_for('candidato_postularse', id_vacante=vacantes[0][0]) }}" method="POST" style="flex: 1;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-primary" style="width: 100%;">
                                     <i class="fas fa-paper-plane"></i> POSTULARME
                                 </button>
                             </form>
                             <form id="form-guardar" action="{{ url_for('candidato_guardar_vacante', id_vacante=vacantes[0][0]) }}" method="POST" style="flex: 1;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-outline" style="width: 100%;">
                                     <i class="fas fa-bookmark"></i> GUARDAR VACANTE
                                 </button>
@@ -245,11 +249,16 @@
             // Requisitos
             const reqSection = document.getElementById('det-requisitos-section');
             const reqList = document.getElementById('det-requisitos-list');
-            reqList.innerHTML = ''; // clear
+            reqList.replaceChildren();
             let hasReqs = false;
-            if(ds.escolaridad) { reqList.innerHTML += `<li>Escolaridad: ${ds.escolaridad}</li>`; hasReqs = true; }
-            if(ds.experiencia) { reqList.innerHTML += `<li>Experiencia: ${ds.experiencia}</li>`; hasReqs = true; }
-            if(ds.requisitos) { reqList.innerHTML += `<li>${ds.requisitos}</li>`; hasReqs = true; }
+            [[ds.escolaridad, 'Escolaridad: '], [ds.experiencia, 'Experiencia: '], [ds.requisitos, '']].forEach(([value, prefix]) => {
+                if (value) {
+                    const item = document.createElement('li');
+                    item.textContent = prefix + value;
+                    reqList.appendChild(item);
+                    hasReqs = true;
+                }
+            });
             reqSection.style.display = hasReqs ? 'block' : 'none';
 
             // Horario

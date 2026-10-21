@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/public/css/admin-child.css">
+    {% include 'shared/security-head.html' %}
 </head>
 <body>
     <div class="container">
@@ -71,6 +72,7 @@
                     </button>
                     <form action="/admin/eliminar-vacante/{{ v[0] }}" method="POST" style="margin: 0;"
                         onsubmit="return confirm('¿Estás seguro de que deseas eliminar la vacante \'{{ v[1] }}\'? Esta acción no se puede deshacer.')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-outline" style="color: var(--danger);">
                             <i class="fas fa-trash"></i>
                         </button>
@@ -185,7 +187,7 @@
             };
 
             document.getElementById('modal-vac-titulo').textContent = d.titulo || 'Sin título';
-            document.getElementById('modal-vac-empresa').innerHTML = '<i class="fas fa-building" style="margin-right: 5px;"></i>' + (d.empresa || 'Sin empresa');
+            document.getElementById('modal-vac-empresa').textContent = d.empresa || 'Sin empresa';"></i>' + (d.empresa || 'Sin empresa');
             document.getElementById('modal-vac-salario').textContent = '$' + (d.salario || '0');
             document.getElementById('modal-vac-postulados').textContent = (d.postulados || '0') + ' candidatos';
             document.getElementById('modal-vac-fecha').textContent = d.fecha || 'N/A';

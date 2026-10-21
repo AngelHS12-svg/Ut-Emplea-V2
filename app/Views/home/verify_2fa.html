@@ -167,6 +167,7 @@
             to { opacity: 0; pointer-events: none; }
         }
     </style>
+    {% include 'shared/security-head.html' %}
 </head>
 <body>
     {% with messages = get_flashed_messages() %}
@@ -192,6 +193,7 @@
         </p>
 
         <form method="POST" action="/auth/verify-2fa" id="verifyForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="code-input-group">
                 <input type="text" maxlength="1" class="code-digit" data-index="0" autocomplete="off" inputmode="numeric">
                 <input type="text" maxlength="1" class="code-digit" data-index="1" autocomplete="off" inputmode="numeric">
@@ -209,6 +211,7 @@
         <div class="resend-section">
             <p>¿No recibiste el código?</p>
             <form method="POST" action="/auth/resend-2fa" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="resend-btn">
                     <i class="fas fa-redo"></i> Reenviar código
                 </button>

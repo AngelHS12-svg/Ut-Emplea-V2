@@ -23,13 +23,17 @@ import pytest
 _fake_extras = types.ModuleType("psycopg2.extras")
 _fake_extras.RealDictCursor = MagicMock()
 _fake_extensions = types.ModuleType("psycopg2.extensions")
+_fake_pool = types.ModuleType("psycopg2.pool")
+_fake_pool.ThreadedConnectionPool = MagicMock()
 _fake_psycopg2 = types.ModuleType("psycopg2")
 _fake_psycopg2.connect = MagicMock()
 _fake_psycopg2.extras = _fake_extras
 _fake_psycopg2.extensions = _fake_extensions
+_fake_psycopg2.pool = _fake_pool
 sys.modules["psycopg2"] = _fake_psycopg2
 sys.modules["psycopg2.extras"] = _fake_extras
 sys.modules["psycopg2.extensions"] = _fake_extensions
+sys.modules["psycopg2.pool"] = _fake_pool
 
 
 @pytest.fixture
@@ -44,6 +48,7 @@ def app():
 
         main_module.app.config["TESTING"] = True
         main_module.app.config["WTF_CSRF_ENABLED"] = False
+        main_module.app.config["CSRF_ENABLED"] = False
         main_module.app.config["LOGIN_DISABLED"] = False
 
         yield main_module.app
@@ -70,30 +75,23 @@ def make_mock_db(fetchone_val=None, fetchall_val=None):
 
 
 def login_as(client, role="admin"):
-    """Simula un inicio de sesión con un rol dado."""
+    """Prepara una sesión para probar rutas; autenticación se verifica por separado."""
+    with client.application.app_context(), client.session_transaction() as session:
+        session['_user_id'] = str({'admin': 1, 'empresa': 2, 'candidato': 3}[role])
+        session['_fresh'] = True
+        import main
+        session['_credential_stamp'] = main.credential_stamp('stored-hash')
+
+
+def attempt_login(client, role):
     from werkzeug.security import generate_password_hash
-    hashed = generate_password_hash("test123")
-
-    role_map = {
-        "admin": (1, "admin@test.com", hashed, "Administrador", 1),
-        "empresa": (2, "empresa@test.com", hashed, "Empresa", 2),
-        "candidato": (3, "candidato@test.com", hashed, "Candidato", 3),
-    }
-    user_data = role_map[role]
-
-    # Mock para auth/login Y para load_user
-    with patch("main.get_connection") as mock_gc:
-        mock_conn = MagicMock()
-        mock_cur = MagicMock()
-        mock_conn.cursor.return_value = mock_cur
-        mock_cur.fetchone.return_value = user_data
-        mock_gc.return_value = mock_conn
-
-        return client.post("/auth/login", data={
-            "correo": user_data[1],
-            "password": "test123",
-            "rol": role
-        }, follow_redirects=False)
+    role_map = {'admin': (1, 'Administrador'), 'empresa': (2, 'Empresa'), 'candidato': (3, 'Candidato')}
+    user_id, role_name = role_map[role]
+    conn = MagicMock()
+    conn.cursor.return_value.fetchone.return_value = (
+        user_id, 'user@example.invalid', generate_password_hash('test123'), role_name, user_id, True)
+    with patch('main.get_connection', return_value=conn), patch('main._enviar_codigo_verificacion', return_value=True):
+        return client.post('/auth/login', data={'correo': 'user@example.invalid', 'password': 'test123', 'rol': role})
 
 
 # ===================================================================
@@ -108,7 +106,7 @@ class TestHomePage:
     def test_home_contains_title(self, client):
         """La página principal debe contener el título de la app."""
         resp = client.get("/")
-        assert b"UT Oriental Emplea" in resp.data
+        assert b"TalentLink" in resp.data
 
     def test_login_page_alias(self, client):
         """La ruta /login también debe funcionar."""
@@ -122,21 +120,21 @@ class TestHomePage:
 class TestAuthentication:
     def test_login_correct_admin(self, client):
         """Login correcto como administrador redirige a /admin."""
-        resp = login_as(client, "admin")
+        resp = attempt_login(client, "admin")
         assert resp.status_code in (302, 303)
-        assert "/admin" in resp.headers.get("Location", "")
+        assert "/auth/verify-2fa" in resp.headers.get("Location", "")
 
     def test_login_correct_empresa(self, client):
         """Login correcto como empresa redirige a /empresa."""
-        resp = login_as(client, "empresa")
+        resp = attempt_login(client, "empresa")
         assert resp.status_code in (302, 303)
-        assert "/empresa" in resp.headers.get("Location", "")
+        assert "/auth/verify-2fa" in resp.headers.get("Location", "")
 
     def test_login_correct_candidato(self, client):
         """Login correcto como candidato redirige a /candidato."""
-        resp = login_as(client, "candidato")
+        resp = attempt_login(client, "candidato")
         assert resp.status_code in (302, 303)
-        assert "/candidato" in resp.headers.get("Location", "")
+        assert "/auth/verify-2fa" in resp.headers.get("Location", "")
 
     def test_login_wrong_password(self, client):
         """Contraseña incorrecta redirige al home con flash."""
@@ -199,9 +197,9 @@ class TestAuthentication:
             mock_conn = MagicMock()
             mock_cur = MagicMock()
             mock_conn.cursor.return_value = mock_cur
-            mock_cur.fetchone.return_value = (1, "admin@test.com", 1, "Administrador")
+            mock_cur.fetchone.return_value = (1, "admin@test.com", 1, "Administrador", 'stored-hash')
             mock_gc.return_value = mock_conn
-            resp = client.get("/logout", follow_redirects=False)
+            resp = client.post("/logout", follow_redirects=False)
             assert resp.status_code in (302, 303)
 
 
@@ -241,7 +239,7 @@ class TestAdminRoutes:
         mock_conn = MagicMock()
         mock_cur = MagicMock()
         mock_conn.cursor.return_value = mock_cur
-        mock_cur.fetchone.return_value = (1, "admin@test.com", 1, "Administrador")
+        mock_cur.fetchone.return_value = (1, "admin@test.com", 1, "Administrador", 'stored-hash')
         mock_cur.fetchall.return_value = []
         self._mock_gc.return_value = mock_conn
         return mock_cur
@@ -250,19 +248,15 @@ class TestAdminRoutes:
         self._patcher.stop()
 
     def test_admin_inicio_loads(self, client):
-        """La página de inicio del admin carga correctamente."""
-        mock_cur = self._login_admin(client)
-        # load_user needs a proper 4-tuple, and fetchone is called many times
-        mock_cur.fetchone.return_value = (0,)
-        mock_cur.fetchall.return_value = []
+        cur = self._login_admin(client)
+        def fetchone():
+            query = cur.execute.call_args.args[0]
+            return (0,) if 'COUNT(' in query else (1, 'admin@test.com', 1, 'Administrador', 'stored-hash')
+        cur.fetchone.side_effect = fetchone
         try:
-            resp = client.get("/admin/inicio")
+            assert client.get('/admin/inicio').status_code == 200
+        finally:
             self._stop_patch()
-            # May be 200 or 302 depending on how load_user resolves
-            assert resp.status_code in (200, 302)
-        except Exception:
-            self._stop_patch()
-            pytest.skip("admin_inicio requires complex multi-query mocking")
 
     def test_admin_consultar_empresas_loads(self, client):
         """Consultar empresas carga correctamente."""
@@ -321,7 +315,7 @@ class TestAdminEliminarVacante:
 
             # Para load_user
             mock_cur.fetchone.side_effect = [
-                (1, "admin@test.com", 1, "Administrador"),  # load_user
+                (1, "admin@test.com", 1, "Administrador", 'stored-hash'),  # load_user
                 ("Desarrollador Python", 5),  # vacancy info
             ]
             mock_gc.return_value = mock_conn
@@ -339,7 +333,7 @@ class TestAdminEliminarVacante:
             mock_cur = MagicMock()
             mock_conn.cursor.return_value = mock_cur
             mock_cur.fetchone.side_effect = [
-                (1, "admin@test.com", 1, "Administrador"),  # load_user
+                (1, "admin@test.com", 1, "Administrador", 'stored-hash'),  # load_user
                 None,  # vacancy not found
             ]
             mock_gc.return_value = mock_conn
@@ -360,7 +354,7 @@ class TestNotificacionesAPI:
             mock_conn = MagicMock()
             mock_cur = MagicMock()
             mock_conn.cursor.return_value = mock_cur
-            mock_cur.fetchone.return_value = (1, "admin@test.com", 1, "Administrador")
+            mock_cur.fetchone.return_value = (1, "admin@test.com", 1, "Administrador", 'stored-hash')
             mock_cur.fetchall.return_value = [
                 (1, "registro", "Nueva empresa", "/admin", datetime.now()),
                 (2, "vacantes", "Nueva vacante", "/admin/vacantes", datetime.now()),
@@ -381,7 +375,7 @@ class TestNotificacionesAPI:
             mock_conn = MagicMock()
             mock_cur = MagicMock()
             mock_conn.cursor.return_value = mock_cur
-            mock_cur.fetchone.return_value = (1, "admin@test.com", 1, "Administrador")
+            mock_cur.fetchone.return_value = (1, "admin@test.com", 1, "Administrador", 'stored-hash')
             mock_gc.return_value = mock_conn
 
             resp = client.post("/api/notificaciones/leer/1")
@@ -416,7 +410,8 @@ class TestRegistroEmpresa:
                 "telefono": "5551234567",
                 "direccion": "Calle Test 123",
                 "correo": "nueva@empresa.com",
-                "password": "SecurePass123",
+                "password": "SafePass8!xQ4",
+                "codigo_postal": "75020",
                 "responsable_rrhh": "María López",
                 "telefono_rrhh": "5559876543",
                 "correo_rrhh": "rrhh@empresa.com",
@@ -443,7 +438,7 @@ class TestHelpers:
 
             main.crear_notificacion(1, "test", "Mensaje de prueba", "/test")
 
-            mock_cur.execute.assert_called_once()
+            assert mock_cur.execute.call_count == 2
             mock_conn.commit.assert_called_once()
             mock_cur.close.assert_called_once()
             mock_conn.close.assert_called_once()
@@ -464,22 +459,14 @@ class TestHelpers:
             mock_conn.rollback.assert_called_once()
 
     def test_notificar_admins(self, app):
-        """notificar_admins envía notificaciones a todos los administradores."""
         import main
-        with patch("main.get_connection") as mock_gc:
-            mock_conn = MagicMock()
-            mock_cur = MagicMock()
-            mock_conn.cursor.return_value = mock_cur
-            # Simular 2 admins
-            mock_cur.fetchall.return_value = [(1,), (2,)]
-            mock_gc.return_value = mock_conn
-
-            main.notificar_admins("registro", "Test notificación", "/admin")
-
-            # SELECT + 2 INSERTs = 3 execute calls
-            assert mock_cur.execute.call_count == 3
-            # commit may be called more than once
-            assert mock_conn.commit.call_count >= 1
+        conn = MagicMock()
+        conn.cursor.return_value.fetchall.return_value = [(1,), (2,)]
+        with patch('main.get_connection', return_value=conn), patch('main.crear_notificacion') as notify:
+            main.notificar_admins('registro', 'Test', '/admin')
+        assert notify.call_count == 2
+        conn.cursor.return_value.execute.assert_called_once()
+        conn.close.assert_called_once()
 
 
 # ===================================================================
@@ -526,7 +513,7 @@ class TestRoleAccess:
             mock_conn = MagicMock()
             mock_cur = MagicMock()
             mock_conn.cursor.return_value = mock_cur
-            mock_cur.fetchone.return_value = (2, "empresa@test.com", 2, "Empresa")
+            mock_cur.fetchone.return_value = (2, "empresa@test.com", 2, "Empresa", 'stored-hash')
             mock_gc.return_value = mock_conn
 
             resp = client.get("/admin", follow_redirects=False)
@@ -540,7 +527,7 @@ class TestRoleAccess:
             mock_conn = MagicMock()
             mock_cur = MagicMock()
             mock_conn.cursor.return_value = mock_cur
-            mock_cur.fetchone.return_value = (3, "candidato@test.com", 3, "Candidato")
+            mock_cur.fetchone.return_value = (3, "candidato@test.com", 3, "Candidato", 'stored-hash')
             mock_gc.return_value = mock_conn
 
             resp = client.get("/admin", follow_redirects=False)
@@ -561,8 +548,8 @@ class TestValidarEmpresa:
             mock_cur = MagicMock()
             mock_conn.cursor.return_value = mock_cur
             mock_cur.fetchone.side_effect = [
-                (1, "admin@test.com", 1, "Administrador"),  # load_user
-                (5,),  # id_usuario de la empresa
+                (1, "admin@test.com", 1, "Administrador", 'stored-hash'),  # load_user
+                (5, "empresa@example.invalid", "Empresa Test"),
             ]
             mock_gc.return_value = mock_conn
 
@@ -579,7 +566,7 @@ class TestValidarEmpresa:
             mock_cur = MagicMock()
             mock_conn.cursor.return_value = mock_cur
             mock_cur.fetchone.side_effect = [
-                (1, "admin@test.com", 1, "Administrador"),  # load_user
+                (1, "admin@test.com", 1, "Administrador", 'stored-hash'),  # load_user
                 (5,),  # id_usuario de la empresa
             ]
             mock_gc.return_value = mock_conn

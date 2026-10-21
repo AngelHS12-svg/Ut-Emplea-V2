@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/public/css/admin-child.css">
+    {% include 'shared/security-head.html' %}
 </head>
 <body>
     <div class="container">
@@ -64,11 +65,13 @@
 
                 <div class="card-actions">
                     <form action="/admin/aprobar-empresa/{{ emp[0] }}" method="POST" style="flex: 1;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-accent" style="width: 100%; justify-content: center;">
                             <i class="fas fa-check"></i> Aprobar
                         </button>
                     </form>
                     <form action="/admin/rechazar-empresa/{{ emp[0] }}" method="POST" style="flex: 1;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-outline" style="width: 100%; justify-content: center; color: var(--danger);">
                             <i class="fas fa-times"></i> Rechazar
                         </button>

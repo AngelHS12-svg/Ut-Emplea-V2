@@ -11,7 +11,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d bolsa_trabajo_uto"]
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -28,6 +28,10 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_PORT=${DB_PORT:-5432}
       - FLASK_ENV=${FLASK_ENV:-production}
+      - SECRET_KEY=${SECRET_KEY:?Configura SECRET_KEY en el archivo .env}
+      - PUBLIC_BASE_URL=${PUBLIC_BASE_URL:-https://talentlink.duckdns.org}
+      - TRUST_PROXY=1
+      - DB_POOL_MAX=${DB_POOL_MAX:-10}
       - MAIL_USERNAME=${MAIL_USERNAME}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
     volumes:
@@ -36,10 +40,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    # El puerto 5000 ya NO se expone directamente al exterior,
-    # solo Nginx puede comunicarse con la app internamente
-    ports:
-      - "5000:5000"
+    # Disponible solo dentro de la red de Compose, a través de Nginx.
+    expose:
+      - "5000"
 
   # Servicio Nginx (Proxy Inverso + SSL)
   nginx:

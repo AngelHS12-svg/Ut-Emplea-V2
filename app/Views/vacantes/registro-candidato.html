@@ -25,6 +25,7 @@
         .required-mark { color: var(--vino); margin-left: 2px; }
         .invalid-feedback { color: var(--vino); font-size: 0.8rem; margin-top: 5px; display: none; }
     </style>
+    {% include 'shared/security-head.html' %}
 </head>
 <body>
 
@@ -43,6 +44,7 @@
     </div>
 
     <form id="registroForm" action="/registro-candidato" method="POST" class="card" onsubmit="return validateFinal()">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         
         <!-- STEP 1 -->
         <div class="form-step active" id="step1">

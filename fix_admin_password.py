@@ -1,32 +1,52 @@
-"""
-Script para actualizar la contraseña del admin.
-"""
+"""Cambio explícito de contraseña de una cuenta administrativa existente."""
+import argparse
+from getpass import getpass
 import os
-import psycopg2
+
+from app.config.database import get_connection
+from app.utils.passwords import password_error
 from werkzeug.security import generate_password_hash
 
-if os.getenv("DATABASE_URL"):
-    conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL"))
-else:
-    conn = psycopg2.connect(
-        host=os.getenv("DB_HOST", "localhost"),
-        database=os.getenv("DB_NAME", "bolsa_trabajo_uto"),
-        user=os.getenv("DB_USER", "postgres"),
-        password=os.getenv("DB_PASS", "angel123"),
-        port=os.getenv("DB_PORT", "5432")
-    )
-cur = conn.cursor()
 
-hashed = generate_password_hash("Admin123!")
-cur.execute("UPDATE usuarios SET password = %s WHERE correo = %s", (hashed, "admin@utoriental.edu.mx"))
+def update_admin_password(email, password):
+    error = password_error(password)
+    if error:
+        raise ValueError(error)
+    hashed = generate_password_hash(password)
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            UPDATE usuarios SET password=%s, reset_token=NULL, reset_expires=NULL,
+                two_fa_code=NULL, two_fa_expires=NULL
+            WHERE correo=%s AND id_rol IN (
+                SELECT id_rol FROM roles WHERE nombre='Administrador'
+            )
+        """, (hashed, email))
+        changed = cur.rowcount > 0
+        conn.commit()
+        return changed
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+        conn.close()
 
-if cur.rowcount > 0:
-    conn.commit()
-    print("Contraseña del admin actualizada exitosamente.")
-    print("Correo: admin@utoriental.edu.mx")
-    print("Contraseña: Admin123!")
-else:
-    print("No se encontró el usuario admin.")
 
-cur.close()
-conn.close()
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--email', required=True)
+    args = parser.parse_args()
+    password = os.environ.get('ADMIN_PASSWORD') or getpass('Nueva contraseña: ')
+    if not os.environ.get('ADMIN_PASSWORD') and password != getpass('Confirma la contraseña: '):
+        parser.error('Las contraseñas no coinciden.')
+    try:
+        changed = update_admin_password(args.email.strip(), password)
+    except ValueError as exc:
+        parser.error(str(exc))
+    print('Contraseña actualizada.' if changed else 'No se encontró esa cuenta administrativa.')
+
+
+if __name__ == '__main__':
+    main()

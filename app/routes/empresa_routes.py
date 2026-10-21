@@ -1,7 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import current_app, Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from app.config.database import get_connection
-from werkzeug.security import generate_password_hash
 from datetime import datetime
 from app.utils.security import strip_tags
 
@@ -14,33 +13,33 @@ def inicio():
     if current_user.rol != "Empresa":
         flash("Acceso denegado")
         return redirect(url_for("home"))
-    
+
     conn = get_connection()
     cur = conn.cursor()
-    
+
     # Obtener ID de empresa
     cur.execute("SELECT id_empresa FROM empresas WHERE id_usuario = %s", (current_user.id,))
     empresa_data = cur.fetchone()
-    
+
     stats = {'vacantes': 0, 'postulaciones': 0}
     if empresa_data:
         id_empresa = empresa_data[0]
         # Contador de vacantes
         cur.execute("SELECT COUNT(*) FROM vacantes WHERE id_empresa = %s", (id_empresa,))
         stats['vacantes'] = cur.fetchone()[0]
-        
+
         # Contador de postulaciones
         cur.execute("""
-            SELECT COUNT(p.id_postulacion) 
+            SELECT COUNT(p.id_postulacion)
             FROM postulaciones p
             JOIN vacantes v ON p.id_vacante = v.id_vacante
             WHERE v.id_empresa = %s
         """, (id_empresa,))
         stats['postulaciones'] = cur.fetchone()[0]
-    
+
     cur.close()
     conn.close()
-    
+
     return render_template('empresa/empresa-inicio.html', stats=stats)
 
 # ================= PUBLICAR VACANTE =================
@@ -48,7 +47,7 @@ def inicio():
 @login_required
 def publicar():
     if current_user.rol != "Empresa": return redirect(url_for("home"))
-    
+
     if request.method == "POST":
         titulo = strip_tags(request.form.get("titulo"))
         descripcion = strip_tags(request.form.get("descripcion"))
@@ -57,7 +56,7 @@ def publicar():
         horario = strip_tags(request.form.get("horario"))
         lugar = strip_tags(request.form.get("lugar"))
         fecha_vencimiento = request.form.get("fecha_vencimiento")
-        
+
         # Requisitos
         escolaridad = strip_tags(request.form.get("escolaridad"))
         experiencia = strip_tags(request.form.get("experiencia"))
@@ -67,45 +66,46 @@ def publicar():
 
         conn = get_connection()
         cur = conn.cursor()
-        
+
         try:
             cur.execute("SELECT id_empresa FROM empresas WHERE id_usuario = %s", (current_user.id,))
             id_empresa = cur.fetchone()[0]
-            
+
             # Insertar vacante
             cur.execute("""
                 INSERT INTO vacantes (id_empresa, titulo, descripcion, salario, modalidad, horario, lugar_trabajo, fecha_vencimiento, num_vacantes, perfil)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id_vacante
             """, (id_empresa, titulo, descripcion, float(salario) if salario and salario.replace('.', '', 1).isdigit() else None, modalidad, horario, lugar, fecha_vencimiento, int(num_vacantes) if num_vacantes else 1, perfil))
-            
+
             id_vacante = cur.fetchone()[0]
-            
+
             # Insertar requisitos
             cur.execute("""
                 INSERT INTO requisitos_vacante (id_vacante, escolaridad, experiencia, descripcion)
                 VALUES (%s, %s, %s, %s)
             """, (id_vacante, escolaridad, experiencia, conocimientos))
-            
+
             cur.execute("SELECT id_usuario FROM usuarios WHERE id_rol = 1")
             for admin_user in cur.fetchall():
                 cur.execute("""
                     INSERT INTO notificaciones (id_usuario, tipo, mensaje, url)
                     VALUES (%s, 'vacantes', %s, '/admin/vacantes')
                 """, (admin_user[0], f"Nueva vacante publicada: {titulo}"))
-                
+
             cur.execute("SELECT id_usuario FROM usuarios WHERE id_rol = 3")
             for cand_user in cur.fetchall():
                 cur.execute("""
                     INSERT INTO notificaciones (id_usuario, tipo, mensaje, url)
                     VALUES (%s, 'vacantes', %s, %s)
                 """, (cand_user[0], f"Nueva vacante disponible: {titulo}", f"/candidato/detalle-vacante/{id_vacante}"))
-            
+
             conn.commit()
             flash("Vacante publicada exitosamente")
             return redirect(url_for("empresa.inicio"))
         except Exception as e:
             conn.rollback()
-            flash(f"Error al publicar: {str(e)}")
+            current_app.logger.exception("Error al completar la operación")
+            flash("No se pudo completar la operación. Inténtalo de nuevo.")
         finally:
             cur.close()
             conn.close()
@@ -117,24 +117,24 @@ def publicar():
 @login_required
 def consultar():
     if current_user.rol != "Empresa": return redirect(url_for("home"))
-    
+
     page = request.args.get('page', 1, type=int)
     per_page = 6  # Mostramos 6 vacantes por página
     offset = (page - 1) * per_page
 
     conn = get_connection()
     cur = conn.cursor()
-    
+
     cur.execute("SELECT id_empresa FROM empresas WHERE id_usuario = %s", (current_user.id,))
     id_empresa_row = cur.fetchone()
-    
+
     if not id_empresa_row:
         cur.close()
         conn.close()
         return redirect(url_for("home"))
-    
+
     id_empresa = id_empresa_row[0]
-    
+
     # Contar total para paginación
     cur.execute("SELECT COUNT(*) FROM vacantes WHERE id_empresa = %s", (id_empresa,))
     total_vacantes = cur.fetchone()[0]
@@ -142,21 +142,21 @@ def consultar():
 
     # Obtener vacantes paginadas
     cur.execute("""
-        SELECT v.id_vacante, v.titulo, v.fecha_publicacion, v.estatus, 
+        SELECT v.id_vacante, v.titulo, v.fecha_publicacion, v.estatus,
         (SELECT COUNT(*) FROM postulaciones p WHERE p.id_vacante = v.id_vacante) as num_postulados
         FROM vacantes v
         WHERE v.id_empresa = %s
         ORDER BY v.fecha_publicacion DESC
         LIMIT %s OFFSET %s
     """, (id_empresa, per_page, offset))
-    
+
     vacantes = cur.fetchall()
     cur.close()
     conn.close()
-    
-    return render_template('empresa/empresa-consultar.html', 
-                           vacantes=vacantes, 
-                           page=page, 
+
+    return render_template('empresa/empresa-consultar.html',
+                           vacantes=vacantes,
+                           page=page,
                            total_pages=total_pages)
 
 # ================= GESTIÓN DE CANDIDATOS =================
@@ -164,20 +164,20 @@ def consultar():
 @login_required
 def candidatos():
     if current_user.rol != "Empresa": return redirect(url_for("home"))
-    
+
     conn = get_connection()
     cur = conn.cursor()
-    
+
     cur.execute("SELECT id_empresa FROM empresas WHERE id_usuario = %s", (current_user.id,))
     id_empresa_row = cur.fetchone()
-    
+
     if not id_empresa_row:
         cur.close()
         conn.close()
         return redirect(url_for("home"))
-    
+
     id_empresa = id_empresa_row[0]
-    
+
     # Obtener vacantes y conteo de postulados
     cur.execute("""
         SELECT v.id_vacante, v.titulo, v.fecha_publicacion, v.estatus,
@@ -187,11 +187,11 @@ def candidatos():
         WHERE v.id_empresa = %s
         ORDER BY v.fecha_publicacion DESC
     """, (id_empresa,))
-    
+
     vacantes = cur.fetchall()
     cur.close()
     conn.close()
-    
+
     return render_template('empresa/empresa-candidatos-lista.html', vacantes=vacantes)
 
 # ================= PERFIL =================
@@ -199,10 +199,10 @@ def candidatos():
 @login_required
 def perfil():
     if current_user.rol != "Empresa": return redirect(url_for("home"))
-    
+
     conn = get_connection()
     cur = conn.cursor()
-    
+
     # Obtener ID de empresa para el usuario actual
     cur.execute("SELECT id_empresa FROM empresas WHERE id_usuario = %s", (current_user.id,))
     id_empresa_row = cur.fetchone()
@@ -210,9 +210,9 @@ def perfil():
         cur.close()
         conn.close()
         return redirect(url_for("home"))
-    
+
     id_empresa = id_empresa_row[0]
-    
+
     if request.method == "POST":
         nombre = strip_tags(request.form.get("nombre"))
         giro = strip_tags(request.form.get("giro"))
@@ -222,57 +222,59 @@ def perfil():
         rh_nombre = strip_tags(request.form.get("rh_nombre"))
         rh_telefono = strip_tags(request.form.get("rh_telefono"))
         rh_correo = strip_tags(request.form.get("rh_correo"))
-        
+
         try:
             # 1. Actualizar tabla empresas
             cur.execute("""
-                UPDATE empresas 
-                SET nombre = %s, giro = %s, tipo_empresa = %s, telefono = %s 
+                UPDATE empresas
+                SET nombre = %s, giro = %s, tipo_empresa = %s, telefono = %s
                 WHERE id_empresa = %s
             """, (nombre, giro, tipo_empresa, telefono, id_empresa))
-            
+
             # 2. Actualizar o insertar tabla direcciones_empresa
             cur.execute("SELECT 1 FROM direcciones_empresa WHERE id_empresa = %s", (id_empresa,))
             if cur.fetchone():
                 cur.execute("UPDATE direcciones_empresa SET calle = %s WHERE id_empresa = %s", (calle, id_empresa))
             else:
                 cur.execute("INSERT INTO direcciones_empresa (id_empresa, calle) VALUES (%s, %s)", (id_empresa, calle))
-                
+
             # 3. Actualizar o insertar tabla recursos_humanos
             cur.execute("SELECT 1 FROM recursos_humanos WHERE id_empresa = %s", (id_empresa,))
             if cur.fetchone():
                 cur.execute("""
-                    UPDATE recursos_humanos SET nombre = %s, telefono = %s, correo = %s 
+                    UPDATE recursos_humanos SET nombre = %s, telefono = %s, correo = %s
                     WHERE id_empresa = %s
                 """, (rh_nombre, rh_telefono, rh_correo, id_empresa))
             else:
                 cur.execute("""
-                    INSERT INTO recursos_humanos (id_empresa, nombre, telefono, correo) 
+                    INSERT INTO recursos_humanos (id_empresa, nombre, telefono, correo)
                     VALUES (%s, %s, %s, %s)
                 """, (id_empresa, rh_nombre, rh_telefono, rh_correo))
-                
+
             conn.commit()
             flash("Perfil actualizado correctamente.")
         except Exception as e:
             conn.rollback()
-            flash(f"Error al actualizar el perfil: {str(e)}")
-        
+            current_app.logger.exception("Error al completar la operación")
+            flash("No se pudo completar la operación. Inténtalo de nuevo.")
+        cur.close()
+        conn.close()
         return redirect(url_for("empresa.perfil"))
-        
+
     # Lógica GET
     cur.execute("""
-        SELECT e.nombre, e.giro, e.tipo_empresa, e.telefono, d.calle, 
+        SELECT e.nombre, e.giro, e.tipo_empresa, e.telefono, d.calle,
                rh.nombre as rh_nombre, rh.telefono as rh_telefono, rh.correo as rh_correo
         FROM empresas e
         LEFT JOIN direcciones_empresa d ON e.id_empresa = d.id_empresa
         LEFT JOIN recursos_humanos rh ON e.id_empresa = rh.id_empresa
         WHERE e.id_empresa = %s
     """, (id_empresa,))
-    
+
     empresa = cur.fetchone()
     cur.close()
     conn.close()
-    
+
     return render_template('empresa/empresa-perfil.html', empresa=empresa)
 
 # ================= ESTADÍSTICAS =================
@@ -280,20 +282,20 @@ def perfil():
 @login_required
 def estadisticas():
     if current_user.rol != "Empresa": return redirect(url_for("home"))
-    
+
     conn = get_connection()
     cur = conn.cursor()
-    
+
     cur.execute("SELECT id_empresa FROM empresas WHERE id_usuario = %s", (current_user.id,))
     empresa_data = cur.fetchone()
-    
+
     stats = {
         'vacantes_activas': 0, 'vacantes_inactivas': 0,
         'total_postulaciones': 0, 'en_revision': 0,
         'aceptadas': 0, 'rechazadas': 0
     }
     vacantes_detalle = []
-    
+
     if empresa_data:
         id_empresa = empresa_data[0]
         cur.execute("SELECT COUNT(*) FROM vacantes WHERE id_empresa = %s AND estatus = 'activa'", (id_empresa,))
@@ -324,7 +326,7 @@ def estadisticas():
             WHERE v.id_empresa = %s AND p.estado = 'rechazado'
         """, (id_empresa,))
         stats['rechazadas'] = cur.fetchone()[0]
-        
+
         # Detalle por vacante
         cur.execute("""
             SELECT v.titulo,
@@ -335,40 +337,14 @@ def estadisticas():
             ORDER BY v.fecha_publicacion DESC
         """, (id_empresa,))
         vacantes_detalle = cur.fetchall()
-    
+
     cur.close()
     conn.close()
-    
+
     return render_template('empresa/empresa-estadisticas.html', stats=stats, vacantes_detalle=vacantes_detalle)
 
 # ================= REGISTRO (Mantenido por compatibilidad) =================
 @empresa_bp.route("/registro-empresa", methods=["POST"])
 def registrar_empresa():
-    data = request.form
-    hashed_password = generate_password_hash(data.get("password"))
-    
-    conn = get_connection()
-    cur = conn.cursor()
-    try:
-        cur.execute("INSERT INTO usuarios (id_rol, correo, password, activo) VALUES (2, %s, %s, false) RETURNING id_usuario", 
-                   (data.get("correo"), hashed_password))
-        id_usuario = cur.fetchone()[0]
-        
-        cur.execute("INSERT INTO empresas (id_usuario, nombre, giro, tipo_empresa, telefono) VALUES (%s, %s, %s, %s, %s) RETURNING id_empresa",
-                   (id_usuario, strip_tags(data.get("empresa")), strip_tags(data.get("giro")), strip_tags(data.get("tipo_empresa")), strip_tags(data.get("telefono"))))
-        id_empresa = cur.fetchone()[0]
-        
-        cur.execute("INSERT INTO direcciones_empresa (id_empresa, calle) VALUES (%s, %s)", (id_empresa, strip_tags(data.get("direccion"))))
-        cur.execute("INSERT INTO recursos_humanos (id_empresa, nombre, telefono, correo) VALUES (%s, %s, %s, %s)",
-                   (id_empresa, strip_tags(data.get("responsable_rrhh")), strip_tags(data.get("telefono_rrhh")), strip_tags(data.get("correo_rrhh"))))
-        
-        conn.commit()
-        flash("Registro exitoso")
-        return redirect(url_for("home"))
-    except Exception as e:
-        conn.rollback()
-        flash(f"Error: {str(e)}")
-        return redirect(url_for("registro_empresa"))
-    finally:
-        cur.close()
-        conn.close()
+    # Conserva los POST antiguos, pero aplica todas las validaciones del registro canónico.
+    return redirect(url_for("registro_empresa"), code=307)

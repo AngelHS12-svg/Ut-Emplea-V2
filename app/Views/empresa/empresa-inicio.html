@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/public/css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% include 'shared/security-head.html' %}
 </head>
 
 <body class="app-shell">
@@ -141,9 +142,10 @@
                         </div>
                     </div>
 
-                    <a href="/logout" class="nav-logout-btn" title="Cerrar Sesión">
-                    <i class="fas fa-sign-out-alt"></i>
-                </a>
+                    <form action="/logout" method="POST" style="margin:0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="nav-logout-btn" title="Cerrar sesión" style="border:0;cursor:pointer;font:inherit;width:100%;"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+            </form>
             </div>
         </header>
 
@@ -257,20 +259,10 @@
                         notifBadge.textContent = data.length;
                         notifBadge.style.display = 'block';
                         
-                        let html = '';
-                        data.forEach(notif => {
-                            html += `
-                                <div class="notif-item" onclick="marcarLeida(${notif.id}, '${notif.url || '#'}')">
-                                    <div class="notif-title">${notif.tipo.toUpperCase()}</div>
-                                    <div class="notif-msg">${notif.mensaje}</div>
-                                    <div class="notif-date">${notif.fecha}</div>
-                                </div>
-                            `;
-                        });
-                        notifMenu.innerHTML = html;
+                        TalentLinkUI.renderNotifications(notifMenu, data, window.marcarLeida);
                     } else {
                         notifBadge.style.display = 'none';
-                        notifMenu.innerHTML = '<div class="notif-item last">No tienes notificaciones nuevas.</div>';
+                        TalentLinkUI.renderNotifications(notifMenu, [], window.marcarLeida);
                     }
                 } catch (error) {
                     console.error("No se pudieron cargar las notificaciones", error);
@@ -279,7 +271,7 @@
 
             window.marcarLeida = async function(id, url) {
                 try {
-                    await fetch(`/api/notificaciones/leer/${id}`, { method: 'POST' });
+                    await TalentLinkUI.csrfFetch(`/api/notificaciones/leer/${id}`, { method: 'POST' });
                     if (url && url !== '#' && url !== 'None') {
                         window.location.href = url;
                     } else {

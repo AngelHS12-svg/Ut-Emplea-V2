@@ -7,6 +7,7 @@
     <title>Gestión de Candidatos · TalentLink</title>
     <link rel="stylesheet" href="/public/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    {% include 'shared/security-head.html' %}
 </head>
 
 <body class="app-shell">
@@ -62,9 +63,10 @@
                         <span>{{ current_user.rol }}</span>
                     </div>
                 </div>
-                <a href="/logout" class="nav-logout-btn" title="Cerrar Sesión">
-                    <i class="fas fa-sign-out-alt"></i>
-                </a>
+                <form action="/logout" method="POST" style="margin:0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="nav-logout-btn" title="Cerrar sesión" style="border:0;cursor:pointer;font:inherit;width:100%;"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+            </form>
             </div>
         </header>
 

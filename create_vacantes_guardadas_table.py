@@ -10,7 +10,7 @@ def check_and_create_schema():
             host=os.getenv("DB_HOST", "localhost"),
             database=os.getenv("DB_NAME", "bolsa_trabajo_uto"),
             user=os.getenv("DB_USER", "postgres"),
-            password=os.getenv("DB_PASS", "angel123"),
+            password=os.environ["DB_PASSWORD"],
             port=os.getenv("DB_PORT", "5432")
         )
     cur = conn.cursor()

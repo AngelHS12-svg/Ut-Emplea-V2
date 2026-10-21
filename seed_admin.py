@@ -1,57 +1,52 @@
-"""
-Script para crear el usuario administrador oficial.
-Ejecutar: python seed_admin.py
-Credenciales: bolsadetrabajo@utdeoriental.edu.mx / UT_Oriental_2026!#
-"""
+"""Alta explícita de administrador. Nunca elimina ni reemplaza cuentas existentes."""
+import argparse
+from getpass import getpass
 import os
-import psycopg2
+
+from app.config.database import get_connection
+from app.utils.passwords import password_error
 from werkzeug.security import generate_password_hash
 
-if os.getenv("DATABASE_URL"):
-    conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL"))
-else:
-    conn = psycopg2.connect(
-        host=os.getenv("DB_HOST", "localhost"),
-        database=os.getenv("DB_NAME", "bolsa_trabajo_uto"),
-        user=os.getenv("DB_USER", "postgres"),
-        password=os.getenv("DB_PASS", "angel123"),
-        port=os.getenv("DB_PORT", "5432")
-    )
 
-cur = conn.cursor()
+def create_admin(email, password):
+    error = password_error(password)
+    if error:
+        raise ValueError(error)
+    if not email or "@" not in email:
+        raise ValueError("Indica un correo válido.")
+    hashed = generate_password_hash(password)
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            INSERT INTO usuarios (id_rol, correo, password, activo)
+            SELECT id_rol, %s, %s, true FROM roles WHERE nombre='Administrador'
+            ON CONFLICT (correo) DO NOTHING RETURNING id_usuario
+        """, (email, hashed))
+        created = cur.fetchone() is not None
+        conn.commit()
+        return created
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+        conn.close()
 
-# 1. Eliminar TODAS las cuentas existentes
-cur.execute("DELETE FROM usuarios")
-conn.commit()
-print("Todas las cuentas anteriores eliminadas.")
 
-# 2. Insertar el administrador oficial
-correo_admin = "bolsadetrabajo@utdeoriental.edu.mx"
-hashed = generate_password_hash("UT_Oriental_2026!#")
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--email', required=True)
+    args = parser.parse_args()
+    password = os.environ.get('ADMIN_PASSWORD') or getpass('Nueva contraseña: ')
+    if not os.environ.get('ADMIN_PASSWORD') and password != getpass('Confirma la contraseña: '):
+        parser.error('Las contraseñas no coinciden.')
+    try:
+        created = create_admin(args.email.strip(), password)
+    except ValueError as exc:
+        parser.error(str(exc))
+    print('Administrador creado.' if created else 'No se creó: el correo ya existe o falta el rol Administrador.')
 
-cur.execute(
-    "INSERT INTO usuarios (id_rol, correo, password, activo) VALUES (1, %s, %s, true)",
-    (correo_admin, hashed)
-)
-conn.commit()
-print("Usuario admin creado exitosamente.")
-print("Correo: " + correo_admin)
-print("Contrasena: UT_Oriental_2026!#")
 
-# 3. Insertar carreras si no existen
-cur.execute("SELECT COUNT(*) FROM carreras")
-if cur.fetchone()[0] == 0:
-    carreras = [
-        ("Ingenieria en Sistemas Computacionales", "Desarrollo de software y sistemas"),
-        ("Administracion", "Gestion empresarial"),
-        ("Contaduria Publica", "Contabilidad y finanzas"),
-        ("Ingenieria Industrial", "Procesos y produccion"),
-        ("Diseno Grafico", "Diseno visual y multimedia"),
-    ]
-    for nombre, desc in carreras:
-        cur.execute("INSERT INTO carreras (nombre, descripcion) VALUES (%s, %s)", (nombre, desc))
-    conn.commit()
-    print("Carreras insertadas.")
-
-cur.close()
-conn.close()
+if __name__ == '__main__':
+    main()

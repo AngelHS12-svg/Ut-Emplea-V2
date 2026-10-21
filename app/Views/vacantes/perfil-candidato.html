@@ -61,6 +61,7 @@
             .btn-print { width: 100%; justify-content: center; padding: 12px; }
         }
     </style>
+    {% include 'shared/security-head.html' %}
 </head>
 <body class="app-shell">
     <aside class="sidebar">
@@ -86,7 +87,10 @@
             </div>
             <div class="user-menu">
                 <button class="btn btn-secondary btn-small" onclick="document.getElementById('editModal').style.display='flex'"><i class="fas fa-edit"></i> Editar Perfil</button>
-                <a href="/logout" class="nav-logout-btn"><i class="fas fa-sign-out-alt"></i></a>
+                <form action="/logout" method="POST" style="margin:0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="nav-logout-btn" title="Cerrar sesión" style="border:0;cursor:pointer;font:inherit;width:100%;"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+            </form>
             </div>
         </header>
 
@@ -101,6 +105,7 @@
                     <img src="{{ candidato[25] or 'https://ui-avatars.com/api/?name=' ~ (candidato[1]|urlencode) ~ '+' ~ (candidato[2]|urlencode) ~ '&background=c2914f&color=fff&size=140' }}" class="profile-photo">
                     <label for="photoInp" class="photo-edit-btn"><i class="fas fa-camera"></i></label>
                     <form id="fPhoto" action="/candidato/subir-foto" method="POST" enctype="multipart/form-data" style="display:none;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="file" id="photoInp" name="foto" onchange="this.form.submit()">
                     </form>
                 </div>
@@ -145,6 +150,7 @@
                         {% endif %}
                         
                         <form action="/candidato/subir-cv" method="POST" enctype="multipart/form-data" style="margin-top: 5px;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <label style="display: block; font-size: 0.7rem; color: var(--texto-gris); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">Subir nuevo archivo (PDF)</label>
                             <div style="display: flex; gap: 10px;">
                                 <input type="file" name="cv" accept=".pdf" class="form-control" style="flex: 1;" required>
@@ -173,6 +179,7 @@
             <span style="position:absolute; top:20px; right:20px; cursor:pointer;" onclick="this.parentElement.parentElement.style.display='none'">&times;</span>
             <h2>Editar Perfil</h2>
             <form action="/candidato/actualizar-perfil" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <h4 style="margin:0 0 15px 0; border-bottom:1px solid #eee; padding-bottom:5px; color:var(--verde);"><i class="fas fa-user"></i> Datos Personales</h4>
                 <div class="grid grid-2">
                     <div class="form-group"><label>Nombre(s)</label><input type="text" name="nombre" class="form-control" value="{{ candidato[1] or '' }}" required></div>

@@ -1,8 +1,13 @@
 from app.config.database import get_connection
 
-conn = get_connection()
 
-if conn:
-    print("Conexion exitosa a PostgreSQL")
-else:
-    print("Error de conexion")
+def main():
+    conn = get_connection()
+    try:
+        print("Conexión exitosa a PostgreSQL")
+    finally:
+        conn.close()
+
+
+if __name__ == '__main__':
+    main()

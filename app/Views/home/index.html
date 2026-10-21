@@ -11,6 +11,7 @@
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700;900&family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% include 'shared/security-head.html' %}
 </head>
 
 <body>
@@ -220,6 +221,7 @@
             <h3 id="roleIndicator"></h3>
 
             <form id="loginForm" method="POST" action="/auth/login">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <div class="input-container">
                     <i class="fas fa-envelope"></i>
@@ -262,6 +264,7 @@
                 Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
             </p>
             <form method="POST" action="/auth/forgot-password">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="input-container">
                     <i class="fas fa-envelope"></i>
                     <input type="email" name="correo" placeholder="Tu correo electrónico" required>

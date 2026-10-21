@@ -19,3 +19,7 @@ nginx/certs-le/
 
 # Respaldo local de base de datos
 respaldo_antes_limpieza.sql
+
+# Diagnóstico inicial para revisión local
+docs/ANALISIS_APLICACION_2026-10-21.md
+docs/auditoria_resultados.json
