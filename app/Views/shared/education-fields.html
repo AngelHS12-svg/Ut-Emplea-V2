@@ -1,0 +1,58 @@
+{% set formacion = formacion|default({}) %}
+{% set tsu = formacion.get('tsu', {}) %}
+{% set superior = formacion.get('superior', {}) %}
+<div class="education-fields" data-education-fields>
+    {% if formacion.get('_legacy') %}
+    <p class="field-note">Conservamos tu formación anterior. Revisa y completa ambos niveles antes de guardar; el TSU debe corresponder a tu título.</p>
+    {% endif %}
+    <fieldset class="education-level">
+        <legend><span class="level-number">01</span> Técnico Superior Universitario <span class="level-tag">Obligatorio</span></legend>
+        <p class="field-note">Registra el programa educativo de tu título TSU.</p>
+        <div class="form-group">
+            <label class="form-label" for="programa-tsu">Programa educativo de TSU <span class="required-mark">*</span></label>
+            <input id="programa-tsu" name="programa_tsu" class="form-control" maxlength="255" data-required="true" required value="{{ tsu.get('programa', '') }}" placeholder="Ej. Tecnologías de la Información, área Desarrollo de Software">
+        </div>
+        <div class="grid grid-2">
+            <div class="form-group">
+                <label class="form-label" for="institucion-tsu">Institución del TSU <span class="required-mark">*</span></label>
+                <input id="institucion-tsu" name="institucion_tsu" class="form-control" maxlength="255" data-required="true" required value="{{ tsu.get('institucion') or 'Universidad Tecnológica de Oriental' }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="egreso-tsu">Año de egreso del TSU <span class="required-mark">*</span></label>
+                <input id="egreso-tsu" name="egreso_tsu" type="number" class="form-control" min="1950" max="{{ education_year() }}" data-required="true" required value="{{ tsu.get('egreso') or '' }}" placeholder="Ej. 2023">
+            </div>
+        </div>
+    </fieldset>
+    <fieldset class="education-level education-level-optional">
+        <legend><span class="level-number">02</span> Ingeniería o licenciatura <span class="level-tag">Opcional</span></legend>
+        <p class="field-note" id="superior-note">Si aún no tienes un título de ingeniería o licenciatura, deja este apartado en blanco. Podrás añadirlo después desde tu perfil y aparecerá en tu CV generado.</p>
+        <div class="grid grid-2">
+            <div class="form-group">
+                <label class="form-label" for="tipo-superior">Tipo de título</label>
+                <select id="tipo-superior" name="tipo_superior" class="form-control">
+                    <option value="">Selecciona al registrar este nivel</option>
+                    {% for tipo in ['Ingeniería', 'Licenciatura'] %}
+                    <option value="{{ tipo }}" {{ 'selected' if superior.get('tipo') == tipo else '' }}>{{ tipo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="programa-superior">Programa educativo de ingeniería o licenciatura</label>
+                <input id="programa-superior" name="programa_superior" class="form-control" maxlength="255" value="{{ superior.get('programa', '') }}" placeholder="Ej. Desarrollo y Gestión de Software" aria-describedby="superior-note">
+            </div>
+        </div>
+        <div class="grid grid-2">
+            <div class="form-group">
+                <label class="form-label" for="institucion-superior">Institución de este título</label>
+                <input id="institucion-superior" name="institucion_superior" class="form-control" maxlength="255" value="{{ superior.get('institucion', '') }}" placeholder="Opcional">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="egreso-superior">Año de egreso de este título</label>
+                <input id="egreso-superior" name="egreso_superior" type="number" class="form-control" min="1950" max="{{ education_year() }}" value="{{ superior.get('egreso') or '' }}" placeholder="Opcional">
+            </div>
+        </div>
+    </fieldset>
+    {% if formacion.get('anterior') %}
+    <p class="field-note">Formación anterior conservada: {{ formacion.anterior.tipo }} — {{ formacion.anterior.programa }}.</p>
+    {% endif %}
+</div>

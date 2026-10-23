@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Empresa | UT Emplea</title>
     <link rel="stylesheet" href="/public/css/styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/profile-fields.css', v='20261022') }}">
+    <script src="{{ url_for('static', filename='js/profile-fields.js', v='20261022') }}" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -153,6 +155,7 @@
             </div>
         </div>
 
+        {% for message in get_flashed_messages() %}<div class="registration-message" role="alert">{{ message }}</div>{% endfor %}
         <form id="registroForm" action="/registro-empresa" method="POST" class="card">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
@@ -186,17 +189,8 @@
                             maxlength="10">
                         <small style="color:var(--texto-gris); font-size:0.7rem;">10 dígitos numéricos.</small>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Código Postal <span class="required-mark">*</span></label>
-                        <input type="text" name="codigo_postal" class="form-control" data-required="true" required
-                            maxlength="5">
-                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Dirección Completa <span class="required-mark">*</span></label>
-                    <input type="text" name="direccion" class="form-control" data-required="true" required
-                        placeholder="Calle, Número, Colonia">
-                </div>
+                {% with street_name='direccion', address_required=true %}{% include 'shared/address-fields.html' %}{% endwith %}
                 <div class="form-actions" style="justify-content: flex-end;">
                     <button type="button" class="btn btn-primary" onclick="nextStep(2)">Siguiente <i
                             class="fas fa-arrow-right"></i></button>
@@ -281,10 +275,11 @@
     <script>
         function nextStep(step) {
             const cur = document.querySelector('.form-step.active');
-            const reqs = cur.querySelectorAll('[data-required="true"]');
+            const reqs = cur.querySelectorAll('input, select, textarea');
             let valid = true;
             reqs.forEach(i => {
-                if (!i.value) { i.style.borderColor = '#dc2626'; valid = false; }
+                const required = i.dataset.required === 'true' || i.required;
+                if ((required && !i.value.trim()) || !i.checkValidity()) { i.style.borderColor = '#dc2626'; valid = false; }
                 else { i.style.borderColor = 'var(--borde)'; }
             });
 

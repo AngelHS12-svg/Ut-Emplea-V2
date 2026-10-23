@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil de Empresa</title>
     <link rel="stylesheet" href="/public/css/styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/profile-fields.css', v='20261022') }}">
+    <script src="{{ url_for('static', filename='js/profile-fields.js', v='20261022') }}" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     {% include 'shared/security-head.html' %}
 </head>
@@ -107,10 +109,7 @@
                                 <input type="text" name="telefono" class="form-control" value="{{ empresa[3] if empresa else '' }}" required>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Dirección <span class="required">*</span></label>
-                            <input type="text" name="calle" class="form-control" value="{{ empresa[4] if empresa else '' }}" required>
-                        </div>
+                        {% with street_name='calle', street_value=empresa[4] if empresa else '', postal_code=empresa[8] if empresa else '' %}{% include 'shared/address-fields.html' %}{% endwith %}
 
                         <h3 style="margin-top: 2rem; color: var(--verde);">Datos de acceso y contacto</h3>
                         <div class="accent-strip mb-3"></div>

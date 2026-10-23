@@ -43,6 +43,65 @@ document.addEventListener("DOMContentLoaded", function () {
     const registerBtn = document.querySelector(".register-btn");
     const inputRol = document.getElementById("inputRol");
 
+    // El CTA del contenido se abre después de desplazar la página en móvil.
+    // Mantener ese punto de lectura y centrar sus dos pasos en el área visible.
+    let heroLogin = null;
+    function syncHeroViewport() {
+        if (!heroLogin) return;
+        const viewport = window.visualViewport;
+        [modalUserType, modalLogin].forEach(modal => {
+            modal.style.setProperty('--hero-modal-top', (viewport ? viewport.offsetTop : 0) + 'px');
+            modal.style.setProperty('--hero-modal-left', (viewport ? viewport.offsetLeft : 0) + 'px');
+            modal.style.setProperty('--hero-modal-height', (viewport ? viewport.height : window.innerHeight) + 'px');
+            modal.style.setProperty('--hero-modal-width', Math.min(
+                viewport ? viewport.width : window.innerWidth, document.documentElement.clientWidth) + 'px');
+        });
+    }
+
+    function openHeroLogin(opener) {
+        const properties = ['position', 'top', 'left', 'right', 'width', 'overflow'];
+        const pageWidth = document.documentElement.clientWidth;
+        heroLogin = { opener, x: window.scrollX, y: window.scrollY,
+            styles: Object.fromEntries(properties.map(key => [key, document.body.style[key]])) };
+        Object.assign(document.body.style, { position: 'fixed', top: -heroLogin.y + 'px',
+            left: '0', right: '0', width: pageWidth + 'px', overflow: 'hidden' });
+        [modalUserType, modalLogin].forEach(modal => modal.classList.add('hero-login-modal'));
+        syncHeroViewport();
+    }
+
+    function focusHeroModal(modal) {
+        if (!heroLogin) return;
+        const panel = modal.querySelector('.modal-content');
+        panel.tabIndex = -1;
+        panel.focus({ preventScroll: true });
+    }
+
+    function closeHeroLogin() {
+        if (!heroLogin) return;
+        const previous = heroLogin;
+        heroLogin = null;
+        [modalUserType, modalLogin].forEach(modal => {
+            modal.classList.remove('hero-login-modal');
+            ['top', 'left', 'height', 'width'].forEach(key => modal.style.removeProperty('--hero-modal-' + key));
+        });
+        Object.assign(document.body.style, previous.styles);
+        previous.opener.focus({ preventScroll: true });
+        window.scrollTo(previous.x, previous.y);
+    }
+
+    window.addEventListener('resize', syncHeroViewport);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', syncHeroViewport);
+        window.visualViewport.addEventListener('scroll', syncHeroViewport);
+    }
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && heroLogin) {
+            modalUserType.style.display = 'none';
+            modalLogin.style.display = 'none';
+            closeHeroLogin();
+        }
+    });
+
     const loginForm = document.getElementById("loginForm");
 
     loginForm.addEventListener("submit", function (e) {
@@ -81,7 +140,11 @@ document.addEventListener("DOMContentLoaded", function () {
     openLoginBtns.forEach(btn => {
         btn.addEventListener("click", function (e) {
             e.preventDefault();
+            if (btn.classList.contains('cta-button') && window.matchMedia('(max-width: 768px)').matches) {
+                openHeroLogin(btn);
+            }
             modalUserType.style.display = "flex";
+            focusHeroModal(modalUserType);
         });
     });
 
@@ -89,6 +152,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (closeUserType) {
         closeUserType.addEventListener("click", function () {
             modalUserType.style.display = "none";
+            closeHeroLogin();
         });
     }
 
@@ -96,6 +160,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (closeLogin) {
         closeLogin.addEventListener("click", function () {
             modalLogin.style.display = "none";
+            closeHeroLogin();
         });
     }
 
@@ -124,6 +189,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
             modalUserType.style.display = "none";
             modalLogin.style.display = "flex";
+            syncHeroViewport();
+            focusHeroModal(modalLogin);
         });
     });
 
@@ -132,10 +199,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (e.target === modalUserType) {
             modalUserType.style.display = "none";
+            closeHeroLogin();
         }
 
         if (e.target === modalLogin) {
             modalLogin.style.display = "none";
+            closeHeroLogin();
         }
 
     });

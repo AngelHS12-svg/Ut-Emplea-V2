@@ -1,6 +1,7 @@
 from flask import current_app, Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from app.config.database import get_connection
+from app.utils.postal import read_address
 from datetime import datetime
 from app.utils.security import strip_tags
 
@@ -222,6 +223,16 @@ def perfil():
         rh_nombre = strip_tags(request.form.get("rh_nombre"))
         rh_telefono = strip_tags(request.form.get("rh_telefono"))
         rh_correo = strip_tags(request.form.get("rh_correo"))
+        try:
+            domicilio = read_address(request.form, required=False)
+        except ValueError as exc:
+            flash(str(exc))
+            cur.close()
+            conn.close()
+            return redirect(url_for('empresa.perfil'))
+        codigo_postal = strip_tags(request.form['codigo_postal']) if 'codigo_postal' in request.form else None
+        address_values = tuple(domicilio[key] if key in request.form else None
+            for key in ('estado', 'municipio', 'ciudad', 'colonia'))
 
         try:
             # 1. Actualizar tabla empresas
@@ -234,9 +245,14 @@ def perfil():
             # 2. Actualizar o insertar tabla direcciones_empresa
             cur.execute("SELECT 1 FROM direcciones_empresa WHERE id_empresa = %s", (id_empresa,))
             if cur.fetchone():
-                cur.execute("UPDATE direcciones_empresa SET calle = %s WHERE id_empresa = %s", (calle, id_empresa))
+                cur.execute('''UPDATE direcciones_empresa SET calle = %s, codigo_postal = COALESCE(%s, codigo_postal),
+                    estado = COALESCE(%s, estado), municipio = COALESCE(%s, municipio),
+                    ciudad = COALESCE(%s, ciudad), colonia = COALESCE(%s, colonia) WHERE id_empresa = %s''',
+                    (calle, codigo_postal, *address_values, id_empresa))
             else:
-                cur.execute("INSERT INTO direcciones_empresa (id_empresa, calle) VALUES (%s, %s)", (id_empresa, calle))
+                cur.execute('''INSERT INTO direcciones_empresa (id_empresa, calle, codigo_postal, estado, municipio, ciudad, colonia)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)''',
+                    (id_empresa, calle, codigo_postal, domicilio['estado'], domicilio['municipio'], domicilio['ciudad'], domicilio['colonia']))
 
             # 3. Actualizar o insertar tabla recursos_humanos
             cur.execute("SELECT 1 FROM recursos_humanos WHERE id_empresa = %s", (id_empresa,))
@@ -264,7 +280,8 @@ def perfil():
     # Lógica GET
     cur.execute("""
         SELECT e.nombre, e.giro, e.tipo_empresa, e.telefono, d.calle,
-               rh.nombre as rh_nombre, rh.telefono as rh_telefono, rh.correo as rh_correo
+               rh.nombre as rh_nombre, rh.telefono as rh_telefono, rh.correo as rh_correo,
+               d.codigo_postal, d.estado, d.municipio, d.ciudad, d.colonia
         FROM empresas e
         LEFT JOIN direcciones_empresa d ON e.id_empresa = d.id_empresa
         LEFT JOIN recursos_humanos rh ON e.id_empresa = rh.id_empresa
@@ -275,7 +292,8 @@ def perfil():
     cur.close()
     conn.close()
 
-    return render_template('empresa/empresa-perfil.html', empresa=empresa)
+    domicilio = dict(zip(('estado', 'municipio', 'ciudad', 'colonia'), empresa[9:13])) if empresa else {}
+    return render_template('empresa/empresa-perfil.html', empresa=empresa, domicilio=domicilio)
 
 # ================= ESTADÍSTICAS =================
 @empresa_bp.route("/estadisticas")

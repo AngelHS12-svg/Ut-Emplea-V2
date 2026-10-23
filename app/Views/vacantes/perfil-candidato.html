@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Perfil Profesional | UT Emplea</title>
     <link rel="stylesheet" href="/public/css/styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/profile-fields.css', v='20261022') }}">
+    <script src="{{ url_for('static', filename='js/profile-fields.js', v='20261022') }}" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -127,12 +129,13 @@
                     <div class="section-header"><h3><i class="fas fa-user-circle"></i> Personales</h3></div>
                     <div class="info-grid">
                         <div class="info-item"><label>Teléfono</label><p>{{ candidato[5] or '-' }}</p></div>
-                        <div class="info-item"><label>Ubicación</label><p>{{ candidato[11] or '-' }}</p></div>
+                        <div class="info-item"><label>Ubicación</label><p>{{ ubicacion_completa or '-' }}</p></div>
                         <div class="info-item"><label>C.P.</label><p>{{ candidato[10] or '-' }}</p></div>
                     </div>
                 </div>
                 <div class="card">
                     <div class="section-header"><h3><i class="fas fa-file-pdf"></i> Mi Currículum</h3></div>
+                <p class="field-note">El CV generado incorpora los cambios de tu perfil. Si subiste un archivo PDF, vuelve a subirlo cuando necesites actualizar su contenido.</p>
                     <div style="display: flex; flex-direction: column; gap: 15px;">
                         {% if candidato[9] %}
                         <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 12px;">
@@ -163,12 +166,17 @@
 
             <div class="card" style="margin-top: 30px;">
                 <div class="section-header"><h3><i class="fas fa-graduation-cap"></i> Educación</h3></div>
-                <div class="info-grid">
-                    <div class="info-item"><label>Grado</label><p>{{ candidato[12] or '-' }}</p></div>
-                    <div class="info-item"><label>Institución</label><p>{{ candidato[13] or '-' }}</p></div>
-                    <div class="info-item"><label>Carrera</label><p>{{ candidato[14] or '-' }}</p></div>
-                    <div class="info-item"><label>Año de Egreso</label><p>{{ candidato[6] or '-' }}</p></div>
+                {% for nivel in ['superior', 'tsu', 'anterior'] %}
+                {% set titulo = formacion.get(nivel) %}
+                {% if titulo %}
+                <div class="education-summary">
+                    <h4>{{ titulo.tipo }}</h4>
+                    <p>{{ titulo.programa }}</p>
+                    {% if titulo.institucion %}<p class="field-note">{{ titulo.institucion }}{% if titulo.egreso %} · Egreso {{ titulo.egreso }}{% endif %}</p>{% elif titulo.egreso %}<p>Egreso {{ titulo.egreso }}</p>{% endif %}
                 </div>
+                {% endif %}
+                {% endfor %}
+                {% if not formacion.get('superior') %}<p class="field-note">Puedes añadir tu ingeniería o licenciatura desde Editar perfil cuando obtengas el título.</p>{% endif %}
             </div>
             {% endif %}
         </main>
@@ -197,24 +205,10 @@
                     </div>
                     <div class="form-group"><label>Teléfono</label><input type="text" name="telefono" class="form-control" value="{{ candidato[5] or '' }}"></div>
                 </div>
-                <div class="grid grid-2">
-                    <div class="form-group"><label>Ubicación (Ciudad, Estado)</label><input type="text" name="ubicacion" class="form-control" value="{{ candidato[11] or '' }}"></div>
-                    <div class="form-group"><label>Código Postal</label><input type="text" name="codigo_postal" class="form-control" value="{{ candidato[10] or '' }}"></div>
-                </div>
+                {% with street_name='ubicacion', street_value=candidato[11], postal_code=candidato[10] %}{% include 'shared/address-fields.html' %}{% endwith %}
 
                 <h4 style="margin:25px 0 15px 0; border-bottom:1px solid #eee; padding-bottom:5px; color:var(--verde);"><i class="fas fa-graduation-cap"></i> Formación Académica</h4>
-                <div class="grid grid-2">
-                    <div class="form-group">
-                        <label>Carrera o Programa Educativo</label>
-                        <input type="text" name="carrera" class="form-control" value="{{ candidato[7] or '' }}" placeholder="Ej: TSU en Tecnologías de la Información">
-                    </div>
-                    <div class="form-group"><label>Año de Egreso (UT)</label><input type="number" name="egreso" class="form-control" value="{{ candidato[6] or '' }}"></div>
-                </div>
-                <div class="grid grid-3">
-                    <div class="form-group"><label>Último Grado (Ej: TSU, Ing)</label><input type="text" name="ultimo_grado_estudios" class="form-control" value="{{ candidato[12] or '' }}"></div>
-                    <div class="form-group"><label>Institución</label><input type="text" name="institucion_estudios" class="form-control" value="{{ candidato[13] or '' }}"></div>
-                    <div class="form-group"><label>Carrera/Especialidad</label><input type="text" name="carrera_estudios" class="form-control" value="{{ candidato[14] or '' }}"></div>
-                </div>
+                {% include 'shared/education-fields.html' %}
 
                 <h4 style="margin:25px 0 15px 0; border-bottom:1px solid #eee; padding-bottom:5px; color:var(--verde);"><i class="fas fa-briefcase"></i> Última Experiencia Laboral</h4>
                 <div class="grid grid-2">

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Candidato | UT Emplea</title>
     <link rel="stylesheet" href="/public/css/styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/profile-fields.css', v='20261022') }}">
+    <script src="{{ url_for('static', filename='js/profile-fields.js', v='20261022') }}" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -43,6 +45,7 @@
         <div class="step" data-step="4"><div class="step-icon">4</div><div class="step-label">Finalizar</div></div>
     </div>
 
+    {% for message in get_flashed_messages() %}<div class="registration-message" role="alert">{{ message }}</div>{% endfor %}
     <form id="registroForm" action="/registro-candidato" method="POST" class="card" onsubmit="return validateFinal()">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         
@@ -62,11 +65,8 @@
                 <div class="form-group"><label class="form-label">A. Paterno <span class="required-mark">*</span></label><input type="text" name="apellido_paterno" class="form-control" data-required="true"></div>
                 <div class="form-group"><label class="form-label">A. Materno</label><input type="text" name="apellido_materno" class="form-control"></div>
             </div>
-            <div class="grid grid-2">
-                <div class="form-group"><label class="form-label">Celular <span class="required-mark">*</span></label><input type="tel" name="telefono" class="form-control" data-required="true"></div>
-                <div class="form-group"><label class="form-label">C.P. <span class="required-mark">*</span></label><input type="text" name="codigo_postal" class="form-control" data-required="true"></div>
-            </div>
-            <div class="form-group"><label class="form-label">Ubicación <span class="required-mark">*</span></label><input type="text" name="ubicacion" class="form-control" data-required="true" placeholder="Calle, Colonia, Ciudad"></div>
+            <div class="form-group"><label class="form-label">Celular <span class="required-mark">*</span></label><input type="tel" name="telefono" class="form-control" data-required="true"></div>
+            {% with street_name='ubicacion', address_required=true %}{% include 'shared/address-fields.html' %}{% endwith %}
             <div class="form-group"><label class="form-label">Email <span class="required-mark">*</span></label><input type="email" name="correo" class="form-control" data-required="true"></div>
             <div class="grid grid-2">
                 <div class="form-group">
@@ -93,21 +93,7 @@
         <!-- STEP 2 -->
         <div class="form-step" id="step2">
             <h2 class="section-title"><i class="fas fa-graduation-cap"></i> Educación</h2>
-            <div class="form-group">
-                <label class="form-label">Carrera o Programa Educativo <span class="required-mark">*</span></label>
-                <input type="text" name="carrera" class="form-control" data-required="true" placeholder="Ej: TSU en Tecnologías de la Información">
-            </div>
-            <div class="grid grid-2">
-                <div class="form-group">
-                    <label class="form-label">Grado <span class="required-mark">*</span></label>
-                    <select name="ultimo_grado_estudios" class="form-control" data-required="true">
-                        <option value="TSU">TSU</option><option value="Ingeniería/Licenciatura">Ingeniería/Licenciatura</option><option value="Maestría">Maestría</option>
-                    </select>
-                </div>
-                <div class="form-group"><label class="form-label">Año Egreso <span class="required-mark">*</span></label><input type="number" name="egreso" class="form-control" data-required="true"></div>
-            </div>
-            <div class="form-group"><label class="form-label">Institución <span class="required-mark">*</span></label><input type="text" name="institucion_estudios" class="form-control" data-required="true"></div>
-            <div class="form-group"><label class="form-label">Carrera cursada <span class="required-mark">*</span></label><input type="text" name="carrera_estudios" class="form-control" data-required="true"></div>
+            {% include 'shared/education-fields.html' %}
             <div class="form-group">
                 <label class="form-label"><i class="fas fa-language"></i> Idiomas</label>
                 <textarea name="idiomas" class="form-control" rows="2" placeholder="Ej: Español (Nativo), Inglés (Intermedio), Francés (Básico)"></textarea>
@@ -172,10 +158,11 @@ Diplomado en Marketing Digital"></textarea>
 <script>
     function nextStep(step) {
         const cur = document.querySelector('.form-step.active');
-        const reqs = cur.querySelectorAll('[data-required="true"]');
+        const reqs = cur.querySelectorAll('input, select, textarea');
         let valid = true;
         reqs.forEach(i => {
-            if(!i.value) { i.style.borderColor='var(--vino)'; valid=false; }
+            const required = i.dataset.required === 'true' || i.required;
+            if((required && !i.value.trim()) || !i.checkValidity()) { i.style.borderColor='var(--vino)'; valid=false; }
             else { i.style.borderColor='var(--borde)'; }
         });
 

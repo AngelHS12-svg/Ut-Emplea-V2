@@ -19,3 +19,8 @@ nginx/certs-le
 *.sql
 *.backup
 *.save
+!database/
+database/*
+!database/migrations/
+database/migrations/*
+!database/migrations/20261022_formacion_domicilio.sql

@@ -173,10 +173,13 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
+            gap: 12px;
             margin-bottom: 8px;
         }
 
         .item-title {
+            min-width: 0;
+            overflow-wrap: anywhere;
             font-weight: 700;
             font-size: 1.1rem;
             color: var(--text-dark);
@@ -189,6 +192,7 @@
         }
 
         .item-date {
+            flex-shrink: 0;
             font-size: 0.85rem;
             color: var(--text-light);
             font-weight: 500;
@@ -243,6 +247,7 @@
             body { padding: 0; background: white; }
             .cv-page { box-shadow: none; margin: 0; width: 100%; }
             .print-actions { display: none; }
+            .timeline-item { break-inside: avoid; page-break-inside: avoid; }
         }
     </style>
     {% include 'shared/security-head.html' %}
@@ -279,7 +284,7 @@
                 </div>
                 <div class="contact-item">
                     <i class="fas fa-map-marker-alt"></i>
-                    <span>{{ c[9] or 'Puebla, México' }}</span>
+                    <span>{{ ubicacion_completa or c[9] or 'México' }}</span>
                 </div>
                 <div class="contact-item">
                     <i class="fas fa-id-card"></i>
@@ -344,13 +349,18 @@
 
             <div class="section">
                 <h3 class="section-title"><i class="fas fa-graduation-cap"></i> Educación</h3>
+                {% for nivel in ['superior', 'tsu', 'anterior'] %}
+                {% set titulo = formacion.get(nivel) %}
+                {% if titulo %}
                 <div class="timeline-item">
                     <div class="item-header">
-                        <div class="item-title">{{ c[10] or 'TSU' }} en {{ c[12] or c[6] }}</div>
-                        <div class="item-date">Graduado en {{ c[5] }}</div>
+                        <div class="item-title">{{ titulo.tipo }} · {{ titulo.programa }}</div>
+                        {% if titulo.egreso %}<div class="item-date">Egreso {{ titulo.egreso }}</div>{% endif %}
                     </div>
-                    <div class="item-org">{{ c[11] or 'TalentLink by UT de Oriental' }}</div>
+                    {% if titulo.institucion %}<div class="item-org">{{ titulo.institucion }}</div>{% endif %}
                 </div>
+                {% endif %}
+                {% endfor %}
             </div>
 
             <div class="section">

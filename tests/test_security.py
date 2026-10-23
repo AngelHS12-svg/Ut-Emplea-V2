@@ -210,11 +210,13 @@ def test_compat_registration_uses_canonical_route(client):
 def test_profile_preserves_omitted_languages(client):
     csrf = token(client)
     conn = MagicMock()
+    conn.cursor.return_value.fetchone.return_value = None
     with authenticate(client, role='Candidato'), patch('main.get_connection', return_value=conn):
-        response = client.post('/candidato/actualizar-perfil', data={'csrf_token': csrf, 'nombre': 'Cambio'})
+        response = client.post('/candidato/actualizar-perfil', data={'csrf_token': csrf, 'nombre': 'Cambio',
+            'programa_tsu': 'Informática', 'institucion_tsu': 'UT de Oriental', 'egreso_tsu': '2020'})
     assert response.status_code == 302
     query, params = conn.cursor.return_value.execute.call_args.args
-    assert 'COALESCE(%s, idiomas)' in query and params[-3:-1] == (None, None)
+    assert 'COALESCE(%s, idiomas)' in query and params[22:24] == (None, None)
     conn.close.assert_called_once()
 
 

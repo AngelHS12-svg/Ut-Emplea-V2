@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TalentLink - Bolsa de Trabajo</title>
 
-    <link rel="stylesheet" href="/public/css/styles1.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles1.css', v='modal-mobile-1') }}">
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700;900&family=Lora:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
@@ -261,7 +261,7 @@
             this.classList.toggle('fa-eye-slash');
         });
     </script>
-    <script src="{{ url_for('static', filename='js/script.js', v='vacantes-1') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/script.js', v='modal-mobile-1') }}" defer></script>
 </body>
 
 </html>

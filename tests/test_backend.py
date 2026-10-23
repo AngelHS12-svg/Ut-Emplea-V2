@@ -393,6 +393,7 @@ class TestRegistroEmpresa:
                 "correo": "nueva@empresa.com",
                 "password": "SafePass8!xQ4",
                 "codigo_postal": "75020",
+                "estado": "Puebla", "municipio": "Oriental", "colonia": "Oriental",
                 "responsable_rrhh": "María López",
                 "telefono_rrhh": "5559876543",
                 "correo_rrhh": "rrhh@empresa.com",

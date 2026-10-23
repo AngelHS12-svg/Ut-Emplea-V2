@@ -1,0 +1,36 @@
+.education-level, .postal-fields {
+    min-width: 0;
+    border: 1px solid #dce4df;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 0 0 24px;
+}
+.education-level legend, .postal-fields legend {
+    color: var(--verde, #0e312d);
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 0 8px;
+    max-width: 100%;
+}
+.education-level-optional { border-color: #d9c6a9; background: #fdfbf7; }
+.level-number { color: #947045; margin-right: 8px; font-size: .8rem; }
+.level-tag { display: inline-block; font-size: .65rem; font-weight: 500; color: #59645c; margin-left: 8px; }
+.field-note { color: #59645c; font-size: .8rem; line-height: 1.7; margin: 0 0 18px; }
+.postal-lookup { display: flex; gap: 8px; align-items: stretch; }
+.postal-lookup input { min-width: 0; }
+.postal-search { border-radius: 8px; padding: 8px 12px; flex-shrink: 0; font-size: .75rem; }
+.postal-status { color: var(--verde, #0e312d); font-size: .8rem; line-height: 1.6; margin: -6px 0 16px; }
+.postal-status:empty { display: none; }
+.postal-status[data-error="true"] { color: #931935; }
+.education-summary + .education-summary { border-top: 1px solid #e2e8f0; margin-top: 18px; padding-top: 18px; }
+.education-summary h4 { color: var(--verde, #0e312d); font-size: .95rem; margin-bottom: 8px; }
+.education-summary p { margin: 4px 0; }
+.education-fields .grid { align-items: end; }
+.registration-message { color: #931935; background: #fff6f7; border-left: 3px solid #931935; padding: 16px; margin-bottom: 20px; border-radius: 4px; }
+@media (max-width: 600px) {
+    .registration-container .card { padding: 24px 16px; }
+    .education-level, .postal-fields { padding: 14px; }
+    .education-fields .grid, .postal-fields .grid { grid-template-columns: 1fr; }
+    .education-fields input, .education-fields select, .postal-fields input, .postal-fields select { font-size: 16px; }
+    .education-level legend { font-size: .9rem; }
+}

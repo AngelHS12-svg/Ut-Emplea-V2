@@ -1137,6 +1137,32 @@ body {
 }
 
 /* ---------- TOUCH DEVICES ---------- */
+/* Solo el modal abierto desde el CTA del contenido en móvil.
+   El área visible se actualiza al mostrar el teclado o girar el dispositivo. */
+.modal.hero-login-modal {
+    top: var(--hero-modal-top, 0px);
+    left: var(--hero-modal-left, 0px);
+    width: var(--hero-modal-width, 100%);
+    height: var(--hero-modal-height, 100dvh);
+    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    overflow: hidden;
+    overscroll-behavior: contain;
+    transition: none;
+}
+
+.modal.hero-login-modal .modal-content {
+    width: 100% !important;
+    max-height: 100%;
+    margin: auto !important;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    animation: none;
+}
+
+.hero-login-modal #loginForm input {
+    font-size: 16px;
+}
+
 @media (hover: none) {
     .hero-3d-wrapper {
         transition: transform 0.3s ease; /* Transiciones más suaves en móvil */

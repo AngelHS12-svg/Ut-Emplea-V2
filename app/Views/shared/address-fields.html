@@ -1,0 +1,48 @@
+{% set domicilio = domicilio|default({}) %}
+{% set address_required = address_required|default(false) %}
+<fieldset class="postal-fields" data-postal-fields>
+    <legend>Domicilio en México</legend>
+    <p class="field-note">Escribe tu código postal para completar la ubicación. Si tiene varias colonias, elige la tuya. La calle y el número se capturan manualmente.</p>
+    <div class="grid grid-2">
+        <div class="form-group">
+            <label class="form-label" for="postal-pais">País</label>
+            <select id="postal-pais" name="pais" class="form-control"><option value="México">México</option></select>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="postal-cp">Código postal {{ '*' if address_required else '' }}</label>
+            <div class="postal-lookup">
+                <input id="postal-cp" name="codigo_postal" class="form-control" inputmode="numeric" autocomplete="postal-code" maxlength="5" pattern="[0-9]{5}" value="{{ postal_code|default('') or '' }}" {% if address_required %}data-required="true" required{% endif %} aria-describedby="postal-status">
+                <button type="button" class="btn btn-secondary postal-search" data-postal-search aria-label="Consultar código postal">Consultar</button>
+            </div>
+        </div>
+    </div>
+    <p id="postal-status" class="postal-status" role="status" aria-live="polite"></p>
+    <div class="grid grid-2">
+        <div class="form-group">
+            <label class="form-label" for="postal-estado">Estado {{ '*' if address_required else '' }}</label>
+            <select id="postal-estado" name="estado" class="form-control" autocomplete="address-level1" {% if address_required %}data-required="true" required{% endif %}>
+                <option value="">Selecciona el estado</option>
+                {% for estado in postal_states() %}<option value="{{ estado }}" {{ 'selected' if domicilio.get('estado') == estado else '' }}>{{ estado }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="postal-municipio">Municipio o alcaldía {{ '*' if address_required else '' }}</label>
+            <input id="postal-municipio" name="municipio" class="form-control" maxlength="150" list="postal-municipios" autocomplete="address-level2" value="{{ domicilio.get('municipio') or '' }}" {% if address_required %}data-required="true" required{% endif %}>
+            <datalist id="postal-municipios"></datalist>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="postal-ciudad">Ciudad o localidad</label>
+            <input id="postal-ciudad" name="ciudad" class="form-control" maxlength="150" list="postal-ciudades" value="{{ domicilio.get('ciudad') or '' }}" placeholder="Si aplica a tu domicilio">
+            <datalist id="postal-ciudades"></datalist>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="postal-colonia">Colonia o asentamiento {{ '*' if address_required else '' }}</label>
+            <input id="postal-colonia" name="colonia" class="form-control" maxlength="150" list="postal-colonias" autocomplete="address-level3" value="{{ domicilio.get('colonia') or '' }}" {% if address_required %}data-required="true" required{% endif %}>
+            <datalist id="postal-colonias"></datalist>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="form-label" for="postal-calle">Calle y número {{ '*' if address_required else '' }}</label>
+        <input id="postal-calle" name="{{ street_name }}" class="form-control" maxlength="150" autocomplete="address-line1" value="{{ street_value|default('') or '' }}" placeholder="Ej. Avenida Universidad 120, interior 2" {% if address_required %}data-required="true" required{% endif %}>
+    </div>
+</fieldset>

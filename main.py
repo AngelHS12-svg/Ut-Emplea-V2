@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 import psycopg2
 import os
 import secrets
+import json
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -16,6 +17,9 @@ from app.config.security import configure_security, credential_stamp
 from app.utils.passwords import password_error
 from app.utils.password_reset import create_reset_token, read_reset_token, matches_current_password
 from app.utils.vacancies import public_vacancy, vacancy_return_id
+from app.utils.education import read_education, legacy_education, highest_education
+from app.utils.postal import read_address, address_text, states
+from app.routes.catalogos_routes import catalogos_bp
 from app.routes.empresa_routes import empresa_bp
 from app.utils.security import strip_tags, detectar_script, detectar_sqli, validar_archivo
 import re
@@ -38,6 +42,8 @@ def vacante_url(id_vacante):
 
 
 app.jinja_env.globals['vacante_url'] = vacante_url
+app.jinja_env.globals['postal_states'] = states
+app.jinja_env.globals['education_year'] = lambda: datetime.now().year
 
 def validar_registro_datos(correo, password, telefono, cp=None):
     correo = correo or ""
@@ -60,6 +66,7 @@ def validar_registro_datos(correo, password, telefono, cp=None):
             
     return None
 app.register_blueprint(empresa_bp, url_prefix='/empresa')
+app.register_blueprint(catalogos_bp)
 # Configuración de uploads
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads', 'cv')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -1347,6 +1354,10 @@ def registro_empresa():
 
         # Validaciones
         error = validar_registro_datos(correo, password, telefono, codigo_postal)
+        try:
+            domicilio = read_address(request.form)
+        except ValueError as exc:
+            error = str(exc)
         if not error:
             # Detección de SQL Injection y Scripts en campos de texto
             for campo in [nombre_empresa, giro, direccion, responsable_rrhh]:
@@ -1373,8 +1384,9 @@ def registro_empresa():
             """, (id_usuario, nombre_empresa, giro, tipo_empresa, telefono))
             id_empresa = cur.fetchone()[0]
             cur.execute("""
-                INSERT INTO direcciones_empresa (id_empresa, calle, codigo_postal) VALUES (%s, %s, %s)
-            """, (id_empresa, direccion, codigo_postal))
+                INSERT INTO direcciones_empresa (id_empresa, calle, codigo_postal, estado, municipio, ciudad, colonia)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (id_empresa, direccion, codigo_postal, domicilio['estado'], domicilio['municipio'], domicilio['ciudad'], domicilio['colonia']))
             cur.execute("""
                 INSERT INTO recursos_humanos (id_empresa, nombre, telefono, correo) 
                 VALUES (%s, %s, %s, %s)
@@ -1423,15 +1435,17 @@ def registro_candidato():
             flash(error)
             return redirect(url_for("registro_candidato"))
         
-        # Datos Profesionales (Educación)
-        carrera = strip_tags(request.form.get("carrera"))
-        
-        anio_egreso = request.form.get("egreso")
-        anio_egreso = int(anio_egreso) if anio_egreso and anio_egreso.isdigit() else None
-        
-        ultimo_grado_estudios = strip_tags(request.form.get("ultimo_grado_estudios"))
-        institucion_estudios = strip_tags(request.form.get("institucion_estudios"))
-        carrera_estudios = strip_tags(request.form.get("carrera_estudios"))
+        try:
+            formacion = read_education(request.form)
+            domicilio = read_address(request.form)
+        except ValueError as exc:
+            flash(str(exc))
+            return redirect(url_for('registro_candidato'))
+        superior = highest_education(formacion)
+        carrera = carrera_estudios = superior['programa']
+        ultimo_grado_estudios = superior['tipo']
+        institucion_estudios = superior['institucion']
+        anio_egreso = superior['egreso']
         
         # Datos Laborales
         ultimo_puesto = strip_tags(request.form.get("ultimo_puesto"))
@@ -1482,7 +1496,8 @@ def registro_candidato():
                     carrera, ultimo_grado_estudios, institucion_estudios, carrera_estudios, anio_egreso,
                     ultimo_puesto, ultima_empresa, fecha_inicio_laboral, fecha_fin_laboral, actividades_logros,
                     puesto_deseado, sueldo_deseado, area_trabajo, especialidad, tags_especialidad,
-                    idiomas, cursos_certificaciones,
+                    idiomas, cursos_certificaciones, formacion_academica,
+                    estado, municipio, ciudad, colonia,
                     estatus
                 ) VALUES (
                     %s, %s, %s, %s,
@@ -1490,7 +1505,8 @@ def registro_candidato():
                     %s, %s, %s, %s, %s,
                     %s, %s, %s, %s, %s,
                     %s, %s, %s, %s, %s,
-                    %s, %s,
+                    %s, %s, %s::jsonb,
+                    %s, %s, %s, %s,
                     'pendiente'
                 )
             """, (
@@ -1499,7 +1515,8 @@ def registro_candidato():
                 carrera, ultimo_grado_estudios, institucion_estudios, carrera_estudios, anio_egreso,
                 ultimo_puesto, ultima_empresa, fecha_inicio_laboral, fecha_fin_laboral, actividades_logros,
                 puesto_deseado, sueldo_deseado, area_trabajo, especialidad, tags_especialidad,
-                idiomas, cursos_certificaciones
+                idiomas, cursos_certificaciones, json.dumps(formacion, ensure_ascii=False),
+                domicilio['estado'], domicilio['municipio'], domicilio['ciudad'], domicilio['colonia']
             ))
             
             conn.commit()
@@ -1688,7 +1705,8 @@ def candidato_perfil():
                c.ultimo_grado_estudios, c.institucion_estudios, c.carrera_estudios,
                c.ultimo_puesto, c.ultima_empresa, c.fecha_inicio_laboral, c.fecha_fin_laboral,
                c.actividades_logros, c.puesto_deseado, c.sueldo_deseado,
-               c.area_trabajo, c.especialidad, c.tags_especialidad, c.foto_perfil_url
+               c.area_trabajo, c.especialidad, c.tags_especialidad, c.foto_perfil_url,
+               c.formacion_academica, c.estado, c.municipio, c.ciudad, c.colonia
         FROM candidatos c
         JOIN usuarios u ON c.id_usuario = u.id_usuario
         WHERE c.id_usuario = %s
@@ -1697,7 +1715,12 @@ def candidato_perfil():
     
     cur.close()
     conn.close()
-    return render_template("vacantes/perfil-candidato.html", candidato=candidato)
+    formacion = legacy_education(candidato[26] if len(candidato) > 26 else None,
+        candidato[12], candidato[13], candidato[14] or candidato[7], candidato[6]) if candidato else {}
+    domicilio = dict(zip(('estado', 'municipio', 'ciudad', 'colonia'), candidato[27:31])) if candidato else {}
+    return render_template("vacantes/perfil-candidato.html", candidato=candidato,
+        formacion=formacion, domicilio=domicilio,
+        ubicacion_completa=address_text(candidato[11], domicilio) if candidato else '')
 
 @app.route("/candidato/subir-foto", methods=["POST"])
 @login_required
@@ -1753,7 +1776,8 @@ def candidato_generar_cv():
                c.ultimo_puesto, c.ultima_empresa, c.fecha_inicio_laboral, c.fecha_fin_laboral,
                c.actividades_logros, c.puesto_deseado, c.sueldo_deseado,
                c.area_trabajo, c.especialidad, c.tags_especialidad, c.foto_perfil_url,
-               c.id_candidato, c.idiomas, c.cursos_certificaciones
+               c.id_candidato, c.idiomas, c.cursos_certificaciones,
+               c.formacion_academica, c.estado, c.municipio, c.ciudad, c.colonia
         FROM candidatos c
         JOIN usuarios u ON c.id_usuario = u.id_usuario
         WHERE c.id_usuario = %s
@@ -1761,7 +1785,11 @@ def candidato_generar_cv():
     candidato = cur.fetchone()
     cur.close()
     conn.close()
-    return render_template("vacantes/cv-template.html", c=candidato)
+    formacion = legacy_education(candidato[27] if len(candidato) > 27 else None,
+        candidato[10], candidato[11], candidato[12] or candidato[6], candidato[5]) if candidato else {}
+    domicilio = dict(zip(('estado', 'municipio', 'ciudad', 'colonia'), candidato[28:32])) if candidato else {}
+    return render_template("vacantes/cv-template.html", c=candidato, formacion=formacion,
+        ubicacion_completa=address_text(candidato[9], domicilio) if candidato else '')
 
 @app.route("/candidato/actualizar-perfil", methods=["POST"])
 @login_required
@@ -1776,12 +1804,17 @@ def candidato_actualizar_perfil():
     telefono = strip_tags(request.form.get("telefono"))
     codigo_postal = strip_tags(request.form.get("codigo_postal"))
     ubicacion = strip_tags(request.form.get("ubicacion"))
-    carrera = strip_tags(request.form.get("carrera"))
-    egreso = request.form.get("egreso")
-    egreso = int(egreso) if egreso and egreso.isdigit() else None
-    ultimo_grado_estudios = strip_tags(request.form.get("ultimo_grado_estudios"))
-    institucion_estudios = strip_tags(request.form.get("institucion_estudios"))
-    carrera_estudios = strip_tags(request.form.get("carrera_estudios"))
+    try:
+        formacion = read_education(request.form)
+        domicilio = read_address(request.form, required=False)
+    except ValueError as exc:
+        flash(str(exc))
+        return redirect(url_for('candidato_perfil'))
+    superior = highest_education(formacion)
+    carrera = carrera_estudios = superior['programa']
+    ultimo_grado_estudios = superior['tipo']
+    institucion_estudios = superior['institucion']
+    egreso = superior['egreso']
     ultimo_puesto = strip_tags(request.form.get("ultimo_puesto"))
     ultima_empresa = strip_tags(request.form.get("ultima_empresa"))
     fecha_inicio_laboral = strip_tags(request.form.get("fecha_inicio_laboral"))
@@ -1809,6 +1842,14 @@ def candidato_actualizar_perfil():
     conn = get_connection()
     cur = conn.cursor()
     try:
+        cur.execute('''SELECT formacion_academica, ultimo_grado_estudios, institucion_estudios,
+            COALESCE(NULLIF(carrera_estudios, ''), carrera), anio_egreso
+            FROM candidatos WHERE id_usuario = %s''', (current_user.id,))
+        anterior = cur.fetchone()
+        if anterior:
+            anterior = legacy_education(*anterior)
+            if anterior.get('anterior'):
+                formacion['anterior'] = anterior['anterior']
         cur.execute("""
             UPDATE candidatos SET
                 nombre = %s, apellido_paterno = %s, apellido_materno = %s,
@@ -1819,7 +1860,9 @@ def candidato_actualizar_perfil():
                 fecha_inicio_laboral = %s, fecha_fin_laboral = %s, actividades_logros = %s,
                 puesto_deseado = %s, sueldo_deseado = %s, area_trabajo = %s,
                 especialidad = %s, tags_especialidad = %s,
-                idiomas = COALESCE(%s, idiomas), cursos_certificaciones = COALESCE(%s, cursos_certificaciones)
+                idiomas = COALESCE(%s, idiomas), cursos_certificaciones = COALESCE(%s, cursos_certificaciones),
+                formacion_academica = %s::jsonb, estado = COALESCE(%s, estado), municipio = COALESCE(%s, municipio),
+                ciudad = COALESCE(%s, ciudad), colonia = COALESCE(%s, colonia)
             WHERE id_usuario = %s
         """, (
             nombre, apellido_paterno, apellido_materno,
@@ -1831,6 +1874,8 @@ def candidato_actualizar_perfil():
             puesto_deseado, sueldo_deseado, area_trabajo,
             especialidad, tags_especialidad,
             idiomas, cursos_certificaciones,
+            json.dumps(formacion, ensure_ascii=False),
+            *(domicilio[key] if key in request.form else None for key in ('estado', 'municipio', 'ciudad', 'colonia')),
             current_user.id
         ))
         conn.commit()
