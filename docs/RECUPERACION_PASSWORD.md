@@ -6,6 +6,8 @@ La solicitud ahora genera un enlace firmado con ItsDangerous (dependencia existe
 
 La ruta `/auth/forgot-password` tiene una pantalla propia, accesible desde el login compartido por empresa y candidato. Incluye confirmación de solicitud, errores de validación, formulario de nueva contraseña y estados de enlace inválido, servicio no disponible y cambio completado. Usa verde, dorado, vino, tipografías e identidad de UT de Oriental. Las respuestas no confirman si existe una cuenta. Una falla de SMTP se registra internamente y mantiene esa misma respuesta; la pantalla no garantiza la entrega.
 
+La recuperación pública solo aplica a empresas y candidatos activos. Al seleccionar Administrador se oculta el enlace y el servidor rechaza tanto la solicitud de correo como el uso de enlaces antiguos de cuentas administrativas. El operador autorizado puede restablecer una cuenta administrativa desde el servidor con `fix_admin_password.py` tras verificar la identidad. El acceso administrativo mantiene la verificación en dos pasos.
+
 No se modifican cuentas, archivos, roles ni la clave de sesión del servidor. Solo al completar la recuperación se cambia la contraseña de esa cuenta y se invalidan sus sesiones y códigos 2FA pendientes. Solicitar un enlace no cierra sesiones. Los enlaces del mecanismo anterior deberán solicitarse nuevamente.
 
 ## Publicar sobre la instalación actual

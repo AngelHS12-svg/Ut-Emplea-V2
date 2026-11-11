@@ -42,6 +42,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const userOptions = document.querySelectorAll(".user-option");
     const registerBtn = document.querySelector(".register-btn");
     const inputRol = document.getElementById("inputRol");
+    const forgotPasswordLink = document.getElementById("forgotPasswordLink");
 
     // El CTA del contenido se abre después de desplazar la página en móvil.
     // Mantener ese punto de lectura y centrar sus dos pasos en el área visible.
@@ -169,9 +170,11 @@ document.addEventListener("DOMContentLoaded", function () {
         option.addEventListener("click", () => {
 
             const rol = option.dataset.role;
+            const isAdmin = rol === "admin" || rol === "administrador";
 
             // poner rol en el input hidden
             inputRol.value = rol;
+            if (forgotPasswordLink) forgotPasswordLink.style.display = isAdmin ? "none" : "";
 
             // mostrar rol en pantalla
             roleIndicator.innerText = "Rol: " + rol.toUpperCase();
@@ -179,7 +182,7 @@ document.addEventListener("DOMContentLoaded", function () {
             // Ocultar botón de registro si es administrador
             const registerBtnModal = document.getElementById("registerBtnModal");
             if (registerBtnModal) {
-                if (rol === "admin" || rol === "administrador") {
+                if (isAdmin) {
                     registerBtnModal.style.display = "none";
                 } else {
                     registerBtnModal.style.display = "block";

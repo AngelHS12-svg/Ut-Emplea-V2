@@ -1,4 +1,22 @@
 """Lectura pública de ofertas con el identificador ya existente en PostgreSQL."""
+from decimal import Decimal, InvalidOperation
+
+
+def salary_value(value):
+    """El salario es opcional y se guarda como NUMERIC(10,2), sin perder centavos."""
+    value = str(value if value is not None else '').strip()
+    if not value:
+        return None
+    try:
+        amount = Decimal(value)
+        if not amount.is_finite() or amount < 0 or amount > Decimal('99999999.99'):
+            raise ValueError
+        rounded = amount.quantize(Decimal('0.01'))
+        if rounded != amount:
+            raise ValueError
+        return rounded
+    except (InvalidOperation, ValueError):
+        raise ValueError('Indica un salario entre 0 y 99,999,999.99, con hasta dos decimales, o déjalo en blanco.') from None
 
 PUBLIC_VACANCY_FIELDS = (
     'id', 'titulo', 'descripcion', 'salario', 'modalidad', 'horario', 'lugar',

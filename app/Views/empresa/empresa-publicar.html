@@ -137,13 +137,24 @@
                             <div class="form-group">
                                 <label class="form-label">Lugar de trabajo</label>
                                 <input type="text" name="lugar" class="form-control"
-                                    placeholder="Ciudad o modalidad (presencial / remoto)">
+                                    placeholder="Ciudad o dirección del lugar de trabajo">
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Rango de salario y prestaciones</label>
-                            <input type="text" name="salario" class="form-control"
-                                placeholder="Ej: 15000">
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Salario mensual aproximado</label>
+                                <input type="number" name="salario" class="form-control" min="0" max="99999999.99" step="0.01" inputmode="decimal" placeholder="Ej. 15000.00">
+                                <small>Importe mensual en MXN. Déjalo en blanco si está por definir.</small>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="modalidad">Modalidad de trabajo</label>
+                                <select name="modalidad" id="modalidad" class="form-control">
+                                    <option value="">Por definir</option>
+                                    <option value="Presencial">Presencial</option>
+                                    <option value="Remoto">Remoto</option>
+                                    <option value="Híbrido">Híbrido</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="grid grid-2">
                             <div class="form-group">

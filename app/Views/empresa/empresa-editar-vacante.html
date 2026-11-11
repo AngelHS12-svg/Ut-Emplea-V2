@@ -87,69 +87,81 @@
                     {% endwith %}
 
                     <form action="/empresa/vacante/{{ vacante[0] }}/editar" method="POST">
+                        {% set values = form_data|default({}) %}
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="grid grid-2">
                             <div class="form-group">
                                 <label class="form-label">Título del puesto <span class="required">*</span></label>
-                                <input type="text" name="titulo" class="form-control" value="{{ vacante[1] }}" required>
+                                <input type="text" name="titulo" class="form-control" value="{{ values.get('titulo', vacante[1]) }}" required maxlength="150">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Perfil solicitado <span class="required">*</span></label>
-                                <input type="text" name="perfil" class="form-control" value="{{ vacante[9] or '' }}" placeholder="Ej: Ingeniero, Diseñador" required>
+                                <input type="text" name="perfil" class="form-control" value="{{ values.get('perfil', vacante[9] or '') }}" placeholder="Ej: Ingeniero, Diseñador" required>
                             </div>
                         </div>
 
                         <div class="grid grid-2">
                             <div class="form-group">
                                 <label class="form-label">Número de vacantes disponibles <span class="required">*</span></label>
-                                <input type="number" name="num_vacantes" class="form-control" value="{{ vacante[8] or 1 }}" required>
+                                <input type="number" name="num_vacantes" class="form-control" value="{{ values.get('num_vacantes', vacante[8] or 1) }}" min="1" step="1" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Salario mensual aproximado</label>
-                                <input type="text" name="salario" class="form-control" value="{{ vacante[3] or '' }}">
+                                <input type="number" name="salario" class="form-control" value="{{ values.get('salario', vacante[3] if vacante[3] is not none else '') }}" min="0" max="99999999.99" step="0.01" inputmode="decimal" placeholder="Ej. 15000.00">
+                                <small>Importe mensual en MXN. Déjalo en blanco si está por definir.</small>
                             </div>
                         </div>
 
                         <div class="form-group">
                             <label class="form-label">Breve descripción del puesto <span class="required">*</span></label>
-                            <textarea name="descripcion" class="form-control" rows="4" required>{{ vacante[2] }}</textarea>
+                            <textarea name="descripcion" class="form-control" rows="4" required>{{ values.get('descripcion', vacante[2]) }}</textarea>
                         </div>
 
                         <div class="grid grid-2">
                             <div class="form-group">
                                 <label class="form-label">Experiencia requerida</label>
-                                <input type="text" name="experiencia" class="form-control" value="{{ vacante[11] or '' }}" placeholder="Ej: 2 años">
+                                <input type="text" name="experiencia" class="form-control" value="{{ values.get('experiencia', vacante[11] or '') }}" placeholder="Ej: 2 años" maxlength="150">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Escolaridad necesaria</label>
-                                <input type="text" name="escolaridad" class="form-control" value="{{ vacante[10] or '' }}" placeholder="Ej: Licenciatura">
+                                <input type="text" name="escolaridad" class="form-control" value="{{ values.get('escolaridad', vacante[10] or '') }}" placeholder="Ej: Licenciatura" maxlength="150">
                             </div>
                         </div>
 
                         <div class="form-group">
                             <label class="form-label">Requerimientos y conocimientos del cargo <span class="required">*</span></label>
-                            <textarea name="conocimientos" class="form-control" rows="4" required>{{ vacante[12] or '' }}</textarea>
+                            <textarea name="conocimientos" class="form-control" rows="4" required>{{ values.get('conocimientos', vacante[12] or '') }}</textarea>
                         </div>
 
                         <div class="grid grid-2">
                             <div class="form-group">
                                 <label class="form-label">Horario de trabajo</label>
-                                <input type="text" name="horario" class="form-control" value="{{ vacante[5] or '' }}">
+                                <input type="text" name="horario" class="form-control" value="{{ values.get('horario', vacante[5] or '') }}" maxlength="100">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Lugar de trabajo / Modalidad</label>
-                                <input type="text" name="lugar" class="form-control" value="{{ vacante[6] or '' }}">
+                                <label class="form-label">Lugar de trabajo</label>
+                                <input type="text" name="lugar" class="form-control" value="{{ values.get('lugar', vacante[6] or '') }}" maxlength="150">
                             </div>
                         </div>
 
                         <div class="grid grid-2">
                             <div class="form-group">
-                                <label class="form-label">Salario mensual aproximado</label>
-                                <input type="text" name="salario" class="form-control" value="{{ vacante[3] or '' }}">
+                                <label class="form-label" for="modalidad">Modalidad de trabajo</label>
+                                {% set modalidad_actual = values.get('modalidad', vacante[4]) or '' %}
+                                {% set modalidades = ['Presencial', 'Remoto', 'Híbrido'] %}
+                                <select name="modalidad" id="modalidad" class="form-control">
+                                    <option value="">Por definir</option>
+                                    {% if modalidad_actual and modalidad_actual not in modalidades %}
+                                    <option value="{{ modalidad_actual }}" selected>{{ modalidad_actual }}</option>
+                                    {% endif %}
+                                    {% for modalidad in modalidades %}
+                                    <option value="{{ modalidad }}" {{ 'selected' if modalidad_actual == modalidad else '' }}>{{ modalidad }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Fecha de vencimiento <span class="required">*</span></label>
-                                <input type="date" name="fecha_vencimiento" class="form-control" value="{{ vacante[7].strftime('%Y-%m-%d') if vacante[7] else '' }}" required>
+                                <input type="date" name="fecha_vencimiento" class="form-control" value="{{ values.get('fecha_vencimiento', vacante[7].strftime('%Y-%m-%d') if vacante[7] else '') }}" required>
                             </div>
                         </div>
 

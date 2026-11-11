@@ -2,6 +2,7 @@ from flask import current_app, Blueprint, render_template, request, redirect, ur
 from flask_login import login_required, current_user
 from app.config.database import get_connection
 from app.utils.postal import read_address
+from app.utils.vacancies import salary_value
 from datetime import datetime
 from app.utils.security import strip_tags
 
@@ -52,7 +53,11 @@ def publicar():
     if request.method == "POST":
         titulo = strip_tags(request.form.get("titulo"))
         descripcion = strip_tags(request.form.get("descripcion"))
-        salario = request.form.get("salario")
+        try:
+            salario = salary_value(request.form.get("salario"))
+        except ValueError as error:
+            flash(str(error))
+            return render_template('empresa/empresa-publicar.html'), 400
         modalidad = strip_tags(request.form.get("modalidad"))
         horario = strip_tags(request.form.get("horario"))
         lugar = strip_tags(request.form.get("lugar"))
@@ -76,7 +81,7 @@ def publicar():
             cur.execute("""
                 INSERT INTO vacantes (id_empresa, titulo, descripcion, salario, modalidad, horario, lugar_trabajo, fecha_vencimiento, num_vacantes, perfil)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id_vacante
-            """, (id_empresa, titulo, descripcion, float(salario) if salario and salario.replace('.', '', 1).isdigit() else None, modalidad, horario, lugar, fecha_vencimiento, int(num_vacantes) if num_vacantes else 1, perfil))
+            """, (id_empresa, titulo, descripcion, salario, modalidad, horario, lugar, fecha_vencimiento, int(num_vacantes) if num_vacantes else 1, perfil))
 
             id_vacante = cur.fetchone()[0]
 

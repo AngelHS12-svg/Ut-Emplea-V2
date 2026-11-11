@@ -100,7 +100,7 @@
                     <div class="grid grid-3" style="margin-bottom: 2rem; gap: 1.5rem;">
                         <div class="stat-item" style="background: var(--bg-soft); padding: 1rem; border-radius: 8px;">
                             <span style="display: block; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Salario</span>
-                            <strong style="font-size: 1.1rem; color: var(--text-main);">${{ vacante[3] or 'No especificado' }}</strong>
+                            <strong style="font-size: 1.1rem; color: var(--text-main);">{{ ('$' ~ '{:,.2f}'.format(vacante[3]) ~ ' MXN') if vacante[3] is not none else 'No especificado' }}</strong>
                         </div>
                         <div class="stat-item" style="background: var(--bg-soft); padding: 1rem; border-radius: 8px;">
                             <span style="display: block; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Modalidad</span>

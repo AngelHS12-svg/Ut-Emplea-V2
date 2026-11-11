@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
-import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.header import Header
@@ -16,7 +15,8 @@ from app.config.database import get_connection, close_request_connections
 from app.config.security import configure_security, credential_stamp
 from app.utils.passwords import password_error
 from app.utils.password_reset import create_reset_token, read_reset_token, matches_current_password
-from app.utils.vacancies import public_vacancy, vacancy_return_id
+from app.utils.smtp_mail import send_smtp_message
+from app.utils.vacancies import public_vacancy, vacancy_return_id, salary_value
 from app.utils.education import read_education, legacy_education, highest_education
 from app.utils.postal import read_address, address_text, states
 from app.routes.catalogos_routes import catalogos_bp
@@ -82,7 +82,12 @@ app.config['MAIL_PASSWORD'] = os.environ["MAIL_PASSWORD"] # App Password de la c
 app.config['MAIL_DEFAULT_SENDER'] = ('TalentLink', os.environ["MAIL_USERNAME"])
 
 def enviar_email(destinatario, asunto, mensaje_texto):
-    """Envía un correo electrónico utilizando smtplib."""
+    """Entrega el mensaje y registra su tipo sin exponer destinatarios ni secretos."""
+    category = {
+        "Código de Verificación - Talent Link": "Código de Verificación",
+        "Nuevo Código de Verificación - Talent Link": "Código de Verificación",
+        "Restablecer contraseña - Talent Link": "Restablecer contraseña",
+    }.get(asunto, "Notificación")
     try:
         msg = MIMEMultipart()
         msg['From'] = f"{Header('TalentLink', 'utf-8')} <{app.config['MAIL_USERNAME']}>"
@@ -92,15 +97,13 @@ def enviar_email(destinatario, asunto, mensaje_texto):
         # Cuerpo del mensaje
         msg.attach(MIMEText(mensaje_texto, 'plain', 'utf-8'))
         
-        # Configuración del servidor con SSL
-        with smtplib.SMTP_SSL(app.config['MAIL_SERVER'], app.config['MAIL_PORT'], timeout=15) as server:
-            server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
-            server.sendmail(app.config['MAIL_USERNAME'], destinatario, msg.as_string())
-        print(f"📧 Correo enviado a {destinatario}: {asunto}")
-        return True
-    except Exception as e:
-        print(f"❌ Error al enviar correo a {destinatario}: {e}")
+        sent = send_smtp_message(app.config, destinatario, msg.as_string(), category=category, logger=app.logger)
+    except Exception as error:
+        app.logger.error("Error al enviar correo | tipo=%s causa=%s", category, type(error).__name__)
         return False
+    if sent:
+        print(f"📧 Correo enviado: {category}")
+    return sent
 
 # Configuración de Flask-Login
 login_manager = LoginManager()
@@ -1392,17 +1395,27 @@ def registro_empresa():
                 VALUES (%s, %s, %s, %s)
             """, (id_empresa, responsable_rrhh, telefono_rrhh, correo_rrhh))
             conn.commit()
-            notificar_admins("registro", f"Nueva empresa registrada: {nombre_empresa}", "/admin/validar-empresa")
-            flash("Empresa registrada exitosamente. Su cuenta será validada por un administrador.")
-            return redirect(url_for("home"))
         except Exception as e:
             conn.rollback()
-            app.logger.exception("Error al completar la operación")
-            flash("No se pudo completar la operación. Inténtalo de nuevo.")
+            if (getattr(e, "pgcode", None) == "23505"
+                    and getattr(getattr(e, "diag", None), "constraint_name", None) == "usuarios_correo_key"):
+                flash("No se pudo registrar con ese correo. Si ya tienes una cuenta, inicia sesión o "
+                      "recupera tu contraseña. Si tu solicitud está pendiente, consulta con administración.")
+            else:
+                app.logger.exception("Error al guardar el registro de empresa")
+                flash("No se pudo completar la operación. Inténtalo de nuevo.")
             return redirect(url_for("registro_empresa"))
         finally:
             cur.close()
             conn.close()
+
+        # El registro ya quedó guardado; una notificación fallida no debe pedir que lo repitan.
+        try:
+            notificar_admins("registro", f"Nueva empresa registrada: {nombre_empresa}", "/admin/validar-empresa")
+        except Exception:
+            app.logger.exception("No se pudo notificar a administración sobre un registro de empresa guardado")
+        flash("Empresa registrada exitosamente. Su cuenta será validada por un administrador.")
+        return redirect(url_for("home"))
     return render_template("empresa/registro-empresa.html")
 
 # ================= CANDIDATO =================
@@ -2154,6 +2167,9 @@ def auth_resend_2fa():
     return redirect(url_for("auth_verify_2fa"))
 
 # ================= FORGOT PASSWORD =================
+_PUBLIC_RECOVERY_ROLE = "id_rol IN (SELECT id_rol FROM roles WHERE nombre IN ('Empresa', 'Candidato'))"
+
+
 @app.route("/auth/forgot-password", methods=["GET", "POST"])
 def auth_forgot_password():
     if request.method == 'GET':
@@ -2168,7 +2184,8 @@ def auth_forgot_password():
     try:
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute("SELECT id_usuario, password FROM usuarios WHERE correo=%s AND activo IS TRUE", (correo,))
+        cur.execute(f"""SELECT id_usuario, password FROM usuarios
+            WHERE correo=%s AND activo IS TRUE AND {_PUBLIC_RECOVERY_ROLE}""", (correo,))
         user = cur.fetchone()
     except Exception:
         app.logger.exception('Error al solicitar recuperación de contraseña')
@@ -2198,8 +2215,8 @@ def auth_forgot_password():
 
 
 def _reset_account(cur, data):
-    cur.execute('SELECT id_usuario, password FROM usuarios WHERE id_usuario=%s AND activo IS TRUE',
-                (data['uid'],))
+    cur.execute(f"""SELECT id_usuario, password FROM usuarios
+        WHERE id_usuario=%s AND activo IS TRUE AND {_PUBLIC_RECOVERY_ROLE}""", (data['uid'],))
     user = cur.fetchone()
     return user if user and matches_current_password(data, user[1]) else None
 
@@ -2249,9 +2266,10 @@ def auth_reset_password_post(token):
             return _invalid_reset_link()
         hashed = generate_password_hash(new_password)
         # Comparar el hash anterior en el UPDATE impide reutilización incluso concurrente.
-        cur.execute("""
+        cur.execute(f"""
             UPDATE usuarios SET password=%s, two_fa_code=NULL, two_fa_expires=NULL
             WHERE id_usuario=%s AND password=%s AND activo IS TRUE
+              AND {_PUBLIC_RECOVERY_ROLE}
             RETURNING id_usuario
         """, (hashed, user[0], user[1]))
         changed = cur.fetchone()
@@ -2560,17 +2578,27 @@ def empresa_editar_vacante(id_vacante):
             abort(404)
         if request.method == "POST":
             try:
-                salario = request.form.get("salario")
-                num_vacantes = int(request.form.get("num_vacantes") or 1)
-                if num_vacantes < 1 or (salario and float(salario) < 0):
-                    raise ValueError("Valores fuera de rango")
+                salaries = request.form.getlist("salario")
+                if len(set(salaries)) > 1:
+                    raise ValueError("El formulario tiene dos salarios distintos. Recarga esta página y vuelve a editar.")
+                salario = salary_value(request.form.get("salario", vacante[3]))
+                try:
+                    num_vacantes = int(request.form.get("num_vacantes") or 1)
+                except ValueError:
+                    raise ValueError("El número de vacantes debe ser un entero mayor que cero.") from None
+                if not 1 <= num_vacantes <= 2147483647:
+                    raise ValueError("El número de vacantes debe ser un entero mayor que cero.")
+                modalidad = request.form.get("modalidad", vacante[4])
+                modalidad = strip_tags(modalidad).strip() or None
+                if modalidad and len(modalidad) > 50:
+                    raise ValueError("La modalidad admite hasta 50 caracteres.")
                 cur.execute("""
                     UPDATE vacantes SET titulo=%s, descripcion=%s, salario=%s, modalidad=%s,
                         horario=%s, lugar_trabajo=%s, fecha_vencimiento=%s, num_vacantes=%s, perfil=%s
                     WHERE id_vacante=%s
                         AND id_empresa IN (SELECT id_empresa FROM empresas WHERE id_usuario=%s)
                 """, (request.form.get("titulo"), request.form.get("descripcion"),
-                      float(salario) if salario else None, request.form.get("modalidad"),
+                      salario, modalidad,
                       request.form.get("horario"), request.form.get("lugar"),
                       request.form.get("fecha_vencimiento") or None, num_vacantes,
                       request.form.get("perfil"), id_vacante, current_user.id))
@@ -2579,12 +2607,27 @@ def empresa_editar_vacante(id_vacante):
                     WHERE id_vacante=%s
                 """, (request.form.get("escolaridad"), request.form.get("experiencia"),
                       request.form.get("conocimientos"), id_vacante))
+                if cur.rowcount == 0:
+                    # Las vacantes antiguas pueden no tener todavía una fila de requisitos.
+                    # La vacante permanece bloqueada por _vacante_empresa durante ambos pasos.
+                    cur.execute("""
+                        INSERT INTO requisitos_vacante (id_vacante, escolaridad, experiencia, descripcion)
+                        VALUES (%s, %s, %s, %s)
+                    """, (id_vacante, request.form.get("escolaridad"), request.form.get("experiencia"),
+                          request.form.get("conocimientos")))
                 conn.commit()
                 flash("Vacante actualizada exitosamente.")
+            except ValueError as error:
+                conn.rollback()
+                flash(str(error))
+                return render_template("empresa/empresa-editar-vacante.html", vacante=vacante,
+                                       form_data=request.form), 400
             except Exception:
                 conn.rollback()
                 app.logger.exception("No se pudo editar la vacante")
-                flash("No se pudo actualizar la vacante. Revisa los datos e inténtalo de nuevo.")
+                flash("No se pudo guardar la vacante. Tus cambios siguen en el formulario; inténtalo de nuevo.")
+                return render_template("empresa/empresa-editar-vacante.html", vacante=vacante,
+                                       form_data=request.form), 503
             return redirect(url_for("empresa.consultar"))
         return render_template("empresa/empresa-editar-vacante.html", vacante=vacante)
     finally:

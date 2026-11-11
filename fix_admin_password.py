@@ -17,8 +17,7 @@ def update_admin_password(email, password):
     cur = conn.cursor()
     try:
         cur.execute("""
-            UPDATE usuarios SET password=%s, reset_token=NULL, reset_expires=NULL,
-                two_fa_code=NULL, two_fa_expires=NULL
+            UPDATE usuarios SET password=%s, two_fa_code=NULL, two_fa_expires=NULL
             WHERE correo=%s AND id_rol IN (
                 SELECT id_rol FROM roles WHERE nombre='Administrador'
             )
