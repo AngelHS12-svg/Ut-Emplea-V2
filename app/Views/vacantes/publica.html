@@ -55,7 +55,7 @@
                     <p class="tl-offer-id">VACANTE #{{ vacante.id }}</p>
                     <h2>Información de la oferta</h2>
                     <dl class="tl-offer-summary">
-                        <div><dt>Salario mensual</dt><dd>{{ ('$' ~ '{:,.2f}'.format(vacante.salario) ~ ' MXN') if vacante.salario is not none else 'No especificado' }}</dd></div>
+                        <div><dt>Salario mensual</dt><dd>{{ salary_label(vacante.salario, vacante.salario_max) }}</dd></div>
                         {% if vacante.plazas %}<div><dt>Plazas disponibles</dt><dd>{{ vacante.plazas }}</dd></div>{% endif %}
                         <div><dt>Cierre de convocatoria</dt><dd>{{ vacante.vencimiento.strftime('%d/%m/%Y') if vacante.vencimiento else 'Sin fecha especificada' }}</dd></div>
                     </dl>

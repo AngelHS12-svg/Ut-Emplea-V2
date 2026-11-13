@@ -47,7 +47,7 @@
                     </div>
                     <div class="detail-row">
                         <span class="detail-label"><i class="fas fa-dollar-sign"></i> Salario:</span>
-                        <span class="detail-value">${{ '{:,.2f}'.format(v[6]) if v[6] else 'No especificado' }}</span>
+                        <span class="detail-value">{{ salary_label(v[6], v[14]) }}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label"><i class="fas fa-users"></i> Postulados:</span>
@@ -63,7 +63,7 @@
                         data-fecha="{{ v[3].strftime('%d/%m/%Y') if v[3] else 'N/A' }}"
                         data-vencimiento="{{ v[4].strftime('%d/%m/%Y') if v[4] else 'Sin límite' }}"
                         data-estatus="{{ v[5] }}"
-                        data-salario="{{ '{:,.2f}'.format(v[6]) if v[6] else 'No especificado' }}"
+                        data-salario="{{ salary_label(v[6], v[14]) }}"
                         data-postulados="{{ v[7] }}"
                         data-descripcion="{{ v[8] or 'Sin descripción' }}"
                         data-modalidad="{{ v[9] or 'No especificada' }}"
@@ -113,7 +113,7 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
                         <p style="margin: 0; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;"><i class="fas fa-dollar-sign"></i> Salario</p>
-                        <p id="modal-vac-salario" style="margin: 5px 0 0 0; color: #1e293b; font-weight: 600;">$0</p>
+                        <p id="modal-vac-salario" style="margin: 5px 0 0 0; color: #1e293b; font-weight: 600;">No especificado</p>
                     </div>
                     <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px;">
                         <p style="margin: 0; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;"><i class="fas fa-users"></i> Postulados</p>
@@ -191,7 +191,7 @@
 
             document.getElementById('modal-vac-titulo').textContent = d.titulo || 'Sin título';
             document.getElementById('modal-vac-empresa').textContent = d.empresa || 'Sin empresa';
-            document.getElementById('modal-vac-salario').textContent = '$' + (d.salario || '0');
+            document.getElementById('modal-vac-salario').textContent = d.salario || 'No especificado';
             document.getElementById('modal-vac-postulados').textContent = (d.postulados || '0') + ' candidatos';
             document.getElementById('modal-vac-fecha').textContent = d.fecha || 'N/A';
             document.getElementById('modal-vac-vencimiento').textContent = d.vencimiento || 'Sin límite';

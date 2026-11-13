@@ -120,12 +120,10 @@
                 </p>
                 {% endif %}
 
-                {% if vacante[3] %}
                 <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Salario</h3>
                 <p style="color: var(--texto-oscuro); font-weight: 600; font-size: 1.1rem; margin-bottom: 2rem;">
-                    ${{ '{:,.2f}'.format(vacante[3]) }} mensuales
+                    {{ salary_label(vacante[3], vacante[16] if vacante|length > 16 else none) }}
                 </p>
-                {% endif %}
 
                 <div style="display: flex; gap: 1rem; border-top: 2px solid var(--borde); padding-top: 2rem;">
                     {% if ya_postulado %}

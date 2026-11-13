@@ -83,7 +83,7 @@
                         data-candidato="{{ s[3] }}"
                         data-estado="{{ s[4] }}"
                         data-fecha="{{ s[5].strftime('%d/%m/%Y') if s[5] else 'N/A' }}"
-                        data-salario="{{ '{:,.2f}'.format(s[6]) if s[6] else 'No especificado' }}"
+                        data-salario="{{ salary_label(s[6], s[12]) }}"
                         data-descripcion="{{ s[7] or 'Sin descripción' }}"
                         data-modalidad="{{ s[8] or 'No especificada' }}"
                         data-correo-empresa="{{ s[9] or '' }}"
@@ -242,7 +242,7 @@
             document.getElementById('seg-correo-cand').textContent = d.correoCandidato || '—';
             document.getElementById('seg-empresa-info').textContent = d.empresa || '—';
             document.getElementById('seg-correo-emp').textContent = d.correoEmpresa || '—';
-            document.getElementById('seg-salario').textContent = '$' + (d.salario || '0');
+            document.getElementById('seg-salario').textContent = d.salario || 'No especificado';
             document.getElementById('seg-fecha').textContent = d.fecha || '—';
             document.getElementById('seg-modalidad').textContent = d.modalidad || '—';
             document.getElementById('seg-lugar').textContent = d.lugar || '—';

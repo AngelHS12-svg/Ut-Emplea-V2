@@ -16,7 +16,7 @@ from app.config.security import configure_security, credential_stamp
 from app.utils.passwords import password_error
 from app.utils.password_reset import create_reset_token, read_reset_token, matches_current_password
 from app.utils.smtp_mail import send_smtp_message
-from app.utils.vacancies import public_vacancy, vacancy_return_id, salary_value
+from app.utils.vacancies import public_vacancy, vacancy_return_id, salary_values, salary_label
 from app.utils.education import read_education, legacy_education, highest_education
 from app.utils.postal import read_address, address_text, states
 from app.routes.catalogos_routes import catalogos_bp
@@ -44,6 +44,7 @@ def vacante_url(id_vacante):
 app.jinja_env.globals['vacante_url'] = vacante_url
 app.jinja_env.globals['postal_states'] = states
 app.jinja_env.globals['education_year'] = lambda: datetime.now().year
+app.jinja_env.globals['salary_label'] = salary_label
 
 def validar_registro_datos(correo, password, telefono, cp=None):
     correo = correo or ""
@@ -544,7 +545,7 @@ def admin_vacantes():
                v.fecha_vencimiento, v.estatus, v.salario,
                (SELECT COUNT(*) FROM postulaciones p WHERE p.id_vacante = v.id_vacante) as num_postulaciones,
                v.descripcion, v.modalidad, v.horario, v.lugar_trabajo, v.perfil,
-               u.id_usuario as id_usuario_empresa
+               u.id_usuario as id_usuario_empresa, v.salario_max
         FROM vacantes v
         JOIN empresas e ON v.id_empresa = e.id_empresa
         JOIN usuarios u ON e.id_usuario = u.id_usuario
@@ -611,7 +612,7 @@ def admin_seguimiento():
                c.nombre as candidato, p.estado, p.fecha_postulacion,
                v.salario, v.descripcion, v.modalidad,
                ue.correo as correo_empresa, uc.correo as correo_candidato,
-               v.lugar_trabajo
+               v.lugar_trabajo, v.salario_max
         FROM postulaciones p
         JOIN vacantes v ON p.id_vacante = v.id_vacante
         JOIN empresas e ON v.id_empresa = e.id_empresa
@@ -1044,7 +1045,8 @@ def admin_exportar_excel():
     cur.execute(f"""
         SELECT v.id_vacante, v.titulo, e.nombre, v.salario, v.modalidad,
                v.horario, v.lugar_trabajo, v.fecha_publicacion, v.estatus,
-               (SELECT COUNT(*) FROM postulaciones p WHERE p.id_vacante = v.id_vacante)
+               (SELECT COUNT(*) FROM postulaciones p WHERE p.id_vacante = v.id_vacante),
+               v.salario_max
         FROM vacantes v
         JOIN empresas e ON v.id_empresa = e.id_empresa
         {wv_a}
@@ -1052,10 +1054,14 @@ def admin_exportar_excel():
     """, params)
     vacantes = cur.fetchall()
     for r, vac in enumerate(vacantes, 2):
-        for c, val in enumerate(vac, 1):
-            if c == 4 and val:  # Salario
+        for c, val in enumerate(vac[:10], 1):
+            if c == 4 and vac[10] is not None:
+                ws4.cell(row=r, column=c, value=salary_label(val, vac[10]))
+            elif c == 4 and val is not None:
                 ws4.cell(row=r, column=c, value=float(val))
                 ws4.cell(row=r, column=c).number_format = '$#,##0.00'
+            elif c == 4:
+                ws4.cell(row=r, column=c, value='No especificado')
             else:
                 ws4.cell(row=r, column=c, value=str(val) if val else "")
     style_data_rows(ws4, 2, len(vacantes) + 1, len(headers_vac))
@@ -1610,7 +1616,8 @@ def candidato_buscar():
     cur.execute("""
         SELECT v.id_vacante, v.titulo, e.nombre as empresa, v.lugar_trabajo,
                v.modalidad, v.salario, v.fecha_publicacion, v.descripcion,
-               v.horario, r.escolaridad, r.experiencia, r.descripcion as req_desc
+               v.horario, r.escolaridad, r.experiencia, r.descripcion as req_desc,
+               v.salario_max
         FROM vacantes v
         JOIN empresas e ON v.id_empresa = e.id_empresa
         LEFT JOIN requisitos_vacante r ON v.id_vacante = r.id_vacante
@@ -2304,7 +2311,8 @@ def api_get_vacante(id_vacante):
     cur.execute("""
         SELECT v.id_vacante, v.titulo, v.descripcion, v.salario, v.modalidad,
                v.horario, v.lugar_trabajo, v.fecha_publicacion,
-               e.nombre as empresa, r.escolaridad, r.experiencia, r.descripcion as req_desc
+               e.nombre as empresa, r.escolaridad, r.experiencia, r.descripcion as req_desc,
+               v.salario_max
         FROM vacantes v
         JOIN empresas e ON v.id_empresa = e.id_empresa
         LEFT JOIN requisitos_vacante r ON v.id_vacante = r.id_vacante
@@ -2321,7 +2329,7 @@ def api_get_vacante(id_vacante):
         "id_vacante": row[0],
         "titulo": row[1],
         "descripcion": row[2],
-        "salario": f"${row[3]:,.2f}" if row[3] else "No especificado",
+        "salario": salary_label(row[3], row[12]),
         "modalidad": row[4],
         "horario": row[5],
         "lugar": row[6],
@@ -2503,7 +2511,7 @@ def empresa_ver_vacante(id_vacante):
     cur.execute("""
         SELECT v.id_vacante, v.titulo, v.descripcion, v.salario, v.modalidad, 
                v.horario, v.lugar_trabajo, v.fecha_vencimiento, v.num_vacantes, v.perfil,
-               r.escolaridad, r.experiencia, r.descripcion as req_desc
+               r.escolaridad, r.experiencia, r.descripcion as req_desc, v.salario_max
         FROM vacantes v
         LEFT JOIN requisitos_vacante r ON v.id_vacante = r.id_vacante
         JOIN empresas e ON v.id_empresa = e.id_empresa
@@ -2555,7 +2563,7 @@ def _vacante_empresa(cur, id_vacante):
     cur.execute("""
         SELECT v.id_vacante, v.titulo, v.descripcion, v.salario, v.modalidad,
                v.horario, v.lugar_trabajo, v.fecha_vencimiento, v.num_vacantes, v.perfil,
-               r.escolaridad, r.experiencia, r.descripcion
+               r.escolaridad, r.experiencia, r.descripcion, v.salario_max
         FROM vacantes v
         JOIN empresas e ON v.id_empresa = e.id_empresa
         LEFT JOIN requisitos_vacante r ON v.id_vacante = r.id_vacante
@@ -2578,10 +2586,7 @@ def empresa_editar_vacante(id_vacante):
             abort(404)
         if request.method == "POST":
             try:
-                salaries = request.form.getlist("salario")
-                if len(set(salaries)) > 1:
-                    raise ValueError("El formulario tiene dos salarios distintos. Recarga esta página y vuelve a editar.")
-                salario = salary_value(request.form.get("salario", vacante[3]))
+                salario, salario_max = salary_values(request.form)
                 try:
                     num_vacantes = int(request.form.get("num_vacantes") or 1)
                 except ValueError:
@@ -2593,12 +2598,12 @@ def empresa_editar_vacante(id_vacante):
                 if modalidad and len(modalidad) > 50:
                     raise ValueError("La modalidad admite hasta 50 caracteres.")
                 cur.execute("""
-                    UPDATE vacantes SET titulo=%s, descripcion=%s, salario=%s, modalidad=%s,
+                    UPDATE vacantes SET titulo=%s, descripcion=%s, salario=%s, salario_max=%s, modalidad=%s,
                         horario=%s, lugar_trabajo=%s, fecha_vencimiento=%s, num_vacantes=%s, perfil=%s
                     WHERE id_vacante=%s
                         AND id_empresa IN (SELECT id_empresa FROM empresas WHERE id_usuario=%s)
                 """, (request.form.get("titulo"), request.form.get("descripcion"),
-                      salario, modalidad,
+                      salario, salario_max, modalidad,
                       request.form.get("horario"), request.form.get("lugar"),
                       request.form.get("fecha_vencimiento") or None, num_vacantes,
                       request.form.get("perfil"), id_vacante, current_user.id))

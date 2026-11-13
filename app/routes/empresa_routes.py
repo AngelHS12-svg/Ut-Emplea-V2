@@ -2,7 +2,7 @@ from flask import current_app, Blueprint, render_template, request, redirect, ur
 from flask_login import login_required, current_user
 from app.config.database import get_connection
 from app.utils.postal import read_address
-from app.utils.vacancies import salary_value
+from app.utils.vacancies import salary_values
 from datetime import datetime
 from app.utils.security import strip_tags
 
@@ -54,10 +54,10 @@ def publicar():
         titulo = strip_tags(request.form.get("titulo"))
         descripcion = strip_tags(request.form.get("descripcion"))
         try:
-            salario = salary_value(request.form.get("salario"))
+            salario, salario_max = salary_values(request.form)
         except ValueError as error:
             flash(str(error))
-            return render_template('empresa/empresa-publicar.html'), 400
+            return render_template('empresa/empresa-publicar.html', form_data=request.form), 400
         modalidad = strip_tags(request.form.get("modalidad"))
         horario = strip_tags(request.form.get("horario"))
         lugar = strip_tags(request.form.get("lugar"))
@@ -79,9 +79,11 @@ def publicar():
 
             # Insertar vacante
             cur.execute("""
-                INSERT INTO vacantes (id_empresa, titulo, descripcion, salario, modalidad, horario, lugar_trabajo, fecha_vencimiento, num_vacantes, perfil)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id_vacante
-            """, (id_empresa, titulo, descripcion, salario, modalidad, horario, lugar, fecha_vencimiento, int(num_vacantes) if num_vacantes else 1, perfil))
+                INSERT INTO vacantes (id_empresa, titulo, descripcion, salario, salario_max,
+                                      modalidad, horario, lugar_trabajo, fecha_vencimiento, num_vacantes, perfil)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id_vacante
+            """, (id_empresa, titulo, descripcion, salario, salario_max, modalidad, horario,
+                  lugar, fecha_vencimiento, int(num_vacantes) if num_vacantes else 1, perfil))
 
             id_vacante = cur.fetchone()[0]
 
@@ -116,7 +118,8 @@ def publicar():
             cur.close()
             conn.close()
 
-    return render_template('empresa/empresa-publicar.html')
+    return render_template('empresa/empresa-publicar.html',
+                           form_data=request.form if request.method == 'POST' else {})
 
 # ================= CONSULTAR VACANTES =================
 @empresa_bp.route("/consultar")

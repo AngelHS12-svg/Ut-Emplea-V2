@@ -1,0 +1,30 @@
+{% set salary_mode = values.get('salario_tipo', 'rango' if salary_upper is not none else ('fijo' if salary_current is not none else 'no_especificado')) %}
+<div class="form-group" data-salary-form>
+    <label class="form-label" for="salario_tipo">Salario mensual en MXN</label>
+    <select id="salario_tipo" name="salario_tipo" class="form-control">
+        <option value="no_especificado" {{ 'selected' if salary_mode == 'no_especificado' else '' }}>No especificado</option>
+        <option value="fijo" {{ 'selected' if salary_mode == 'fijo' else '' }}>Cantidad fija</option>
+        <option value="rango" {{ 'selected' if salary_mode == 'rango' else '' }}>Rango aproximado</option>
+    </select>
+    <div data-salary-fields="fijo" {{ 'hidden' if salary_mode != 'fijo' else '' }} style="margin-top: 1rem; {{ 'display: none;' if salary_mode != 'fijo' else '' }}">
+        <label class="form-label" for="salario">Cantidad mensual</label>
+        <input id="salario" type="number" name="salario" class="form-control"
+               value="{{ values.get('salario', salary_current if salary_upper is none and salary_current is not none else '') }}"
+               min="0" max="99999999.99" step="0.01" inputmode="decimal" placeholder="Ej. 10000.00">
+    </div>
+    <div data-salary-fields="rango" {{ 'hidden' if salary_mode != 'rango' else '' }} class="grid grid-2" style="margin-top: 1rem; {{ 'display: none;' if salary_mode != 'rango' else '' }}">
+        <div>
+            <label class="form-label" for="salario_min">Desde</label>
+            <input id="salario_min" type="number" name="salario_min" class="form-control"
+                   value="{{ values.get('salario_min', salary_current if salary_upper is not none else '') }}"
+                   min="0" max="99999999.99" step="0.01" inputmode="decimal" placeholder="Ej. 8000.00">
+        </div>
+        <div>
+            <label class="form-label" for="salario_max">Hasta</label>
+            <input id="salario_max" type="number" name="salario_max" class="form-control"
+                   value="{{ values.get('salario_max', salary_upper if salary_upper is not none else '') }}"
+                   min="0" max="99999999.99" step="0.01" inputmode="decimal" placeholder="Ej. 10000.00">
+        </div>
+    </div>
+    <small>Si eliges “No especificado”, la vacante mostrará ese texto en todas las vistas.</small>
+</div>

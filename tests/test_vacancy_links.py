@@ -31,7 +31,23 @@ def vacancy(vacancy_id=42, available=True):
     return (vacancy_id, 'Analista de calidad', 'Descripción oficial de la oferta', 14000,
             'Presencial', 'Lunes a viernes', 'Oriental, Puebla', datetime(2026, 10, 20),
             'Empresa de ejemplo', 'Ingeniería', 'Un año', 'Análisis de procesos',
-            date(2026, 12, 31), 'Perfil profesional', 2, available)
+            date(2026, 12, 31), 'Perfil profesional', 2, available, None)
+
+
+@pytest.mark.parametrize(('minimum', 'maximum', 'expected'), [
+    (None, None, 'No especificado'),
+    (10000, None, '$10,000.00 MXN mensuales'),
+    (8000, 10000, 'Aprox. $8,000.00 a $10,000.00 MXN mensuales'),
+])
+def test_public_vacancy_displays_salary_modes(client, minimum, maximum, expected):
+    row = list(vacancy())
+    row[3], row[16] = minimum, maximum
+    conn = MagicMock()
+    conn.cursor.return_value.fetchone.return_value = row
+    with patch('main.get_connection', return_value=conn):
+        response = client.get('/vacantes/42')
+    assert response.status_code == 200
+    assert expected in response.text
 
 
 def authenticated(role='Candidato'):
