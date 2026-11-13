@@ -47,6 +47,8 @@ La seguridad es el núcleo de esta versión 2.0:
 3. Configurar variables de entorno (`DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `MAIL_USERNAME`, `MAIL_PASSWORD` y una `SECRET_KEY` aleatoria de al menos 32 caracteres). Para HTTP local usar `FLASK_ENV=development` y `TRUST_PROXY=0`.
 4. Ejecutar: `python main.py`.
 
+Si usas Windows sin `python` en el PATH, consulta la [guía de arranque local con Docker](docs/ARRANQUE_LOCAL.md). La aplicación directa no carga `.env` automáticamente.
+
 Consulta [la configuración de seguridad y preparación del despliegue](docs/SEGURIDAD.md). Las sesiones, los formularios y los tres roles usan los controles de la primera entrega de seguridad; la activación en producción requiere la configuración indicada.
 
 ---

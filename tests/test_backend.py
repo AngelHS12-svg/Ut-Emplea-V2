@@ -254,7 +254,7 @@ class TestAdminRoutes:
         mock_cur = self._login_admin(client)
         mock_cur.fetchall.return_value = [
             (1, "Dev Python", "Empresa X", datetime.now(), datetime.now(),
-             "activa", 15000.0, 3, "Desc", "Presencial", "9-6", "CDMX", "Ing.", 5)
+             "activa", 15000.0, 3, "Desc", "Presencial", "9-6", "CDMX", "Ing.", 5, None)
         ]
         resp = client.get("/admin/vacantes")
         self._stop_patch()
@@ -266,7 +266,7 @@ class TestAdminRoutes:
         mock_cur.fetchall.return_value = [
             (1, "Dev Python", "Empresa X", "Juan Pérez", "pendiente",
              datetime.now(), 15000.0, "Descripción", "Presencial",
-             "empresa@test.com", "candidato@test.com", "CDMX")
+             "empresa@test.com", "candidato@test.com", "CDMX", None)
         ]
         resp = client.get("/admin/seguimiento")
         self._stop_patch()

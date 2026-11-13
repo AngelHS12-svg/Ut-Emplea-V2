@@ -105,11 +105,9 @@
                                 <label class="form-label">Número de vacantes disponibles <span class="required">*</span></label>
                                 <input type="number" name="num_vacantes" class="form-control" value="{{ values.get('num_vacantes', vacante[8] or 1) }}" min="1" step="1" required>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">Salario mensual aproximado</label>
-                                <input type="number" name="salario" class="form-control" value="{{ values.get('salario', vacante[3] if vacante[3] is not none else '') }}" min="0" max="99999999.99" step="0.01" inputmode="decimal" placeholder="Ej. 15000.00">
-                                <small>Importe mensual en MXN. Déjalo en blanco si está por definir.</small>
-                            </div>
+                            {% set salary_current = vacante[3] %}
+                            {% set salary_upper = vacante[13] %}
+                            {% include 'shared/salary-fields.html' %}
                         </div>
 
                         <div class="form-group">
@@ -175,6 +173,7 @@
         </main>
     </div>
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <script src="{{ url_for('static', filename='js/salary-fields.js') }}" defer></script>
     <script>
         (function(){
             const t=document.getElementById('sidebarToggle'),s=document.querySelector('.sidebar'),o=document.getElementById('sidebarOverlay');

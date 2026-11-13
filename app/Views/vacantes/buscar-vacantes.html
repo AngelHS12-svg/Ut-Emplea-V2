@@ -122,7 +122,7 @@
                              data-empresa="{{ v[2] }}"
                              data-lugar="{{ v[3] or 'No especificado' }}"
                              data-modalidad="{{ v[4] or 'No especificado' }}"
-                             data-salario="{{ v[5] or '' }}"
+                             data-salario="{{ salary_label(v[5], v[12]) }}"
                              data-fecha="{{ v[6].strftime('%d %b %Y') if v[6] else 'N/A' }}"
                              data-descripcion="{{ v[7] }}"
                              data-horario="{{ v[8] or '' }}"
@@ -188,10 +188,10 @@
                             </p>
                         </div>
 
-                        <div id="det-salario-section" style="{% if not vacantes[0][5] %}display: none;{% endif %}">
+                        <div id="det-salario-section">
                             <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Salario</h3>
                             <p style="color: var(--texto-oscuro); font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;" id="det-salario">
-                                ${{ "{:,.2f}".format(vacantes[0][5]|float) if vacantes[0][5] else "" }} mensuales
+                                {{ salary_label(vacantes[0][5], vacantes[0][12]) }}
                             </p>
                         </div>
 
@@ -288,13 +288,7 @@
             }
 
             // Salario
-            const salSection = document.getElementById('det-salario-section');
-            if(ds.salario && ds.salario !== 'No especificado') {
-                document.getElementById('det-salario').textContent = '$' + Number(ds.salario).toLocaleString('en-US', {minimumFractionDigits: 2}) + ' mensuales';
-                salSection.style.display = 'block';
-            } else {
-                salSection.style.display = 'none';
-            }
+            document.getElementById('det-salario').textContent = ds.salario || 'No especificado';
 
             // Update form actions dynamically
             const formPostular = document.getElementById('form-postular');
